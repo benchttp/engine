@@ -1,0 +1,159 @@
+run:
+  timeout: 1m
+  uniq-by-line: false
+
+linters-settings:
+  dupl:
+    threshold: 100
+
+  errcheck:
+    exclude-functions:
+      - (net/http.ResponseWriter).Write
+
+  gocognit:
+    min-complexity: 8
+
+  gocritic:
+    enabled-checks:
+      - appendassign
+      - appendcombine
+      - argorder
+      - assignop
+      - badcall
+      - badcond
+      - badlock
+      - badregexp
+      - boolexprsimplify
+      - builtinshadow
+      - builtinshadowdecl
+      - captlocal
+      - caseorder
+      - codegencomment
+      - commentedoutcode
+      - commentedoutimport
+      - commentformatting
+      - defaultcaseorder
+      - deferunlambda
+      - deprecatedcomment
+      - docstub
+      - duparg
+      - dupbranchbody
+      - dupcase
+      - dupimport
+      - dupsubexpr
+      - elseif
+      - emptyfallthrough
+      - emptystringtest
+      - equalfold
+      - evalorder
+      - exitafterdefer
+      - filepathjoin
+      - flagderef
+      - flagname
+      - hexliteral
+      - hugeparam
+      - ifelsechain
+      - importshadow
+      - indexalloc
+      - initclause
+      - mapkey
+      - methodexprcall
+      - nestingreduce
+      - newderef
+      - nilvalreturn
+      - octalliteral
+      - offby1
+      - paramtypecombine
+      - ptrtorefparam
+      - rangeexprcopy
+      - rangevalcopy
+      - regexpmust
+      - regexppattern
+      - regexpsimplify
+      - ruleguard
+      - singlecaseswitch
+      - sloppylen
+      - sloppyreassign
+      - sloppytypeassert
+      - sortslice
+      - sqlquery
+      - stringxbytes
+      - switchtrue
+      - toomanyresultschecker
+      - truncatecmp
+      - typeassertchain
+      - typedeffirst
+      - typeswitchvar
+      - typeunparen
+      - underef
+      # - unamedresult
+      - unlabelstmt
+      - unlambda
+      - unnecessaryblock
+      - unnecessarydefer
+      - unslice
+      - valswap
+      - weakcond
+      # - whynolint
+      - wrapperfunc
+      - yodastyleexpr
+
+    settings:
+      hugeParam:
+        sizeThreshold: 256
+      rangeValCopy:
+        sizeThreshold: 256
+
+  gofumpt:
+    lang-version: "1.17"
+    extra-rules: true
+
+  goimports:
+    local-prefixes: github.com/benchttp/runner
+
+  misspell:
+    locale: US
+
+  revive:
+    enableAllRules: true
+
+  staticcheck:
+    go: "1.17"
+    checks: [all]
+
+  stylecheck:
+    go: "1.17"
+    checks: [all]
+
+linters:
+  disable-all: true
+  enable:
+    - bodyclose # enforce resp.Body.Close()
+    - deadcode
+    - dupl # duplicate code
+    - errcheck
+    - exportloopref
+    - gocognit # smart complexity analyzer
+    - gocritic # opinionated linter
+    - gofumpt # stricter gofmt
+    - goimports # imports order
+    - gosec # security checks
+    - govet
+    - misspell # typos in strings, comments
+    - prealloc # enforce capacity allocation when possible
+    - revive # golint enhancement
+    - staticcheck # go vet enhancement
+    - structcheck # unused struct fields
+    - testpackage # checks on tests (*_test)
+    - thelper # enforce t.Helper()
+    - varcheck # unused global var and const
+    - wastedassign
+  fast: false
+
+issues:
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - dupl
+        - gocognit
+        - gocyclo

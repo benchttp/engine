@@ -1,0 +1,5 @@
+# Env files
+.env
+
+# Binary files
+/bin
