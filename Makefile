@@ -17,7 +17,7 @@ lint:
 
 .PHONY: tests
 tests:
-	@go test ./...
+	@go test -race ./...
 
 TEST_FUNC=^.*$$
 ifdef t
@@ -30,7 +30,7 @@ endif
 
 .PHONY: test
 test:
-	@go test -timeout 30s -run $(TEST_FUNC) $(TEST_PKG)
+	@go test -race -timeout 30s -run $(TEST_FUNC) $(TEST_PKG)
 
 # Build
 
