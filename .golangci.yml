@@ -11,7 +11,7 @@ linters-settings:
       - (net/http.ResponseWriter).Write
 
   gocognit:
-    min-complexity: 8
+    min-complexity: 10
 
   gocritic:
     enabled-checks:

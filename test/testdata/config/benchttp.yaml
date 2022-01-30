@@ -1,0 +1,15 @@
+aliases:
+  defaults: &defaults
+    method: GET
+    url: http://localhost:9999?delay=200ms
+
+request:
+  <<: *defaults
+  queryParams:
+    fib: 30
+  timeout: 2s
+
+runnerOptions:
+  requests: 100
+  concurrency: 1
+  globalTimeout: 60s

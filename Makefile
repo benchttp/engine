@@ -36,7 +36,7 @@ test:
 
 .PHONY: Build
 build:
-	@go build -v ./cmd/runner/main.go
+	@go build -v -o ./bin/benchttp ./cmd/runner/main.go
 
 # Docs
 
