@@ -32,6 +32,11 @@ endif
 test:
 	@go test -race -timeout 30s -run $(TEST_FUNC) $(TEST_PKG)
 
+
+.PHONY: test-cov
+test-cov:
+	@go-acc ./...
+
 # Build
 
 .PHONY: build

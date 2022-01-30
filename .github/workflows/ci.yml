@@ -1,6 +1,10 @@
 name: Lint & Test & Build
 
-on: [pull_request]
+on:
+  pull_request:
+  push:
+    branches:
+      - main
 
 jobs:
   check:
@@ -13,16 +17,26 @@ jobs:
         with:
           go-version: 1.17
 
+      - name: Install coverage tool
+        run: go get github.com/ory/go-acc
+
       # Check #1: Lint
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v2
         with:
           version: v1.43.0
 
-      # Check #2: Test
-      - name: Test
-        run: make tests
+      # Check #2: Test & generate coverage report
+      - name: Test & coverage
+        run: make test-cov
 
       # Check #3: Build
       - name: Build Server
         run: make build
+
+      - name: Upload coverage report
+        uses: codecov/codecov-action@v1.0.2
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./coverage.txt
+          flags: unittests
