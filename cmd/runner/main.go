@@ -49,7 +49,8 @@ func main() {
 	fmt.Println("total:", len(rec))
 }
 
-// makeRunnerConfig retrieves a config from
+// makeRunnerConfig returns a config.Config initialized with config file
+// options if found, overridden with CLI options.
 func makeRunnerConfig() config.Config {
 	fileConfig, err := configfile.Parse(configFile)
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
