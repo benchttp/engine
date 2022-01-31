@@ -3,6 +3,7 @@ package config
 import (
 	"encoding/json"
 	"errors"
+	"net/http"
 	"net/url"
 	"time"
 )
@@ -33,6 +34,16 @@ type Config struct {
 func (cfg Config) String() string {
 	b, _ := json.MarshalIndent(cfg, "", "  ")
 	return string(b)
+}
+
+// HTTPRequest returns a *http.Request created from Target. Returns any non-nil
+// error that occurred.
+func (cfg Config) HTTPRequest() (*http.Request, error) {
+	return http.NewRequest(
+		cfg.Request.Method,
+		cfg.Request.URL.String(),
+		nil, // TODO: handle body
+	)
 }
 
 // New returns a Config initialized with given parameters. The returned Config

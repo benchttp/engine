@@ -10,7 +10,11 @@ import (
 
 	"github.com/benchttp/runner/config"
 	configfile "github.com/benchttp/runner/config/file"
-	"github.com/benchttp/runner/request"
+	"github.com/benchttp/runner/requester"
+)
+
+const (
+	serverURL = "http://localhost:9000/report"
 )
 
 var (
@@ -44,9 +48,9 @@ func main() {
 	cfg := makeRunnerConfig()
 	fmt.Println(cfg)
 
-	rec := request.Do(cfg)
-
-	fmt.Println("total:", len(rec))
+	if err := requester.New(cfg).RunAndReport(serverURL); err != nil {
+		log.Fatal(err)
+	}
 }
 
 // makeRunnerConfig returns a config.Config initialized with config file

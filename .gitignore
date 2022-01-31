@@ -1,5 +1,6 @@
 # Env files
 .env
+.benchttp.*
 
 # Binary files
 /bin
