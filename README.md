@@ -46,7 +46,7 @@ CLI options:
   -requests int
         Maximum number of requests to run, 0 means no limit (default 0)
   -timeout duration
-        Timeout for each http request (default 10s)
+        Timeout for each HTTP request (default 10s)
 ```
 
 ## Example and ouput

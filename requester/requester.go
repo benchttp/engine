@@ -16,17 +16,24 @@ type Requester struct {
 
 	config config.Config
 	client http.Client
+	tracer *tracer
 }
 
 // New returns a Requester configured with specified Options.
 func New(cfg config.Config) *Requester {
+	tracer := newTracer()
 	return &Requester{
 		records: make(chan Record, cfg.RunnerOptions.Requests),
 		config:  cfg,
+		tracer:  tracer,
 		client: http.Client{
-			// Timeout includes connection time, any redirects, and reading the response body.
+			// Timeout includes connection time, any redirects, and reading
+			// the response body.
 			// We may want exclude reading the response body in our benchmark tool.
 			Timeout: cfg.Request.Timeout,
+
+			// tracer keeps track of all events of the current request.
+			Transport: tracer,
 		},
 	}
 }
@@ -54,10 +61,11 @@ func (r *Requester) Run() Report {
 // response body, invalidating the entire response, as it is not a remote
 // server error.
 type Record struct {
-	Time  time.Duration `json:"time"`
-	Code  int           `json:"code"`
-	Bytes int           `json:"bytes"`
-	Error error         `json:"error"`
+	Time   time.Duration `json:"time"`
+	Code   int           `json:"code"`
+	Bytes  int           `json:"bytes"`
+	Error  error         `json:"error,omitempty"`
+	Events []Event       `json:"events"`
 }
 
 func (r *Requester) record() {
@@ -83,8 +91,9 @@ func (r *Requester) record() {
 	}
 
 	r.records <- Record{
-		Code:  resp.StatusCode,
-		Time:  time.Since(sent),
-		Bytes: len(body),
+		Code:   resp.StatusCode,
+		Time:   time.Since(sent),
+		Bytes:  len(body),
+		Events: r.tracer.events,
 	}
 }

@@ -22,7 +22,7 @@ var (
 	url           string
 	concurrency   int           // Number of connections to run concurrently
 	requests      int           // Number of requests to run, use duration as exit condition if omitted.
-	timeout       time.Duration // Timeout for each http request
+	timeout       time.Duration // Timeout for each HTTP request
 	globalTimeout time.Duration // Duration of test
 )
 
@@ -37,7 +37,7 @@ func parseArgs() {
 	flag.StringVar(&url, "url", "", "Target URL to request")
 	flag.IntVar(&concurrency, "concurrency", 0, "Number of connections to run concurrently")
 	flag.IntVar(&requests, "requests", 0, "Number of requests to run, use duration as exit condition if omitted")
-	flag.DurationVar(&timeout, "timeout", 0, "Timeout for each http request")
+	flag.DurationVar(&timeout, "timeout", 0, "Timeout for each HTTP request")
 	flag.DurationVar(&globalTimeout, "globalTimeout", 0, "Duration of test")
 	flag.Parse()
 }
