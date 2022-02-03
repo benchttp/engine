@@ -62,7 +62,7 @@ func TestParse(t *testing.T) {
 // newExpConfig returns the expected config.Config result after parsing
 // one of the config files in testdataConfigPath.
 func newExpConfig() config.Config {
-	u, _ := url.Parse(testURL)
+	u, _ := url.ParseRequestURI(testURL)
 	return config.Config{
 		Request: config.Request{
 			Method:  "GET",

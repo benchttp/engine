@@ -2,7 +2,7 @@ package config
 
 import (
 	"encoding/json"
-	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"time"
@@ -50,10 +50,10 @@ func (cfg Config) HTTPRequest() (*http.Request, error) {
 // is not guaranteed to be safe: it must be validated using Config.Validate
 // before usage.
 func New(uri string, requests, concurrency int, requestTimeout, globalTimeout time.Duration) Config {
-	var urlURL *url.URL
-	if uri != "" {
-		// ignore err: a Config can be invalid at this point
-		urlURL, _ = url.Parse(uri)
+	// ignore err: a Config can be invalid at this point
+	urlURL, _ := url.ParseRequestURI(uri)
+	if urlURL == nil {
+		urlURL = &url.URL{}
 	}
 	return Config{
 		Request: Request{
@@ -66,6 +66,37 @@ func New(uri string, requests, concurrency int, requestTimeout, globalTimeout ti
 			GlobalTimeout: globalTimeout,
 		},
 	}
+}
+
+// Validate returns the config and a not nil ErrInvalid if any of the fields provided by the user is not valid
+func (cfg Config) Validate() error { //nolint
+	inputErrors := []error{}
+
+	_, err := url.ParseRequestURI(cfg.Request.URL.String())
+	if err != nil {
+		inputErrors = append(inputErrors, fmt.Errorf("-url: %s is not a valid url", cfg.Request.URL.String()))
+	}
+
+	if cfg.RunnerOptions.Requests < 1 && cfg.RunnerOptions.Requests != -1 {
+		inputErrors = append(inputErrors, fmt.Errorf("-requests: must be >= 0, we got %d", cfg.RunnerOptions.Requests))
+	}
+
+	if cfg.RunnerOptions.Concurrency < 1 && cfg.RunnerOptions.Concurrency != -1 {
+		inputErrors = append(inputErrors, fmt.Errorf("-concurrency: must be > 0, we got %d", cfg.RunnerOptions.Concurrency))
+	}
+
+	if cfg.Request.Timeout < 0 {
+		inputErrors = append(inputErrors, fmt.Errorf("-timeout: must be > 0, we got %d", cfg.Request.Timeout))
+	}
+
+	if cfg.RunnerOptions.GlobalTimeout < 0 {
+		inputErrors = append(inputErrors, fmt.Errorf("-globalTimeout: must be > 0, we got %d", cfg.RunnerOptions.GlobalTimeout))
+	}
+
+	if len(inputErrors) > 0 {
+		return &ErrInvalid{inputErrors}
+	}
+	return nil
 }
 
 // Default returns a default config that is safe to use.
@@ -104,14 +135,4 @@ func Merge(base, override Config) Config {
 // using Config.Validate before usage.
 func MergeDefault(override Config) Config {
 	return Merge(Default(), override)
-}
-
-// Validate returns an unimplemented error.
-//
-// Once implemented, Validate will return ErrInvalid if any of its fields
-// does not meet the runner requirements.
-//
-// TODO: https://github.com/benchttp/runner/issues/20
-func (cfg Config) Validate() error {
-	return errors.New("unimplemented")
 }

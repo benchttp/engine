@@ -67,7 +67,7 @@ func parseRawConfig(in rawConfig) (cfg config.Config, err error) {
 // query parameters. It returns the first non-nil error occurring in the
 // process.
 func parseAndBuildURL(raw string, qp map[string]string) (*url.URL, error) {
-	u, err := url.Parse(raw)
+	u, err := url.ParseRequestURI(raw)
 	if err != nil {
 		return nil, err
 	}
