@@ -13,7 +13,8 @@ import (
 )
 
 const (
-	serverURL = "http://localhost:9000/report"
+	// API server endpoint. May live is some config file later.
+	reportURL = "http://localhost:9998/report"
 )
 
 var (
@@ -49,7 +50,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if err := requester.New(cfg).RunAndSendReport(serverURL); err != nil {
+	if err := requester.New(cfg).RunAndSendReport(reportURL); err != nil {
 		log.Fatal(err)
 	}
 }
