@@ -1,3 +1,9 @@
+github.com/drykit-go/cond v0.1.0 h1:y7MNxREQLT83vGfcfSKjyFPLC/ZDjYBNp6KuaVVjOg4=
+github.com/drykit-go/cond v0.1.0/go.mod h1:7MXBFjjaB5ZCEB8Q4w2euNOaWuTqf7NjOFZAyV1Jpfg=
+github.com/drykit-go/strcase v0.2.0/go.mod h1:cWK0/az2f09UPIbJ42Sb8Iqdv01uENrFX+XXKGjPo+8=
+github.com/drykit-go/testx v0.1.0/go.mod h1:qGXb49a8CzQ82crBeCVW8R3kGU1KRgWHnI+Q6CNVbz8=
+github.com/drykit-go/testx v1.2.0 h1:UsH+tFd24z3Xu+mwvwPY+9eBEg9CUyMsUeMYyUprG0o=
+github.com/drykit-go/testx v1.2.0/go.mod h1:qTzXJgnAg8n31woklBzNTaWzLMJrnFk93x/aeaIpc20=
 golang.org/x/sync v0.0.0-20210220032951-036812b2e83c h1:5KslGYwFpkhGh+Q16bwMP3cOontH8FOep7tGV86Y7SQ=
 golang.org/x/sync v0.0.0-20210220032951-036812b2e83c/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405 h1:yhCVgyC4o1eVCa2tZl7eS0r+SDo693bJlVdllGtEeKM=

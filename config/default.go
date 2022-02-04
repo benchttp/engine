@@ -13,7 +13,7 @@ var defaultConfig = Config{
 	},
 	RunnerOptions: RunnerOptions{
 		Concurrency:   1,
-		Requests:      0, // Use GlobalTimeout as exit condition if omitted.
+		Requests:      -1, // Use GlobalTimeout as exit condition.
 		GlobalTimeout: 30 * time.Second,
 	},
 }

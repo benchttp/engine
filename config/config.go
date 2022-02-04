@@ -46,6 +46,29 @@ func (cfg Config) HTTPRequest() (*http.Request, error) {
 	)
 }
 
+// Override returns a new Config based on cfg with overridden values from c.
+// Only fields specified in options are replaced. Accepted options are limited
+// to existing Fields, other values are silently ignored.
+func (cfg Config) Override(c Config, fields ...string) Config {
+	for _, field := range fields {
+		switch field {
+		case FieldMethod:
+			cfg.Request.Method = c.Request.Method
+		case FieldURL:
+			cfg.Request.URL = c.Request.URL
+		case FieldTimeout:
+			cfg.Request.Timeout = c.Request.Timeout
+		case FieldRequests:
+			cfg.RunnerOptions.Requests = c.RunnerOptions.Requests
+		case FieldConcurrency:
+			cfg.RunnerOptions.Concurrency = c.RunnerOptions.Concurrency
+		case FieldGlobalTimeout:
+			cfg.RunnerOptions.GlobalTimeout = c.RunnerOptions.GlobalTimeout
+		}
+	}
+	return cfg
+}
+
 // New returns a Config initialized with given parameters. The returned Config
 // is not guaranteed to be safe: it must be validated using Config.Validate
 // before usage.
@@ -102,37 +125,4 @@ func (cfg Config) Validate() error { //nolint
 // Default returns a default config that is safe to use.
 func Default() Config {
 	return defaultConfig
-}
-
-// Merge returns a Config after a base Config overridden by all non-zero values
-// of override. The returned Config is not guaranteed to be safe: it must be
-// validated using Config.Validate before usage.
-func Merge(base, override Config) Config {
-	if override.Request.Method != "" {
-		base.Request.Method = override.Request.Method
-	}
-	newURL := override.Request.URL
-	if newURL != nil && newURL.String() != "" {
-		base.Request.URL = override.Request.URL
-	}
-	if override.Request.Timeout != 0 {
-		base.Request.Timeout = override.Request.Timeout
-	}
-	if override.RunnerOptions.Requests != 0 {
-		base.RunnerOptions.Requests = override.RunnerOptions.Requests
-	}
-	if override.RunnerOptions.Concurrency != 0 {
-		base.RunnerOptions.Concurrency = override.RunnerOptions.Concurrency
-	}
-	if override.RunnerOptions.GlobalTimeout != 0 {
-		base.RunnerOptions.GlobalTimeout = override.RunnerOptions.GlobalTimeout
-	}
-	return base
-}
-
-// MergeDefault merges override with the default config calling Merge.
-// The returned Config is not guaranteed to be safe: it must be validated
-// using Config.Validate before usage.
-func MergeDefault(override Config) Config {
-	return Merge(Default(), override)
 }
