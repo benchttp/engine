@@ -1,26 +1,61 @@
-package semimpl_test
+package dispatcher_test
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"runtime"
 	"sync"
 	"testing"
 	"time"
 
-	"github.com/benchttp/runner/semimpl"
+	"github.com/benchttp/runner/dispatcher"
 )
+
+func TestNew(t *testing.T) {
+	t.Run("panic if numWorker < 1", func(t *testing.T) {
+		for _, numWorker := range []int{-1, 0} {
+			func(numWorker int) {
+				expMessage := fmt.Sprintf(
+					"invalid numWorker value: must be > 1, got %d",
+					numWorker,
+				)
+
+				defer func() {
+					r := recover()
+					if r == nil {
+						t.Error("expected to panic but did not")
+					}
+					if r != expMessage {
+						t.Errorf("unexpected panic message:\nexp %s\ngot %v", expMessage, r)
+					}
+				}()
+
+				if d := dispatcher.New(numWorker); d != nil {
+					t.Error("returned a non-nil Dispatcher")
+				}
+			}(numWorker)
+		}
+	})
+
+	t.Run("return valid Dispatcher if numWorker > 0", func(t *testing.T) {
+		if d := dispatcher.New(10); d == nil {
+			t.Error("returned nil Dispatcher")
+		}
+	})
+}
 
 func TestDo(t *testing.T) {
 	t.Run("stop when maxIter is reached", func(t *testing.T) {
 		const (
-			numWorkers = 1
-			maxIter    = 10
-			expIter    = 10
+			numWorker = 1
+			maxIter   = 10
+			expIter   = 10
 		)
 
 		gotIter := 0
 
-		semimpl.Do(context.Background(), numWorkers, maxIter, func() {
+		dispatcher.New(numWorker).Do(context.Background(), maxIter, func() { //nolint:errcheck
 			gotIter++
 		})
 
@@ -31,24 +66,25 @@ func TestDo(t *testing.T) {
 
 	t.Run("stop on context timeout", func(t *testing.T) {
 		const (
-			timeout    = 100 * time.Millisecond
-			interval   = timeout / 10
-			numWorkers = 1
+			timeout   = 100 * time.Millisecond
+			interval  = timeout / 10
+			numWorker = 1
+			maxIter   = -1
 
 			margin      = 25 * time.Millisecond // determined empirically
 			maxDuration = timeout + margin
 		)
 
 		var (
-			maxIter = int(interval.Milliseconds()) + 1 // should not be reached
-			gotIter = 0
+			expIterMax = int(interval.Milliseconds()) + 1 // should not be reached
+			gotIter    = 0
 		)
 
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
 
 		gotDuration := timeFunc(func() {
-			semimpl.Do(ctx, numWorkers, maxIter, func() {
+			dispatcher.New(numWorker).Do(ctx, maxIter, func() { //nolint:errcheck
 				gotIter++
 				time.Sleep(interval)
 			})
@@ -61,27 +97,28 @@ func TestDo(t *testing.T) {
 			)
 		}
 
-		if gotIter >= maxIter {
+		if gotIter >= expIterMax {
 			t.Errorf(
 				"context timeout iterations: exp < %d, got %d",
-				maxIter, gotIter,
+				expIterMax, gotIter,
 			)
 		}
 	})
 
 	t.Run("stop on context cancel", func(t *testing.T) {
 		const (
-			timeout    = 100 * time.Millisecond
-			interval   = timeout / 10
-			numWorkers = 1
+			timeout   = 100 * time.Millisecond
+			interval  = timeout / 10
+			numWorker = 1
+			maxIter   = -1
 
 			margin      = 25 * time.Millisecond // determined empirically
 			maxDuration = timeout + margin
 		)
 
 		var (
-			maxIter = int(interval.Milliseconds()) + 1 // should not be reached
-			gotIter = 0
+			expIterMax = int(interval.Milliseconds()) + 1 // should not be reached
+			gotIter    = 0
 		)
 
 		ctx, cancel := context.WithCancel(context.Background())
@@ -91,7 +128,7 @@ func TestDo(t *testing.T) {
 		}()
 
 		gotDuration := timeFunc(func() {
-			semimpl.Do(ctx, numWorkers, maxIter, func() {
+			dispatcher.New(numWorker).Do(ctx, maxIter, func() { //nolint:errcheck
 				time.Sleep(interval)
 			})
 		})
@@ -103,24 +140,24 @@ func TestDo(t *testing.T) {
 			)
 		}
 
-		if gotIter >= maxIter {
+		if gotIter >= expIterMax {
 			t.Errorf(
 				"context timeout iterations: exp < %d, got %d",
-				maxIter, gotIter,
+				expIterMax, gotIter,
 			)
 		}
 	})
 
 	t.Run("limit concurrent workers", func(t *testing.T) {
 		const (
-			interval   = 10 * time.Millisecond
-			numWorkers = 10
-			maxIter    = 100
+			interval  = 10 * time.Millisecond
+			numWorker = 10
+			maxIter   = 100
 
 			// occasionnally we can have 1 extra concurrent goroutine,
 			// we consider it an acceptable error margin
 			margin             = 1
-			expMaxNumGoroutine = numWorkers + margin
+			expMaxNumGoroutine = numWorker + margin
 		)
 
 		var (
@@ -129,7 +166,7 @@ func TestDo(t *testing.T) {
 			gotNumGoroutines = make([]int, 0, maxIter)
 		)
 
-		semimpl.Do(context.Background(), numWorkers, maxIter, func() {
+		dispatcher.New(numWorker).Do(context.Background(), maxIter, func() { //nolint:errcheck
 			mu.Lock()
 			gotNumGoroutines = append(gotNumGoroutines, runtime.NumGoroutine()-baseNumGoroutine)
 			mu.Unlock()
@@ -150,8 +187,8 @@ func TestDo(t *testing.T) {
 
 	t.Run("dispatch concurrent workers correctly", func(t *testing.T) {
 		const (
-			numWorkers = 3
-			maxIter    = 12
+			numWorker = 3
+			maxIter   = 12
 
 			minIntervalBetweenGroups = 30 * time.Millisecond
 			maxIntervalWithinGroup   = 10 * time.Millisecond
@@ -165,7 +202,7 @@ func TestDo(t *testing.T) {
 		)
 
 		start := time.Now()
-		semimpl.Do(context.Background(), numWorkers, maxIter, func() {
+		dispatcher.New(numWorker).Do(context.Background(), maxIter, func() { //nolint:errcheck
 			mu.Lock()
 			elapsedTimes = append(elapsedTimes, time.Since(start))
 			mu.Unlock()
@@ -181,7 +218,7 @@ func TestDo(t *testing.T) {
 		// We check the resulting grouping against 2 rules:
 		// 	1. durations within a same group must be close
 		// 	2. max interval between two groups must be higher than the callback duration
-		groups := groupby(elapsedTimes, numWorkers)
+		groups := groupby(elapsedTimes, numWorker)
 		for groupIndex, group := range groups {
 			// 1. check durations within each group are similar
 			hi, lo := maxof(group), minof(group)
@@ -207,6 +244,71 @@ func TestDo(t *testing.T) {
 
 		t.Log(elapsedTimes)
 	})
+}
+
+func TestValidate(t *testing.T) {
+	testcases := []struct {
+		label     string
+		exp       error
+		numWorker int
+		maxIter   int
+		callback  func()
+	}{
+		{
+			label:     "return error if maxIter == 0",
+			exp:       errors.New("invalid value: maxIter: must be -1 or >= 1, got 0"),
+			numWorker: 10,
+			maxIter:   0,
+			callback:  func() {},
+		},
+		{
+			label:     "return error if maxIter == -2",
+			exp:       errors.New("invalid value: maxIter: must be -1 or >= 1, got -2"),
+			numWorker: 10,
+			maxIter:   -2,
+			callback:  func() {},
+		},
+		{
+			label:     "return error if maxIter < numWorker",
+			exp:       errors.New("invalid value: maxIter: must be >= numWorker (10), got 5"),
+			numWorker: 10,
+			maxIter:   5,
+			callback:  func() {},
+		},
+		{
+			label:     "return error if callback == nil",
+			exp:       errors.New("invalid value: callback: must be non-nil"),
+			numWorker: 10,
+			maxIter:   20,
+			callback:  nil,
+		},
+		{
+			label:     "return nil if values are valid (maxIter == 1)",
+			exp:       nil,
+			numWorker: 1,
+			maxIter:   1,
+			callback:  func() {},
+		},
+		{
+			label:     "return nil if values are valid (maxIter == -1)",
+			exp:       nil,
+			numWorker: 1,
+			maxIter:   -1,
+			callback:  func() {},
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.label, func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
+			defer cancel()
+
+			got := dispatcher.New(tc.numWorker).Do(ctx, tc.maxIter, tc.callback)
+			if got != nil && got.Error() != tc.exp.Error() {
+				t.Errorf("unexpected error value:\nexp %v\ngot %v", tc.exp, got)
+			}
+		})
+	}
 }
 
 // helpers

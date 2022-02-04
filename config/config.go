@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -39,11 +40,15 @@ func (cfg Config) String() string {
 // HTTPRequest returns a *http.Request created from Target. Returns any non-nil
 // error that occurred.
 func (cfg Config) HTTPRequest() (*http.Request, error) {
-	return http.NewRequest(
-		cfg.Request.Method,
-		cfg.Request.URL.String(),
-		nil, // TODO: handle body
-	)
+	if cfg.Request.URL == nil {
+		return nil, errors.New("empty url")
+	}
+	rawURL := cfg.Request.URL.String()
+	if _, err := url.ParseRequestURI(rawURL); err != nil {
+		return nil, errors.New("bad url")
+	}
+	// TODO: handle body
+	return http.NewRequest(cfg.Request.Method, rawURL, nil)
 }
 
 // Override returns a new Config based on cfg with overridden values from c.
@@ -92,7 +97,7 @@ func New(uri string, requests, concurrency int, requestTimeout, globalTimeout ti
 }
 
 // Validate returns the config and a not nil ErrInvalid if any of the fields provided by the user is not valid
-func (cfg Config) Validate() error { //nolint
+func (cfg Config) Validate() error { //nolint:gocognit
 	inputErrors := []error{}
 
 	_, err := url.ParseRequestURI(cfg.Request.URL.String())

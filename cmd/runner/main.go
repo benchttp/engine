@@ -49,7 +49,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if err := requester.New(cfg).RunAndReport(serverURL); err != nil {
+	if err := requester.New(cfg).RunAndSendReport(serverURL); err != nil {
 		log.Fatal(err)
 	}
 }
