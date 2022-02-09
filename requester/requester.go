@@ -71,12 +71,13 @@ func (r *Requester) Run() (Report, error) {
 		numWorker   = r.config.RunnerOptions.Concurrency
 		maxIter     = r.config.RunnerOptions.Requests
 		timeout     = r.config.RunnerOptions.GlobalTimeout
+		interval    = r.config.RunnerOptions.Interval
 		ctx, cancel = context.WithTimeout(context.Background(), timeout)
 	)
 
 	defer cancel()
 
-	if err := dispatcher.New(numWorker).Do(ctx, maxIter, r.record(req)); err != nil {
+	if err := dispatcher.New(numWorker).Do(ctx, maxIter, r.record(req, interval)); err != nil {
 		return Report{}, err
 	}
 
@@ -103,7 +104,7 @@ type Record struct {
 	Events []Event       `json:"events"`
 }
 
-func (r *Requester) record(req *http.Request) func() {
+func (r *Requester) record(req *http.Request, interval time.Duration) func() {
 	return func() {
 		sent := time.Now()
 
@@ -128,6 +129,8 @@ func (r *Requester) record(req *http.Request) func() {
 			Bytes:  len(body),
 			Events: r.tracer.events,
 		})
+
+		time.Sleep(interval)
 	}
 }
 

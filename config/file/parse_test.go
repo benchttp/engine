@@ -97,6 +97,7 @@ func newExpConfig() config.Config {
 		RunnerOptions: config.RunnerOptions{
 			Requests:      100,
 			Concurrency:   1,
+			Interval:      50 * time.Millisecond,
 			GlobalTimeout: 60 * time.Second,
 		},
 	}

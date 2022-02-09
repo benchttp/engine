@@ -70,6 +70,15 @@ func parseRawConfig(raw unmarshaledConfig) (config.Config, error) { //nolint:goc
 		fields = append(fields, config.FieldConcurrency)
 	}
 
+	if interval := raw.RunnerOptions.Interval; interval != nil {
+		parsedInterval, err := parseOptionalDuration(*interval)
+		if err != nil {
+			return config.Config{}, err
+		}
+		cfg.RunnerOptions.Interval = parsedInterval
+		fields = append(fields, config.FieldInterval)
+	}
+
 	if globalTimeout := raw.RunnerOptions.GlobalTimeout; globalTimeout != nil {
 		parsedGlobalTimeout, err := parseOptionalDuration(*globalTimeout)
 		if err != nil {

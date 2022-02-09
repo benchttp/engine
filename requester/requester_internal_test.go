@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"reflect"
+	"sync"
 	"testing"
 	"time"
 
@@ -100,19 +101,106 @@ func TestRun(t *testing.T) {
 
 		t.Log(rep)
 	})
+
+	t.Run("use interval", func(t *testing.T) {
+		const (
+			requests    = 12
+			concurrency = 3
+			interval    = 30 * time.Millisecond
+			baseMargin  = 4 * time.Millisecond
+		)
+
+		var (
+			mu             sync.Mutex
+			start          time.Time
+			currentRequest int
+
+			expTimes = []time.Duration{
+				0 * time.Millisecond, 0 * time.Millisecond, 0 * time.Millisecond,
+				30 * time.Millisecond, 30 * time.Millisecond, 30 * time.Millisecond,
+				60 * time.Millisecond, 60 * time.Millisecond, 60 * time.Millisecond,
+				90 * time.Millisecond, 90 * time.Millisecond, 90 * time.Millisecond,
+			}
+			gotTimes = make([]time.Duration, 0, requests)
+		)
+
+		cfg := config.Config{
+			RunnerOptions: config.RunnerOptions{
+				Concurrency:   concurrency,
+				Requests:      requests,
+				Interval:      interval,
+				GlobalTimeout: 5 * time.Second,
+			},
+		}.WithURL(goodURL)
+
+		r := withCallbackTransport(New(cfg), func() {
+			defer func() {
+				currentRequest++
+				mu.Unlock()
+			}()
+			mu.Lock()
+
+			// ignore first request from r.ping()
+			if currentRequest == 0 {
+				return
+			}
+
+			// actual first request: start timer now
+			if currentRequest == 1 {
+				start = time.Now()
+			}
+
+			elapsed := time.Since(start)
+			gotTimes = append(gotTimes, elapsed)
+		})
+
+		if _, err := r.Run(); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+
+		if len(gotTimes) != len(expTimes) {
+			t.Logf("exp %v\ngot %v", expTimes, gotTimes)
+			t.Fatal("unexpected requests count")
+		}
+
+		fail := false
+		for i, gotTime := range gotTimes {
+			// Delay accumulates each non-concurrent iteration, so we increase
+			// the margin accordingly each step.
+			// With baseMargin == 4ms and concurrency == 3, this empirically
+			// determined formula gives the following margins:
+			// 	4ms, 4ms, 4ms    // 0ms <= d <= 4ms
+			// 	8ms, 8ms, 8ms    // 30ms <= d <= 38ms
+			// 	12ms, 12ms, 12ms // 60ms <= d <= 72ms
+			// 	16ms, 16ms, 16ms // 90ms <= d <= 106ms
+			margin := baseMargin + time.Duration(i/concurrency)*baseMargin
+			if gotTime < expTimes[i] || gotTime > expTimes[i]+margin {
+				fail = true
+			}
+		}
+
+		if fail {
+			t.Errorf("unexpected interval:\nexp %v\ngot %v", expTimes, gotTimes)
+		}
+	})
 }
 
 // helpers
 
-type noopTransport struct{}
+type callbackTransport struct{ callback func() }
 
-func (noopTransport) RoundTrip(*http.Request) (*http.Response, error) {
+func (t callbackTransport) RoundTrip(*http.Request) (*http.Response, error) {
+	t.callback()
 	return &http.Response{}, nil
 }
 
-func withNoopTransport(req *Requester) *Requester {
-	req.client.Transport = noopTransport{}
+func withCallbackTransport(req *Requester, callback func()) *Requester {
+	req.client.Transport = callbackTransport{callback: callback}
 	return req
+}
+
+func withNoopTransport(req *Requester) *Requester {
+	return withCallbackTransport(req, func() {})
 }
 
 type errTransport struct{}

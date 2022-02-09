@@ -5,12 +5,11 @@ import (
 	"reflect"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/benchttp/runner/config"
 )
 
-func TestConfigValidation(t *testing.T) {
+func TestValidate(t *testing.T) {
 	t.Run("test valid configuration", func(t *testing.T) {
 		cfg := config.New("https://github.com/benchttp/", 5, 5, 5, 5)
 		err := cfg.Validate()
@@ -44,41 +43,23 @@ func TestConfigValidation(t *testing.T) {
 	})
 }
 
-func TestNew(t *testing.T) {
-	t.Run("zero value params return empty config", func(t *testing.T) {
-		exp := config.Config{Request: config.Request{URL: &url.URL{}}}
-		if got := config.New("", 0, 0, 0, 0); !reflect.DeepEqual(got, exp) {
-			t.Errorf("returned non-zero config:\nexp %#v\ngot %#v", exp, got)
+func TestWithURL(t *testing.T) {
+	t.Run("set empty url if invalid", func(t *testing.T) {
+		cfg := config.Config{}.WithURL("abc")
+		if got := cfg.Request.URL; !reflect.DeepEqual(got, &url.URL{}) {
+			t.Errorf("exp empty *url.URL, got %v", got)
 		}
 	})
 
-	t.Run("non-zero params return initialized config", func(t *testing.T) {
+	t.Run("set parsed url", func(t *testing.T) {
 		var (
-			rawURL      = "http://example.com"
-			urlURL, _   = url.ParseRequestURI(rawURL)
-			requests    = 1
-			concurrency = 2
-			reqTimeout  = 3 * time.Second
-			glbTimeout  = 4 * time.Second
+			rawURL    = "http://benchttp.app?cool=true"
+			expURL, _ = url.ParseRequestURI(rawURL)
+			gotURL    = config.Config{}.WithURL(rawURL).Request.URL
 		)
 
-		exp := config.Config{
-			Request: config.Request{
-				Method:  "",
-				URL:     urlURL,
-				Timeout: reqTimeout,
-			},
-			RunnerOptions: config.RunnerOptions{
-				Requests:      requests,
-				Concurrency:   concurrency,
-				GlobalTimeout: glbTimeout,
-			},
-		}
-
-		got := config.New(rawURL, requests, concurrency, reqTimeout, glbTimeout)
-
-		if !reflect.DeepEqual(got, exp) {
-			t.Errorf("returned unexpected config:\nexp %#v\ngot %#v", exp, got)
+		if !reflect.DeepEqual(gotURL, expURL) {
+			t.Errorf("\nexp %v\ngot %v", expURL, gotURL)
 		}
 	})
 }

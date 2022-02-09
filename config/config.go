@@ -20,6 +20,7 @@ type Request struct {
 type RunnerOptions struct {
 	Requests      int
 	Concurrency   int
+	Interval      time.Duration
 	GlobalTimeout time.Duration
 }
 
@@ -67,10 +68,25 @@ func (cfg Config) Override(c Config, fields ...string) Config {
 			cfg.RunnerOptions.Requests = c.RunnerOptions.Requests
 		case FieldConcurrency:
 			cfg.RunnerOptions.Concurrency = c.RunnerOptions.Concurrency
+		case FieldInterval:
+			cfg.RunnerOptions.Interval = c.RunnerOptions.Interval
 		case FieldGlobalTimeout:
 			cfg.RunnerOptions.GlobalTimeout = c.RunnerOptions.GlobalTimeout
 		}
 	}
+	return cfg
+}
+
+// WithURL sets the current Config to the parsed *url.URL from rawURL
+// and returns it. Any errors is discarded as a Config can be invalid
+// until Config.Validate is called. The url is guaranteed not to be nil.
+func (cfg Config) WithURL(rawURL string) Config {
+	// ignore err: a Config can be invalid at this point
+	urlURL, _ := url.ParseRequestURI(rawURL)
+	if urlURL == nil {
+		urlURL = &url.URL{}
+	}
+	cfg.Request.URL = urlURL
 	return cfg
 }
 
@@ -115,6 +131,10 @@ func (cfg Config) Validate() error { //nolint:gocognit
 
 	if cfg.Request.Timeout < 0 {
 		inputErrors = append(inputErrors, fmt.Errorf("-timeout: must be > 0, we got %d", cfg.Request.Timeout))
+	}
+
+	if cfg.RunnerOptions.Interval < 0 {
+		inputErrors = append(inputErrors, fmt.Errorf("-interval: must be > 0, we got %d", cfg.RunnerOptions.Interval))
 	}
 
 	if cfg.RunnerOptions.GlobalTimeout < 0 {

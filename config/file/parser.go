@@ -49,6 +49,7 @@ type unmarshaledConfig struct {
 	RunnerOptions struct {
 		Requests      *int    `yaml:"requests" json:"requests"`
 		Concurrency   *int    `yaml:"concurrency" json:"concurrency"`
+		Interval      *string `yaml:"interval" json:"interval"`
 		GlobalTimeout *string `yaml:"globalTimeout" json:"globalTimeout"`
 	} `yaml:"runnerOptions" json:"runnerOptions"`
 }
