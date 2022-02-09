@@ -41,13 +41,17 @@ func TestTracer(t *testing.T) {
 				t.Errorf("unexpected appended event: exp %s, got %s", expName, gotName)
 			}
 
-			// check timestamps
+			// check incremental timestamps
 			if i == 0 {
 				continue
 			}
-			if prev := gotEvents[i-1]; gotEvent.Time <= prev.Time {
-				t.Error("unexpect event time, should be incremental")
+			if prev := gotEvents[i-1]; gotEvent.Time < prev.Time {
+				t.Error("unexpected event time, should be incremental")
 			}
+		}
+
+		if first, last := gotEvents[0], gotEvents[len(gotEvents)-1]; first.Time == last.Time {
+			t.Error("unexpected event times, should be incremental")
 		}
 
 		t.Log(tracer.events)
