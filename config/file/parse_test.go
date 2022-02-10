@@ -1,6 +1,7 @@
 package file_test
 
 import (
+	"errors"
 	"net/url"
 	"path"
 	"reflect"
@@ -24,6 +25,53 @@ var supportedExt = []string{
 
 // TestParse ensures the config file is open, read, and correctly parsed.
 func TestParse(t *testing.T) {
+	t.Run("return file errors early", func(t *testing.T) {
+		testcases := []struct {
+			label  string
+			path   string
+			expErr error
+		}{
+			{
+				label:  "not found",
+				path:   configPath("bad path"),
+				expErr: file.ErrFileNotFound,
+			},
+			{
+				label:  "unsupported extension",
+				path:   configPath("badext.yams"),
+				expErr: file.ErrFileExt,
+			},
+			{
+				label:  "yaml invalid fields",
+				path:   configPath("badfields.yml"),
+				expErr: file.ErrParse,
+			},
+			{
+				label:  "json invalid fields",
+				path:   configPath("badfields.json"),
+				expErr: file.ErrParse,
+			},
+		}
+
+		for _, tc := range testcases {
+			t.Run(tc.label, func(t *testing.T) {
+				gotCfg, gotErr := file.Parse(tc.path)
+
+				if gotErr == nil {
+					t.Fatal("exp non-nil error, got nil")
+				}
+
+				if !errors.Is(gotErr, tc.expErr) {
+					t.Errorf("\nexp %v\ngot %v", tc.expErr, gotErr)
+				}
+
+				if !reflect.DeepEqual(gotCfg, config.Config{}) {
+					t.Errorf("\nexp config.Config{}\ngot %v", gotCfg)
+				}
+			})
+		}
+	})
+
 	t.Run("happy path for all extensions", func(t *testing.T) {
 		for _, ext := range supportedExt {
 			expCfg := newExpConfig()
@@ -128,4 +176,8 @@ func setTempValue(ptr *string, val string) (restore func()) {
 	return func() {
 		*ptr = previousValue
 	}
+}
+
+func configPath(name string) string {
+	return path.Join(testdataConfigPath, name)
 }

@@ -4,7 +4,6 @@ import (
 	"errors"
 	"flag"
 	"log"
-	"os"
 	"time"
 
 	"github.com/benchttp/runner/config"
@@ -61,7 +60,7 @@ func main() {
 // options if found, overridden with CLI options.
 func parseConfig() (config.Config, error) {
 	fileCfg, err := configfile.Parse(configFile)
-	if err != nil && !errors.Is(err, os.ErrNotExist) {
+	if err != nil && !errors.Is(err, configfile.ErrFileNotFound) {
 		// config file is not mandatory, other errors are critical
 		log.Fatal(err)
 	}

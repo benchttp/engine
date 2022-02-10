@@ -1,6 +1,7 @@
 package file
 
 import (
+	"errors"
 	"net/url"
 	"os"
 	"path"
@@ -13,22 +14,31 @@ import (
 // and returns it or the first non-nil error occurring in the process.
 func Parse(cfgpath string) (cfg config.Config, err error) {
 	b, err := os.ReadFile(cfgpath)
-	if err != nil {
-		return
+	switch {
+	case err == nil:
+	case errors.Is(err, os.ErrNotExist):
+		return cfg, errWithDetails(ErrFileNotFound, cfgpath)
+	default:
+		return cfg, errWithDetails(ErrFileRead, cfgpath, err)
 	}
 
 	ext := extension(path.Ext(cfgpath))
 	parser, err := newParser(ext)
 	if err != nil {
-		return
+		return cfg, errWithDetails(ErrFileExt, ext, err)
 	}
 
 	var rawCfg unmarshaledConfig
 	if err = parser.parse(b, &rawCfg); err != nil {
-		return
+		return cfg, errWithDetails(ErrParse, cfgpath, err)
 	}
 
-	return parseRawConfig(rawCfg)
+	cfg, err = parseRawConfig(rawCfg)
+	if err != nil {
+		return cfg, errWithDetails(ErrParse, cfgpath, err)
+	}
+
+	return
 }
 
 // parseRawConfig parses an input raw config as a config.Config and returns it
