@@ -2,6 +2,7 @@ package file
 
 import (
 	"errors"
+	"net/http"
 	"net/url"
 	"os"
 	"path"
@@ -59,6 +60,15 @@ func parseRawConfig(raw unmarshaledConfig) (config.Config, error) { //nolint:goc
 		}
 		cfg.Request.URL = parsedURL
 		fields = append(fields, config.FieldURL)
+	}
+
+	if header := raw.Request.Header; header != nil {
+		httpHeader := http.Header{}
+		for key, val := range header {
+			httpHeader[key] = val
+		}
+		cfg.Request.Header = httpHeader
+		fields = append(fields, config.FieldHeader)
 	}
 
 	if timeout := raw.Request.Timeout; timeout != nil {

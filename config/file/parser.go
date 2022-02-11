@@ -187,10 +187,11 @@ func (p jsonParser) parseUnknownFieldError(raw string) (field string) {
 // unmarshalers).
 type unmarshaledConfig struct {
 	Request struct {
-		Method      *string           `yaml:"method" json:"method"`
-		URL         *string           `yaml:"url" json:"url"`
-		QueryParams map[string]string `yaml:"queryParams" json:"queryParams"`
-		Timeout     *string           `yaml:"timeout" json:"timeout"`
+		Method      *string             `yaml:"method" json:"method"`
+		URL         *string             `yaml:"url" json:"url"`
+		QueryParams map[string]string   `yaml:"queryParams" json:"queryParams"`
+		Header      map[string][]string `yaml:"header" json:"header"`
+		Timeout     *string             `yaml:"timeout" json:"timeout"`
 	} `yaml:"request" json:"request"`
 
 	RunnerOptions struct {

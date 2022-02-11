@@ -27,18 +27,45 @@ func TestRun(t *testing.T) {
 	}{
 		{
 			label: "return ErrRequest early on request error",
-			req:   New(config.New(badURL, -1, 1, 0, 0)),
-			exp:   ErrRequest,
+			req: New(config.Config{
+				Request: config.Request{
+					Timeout: 0,
+				},
+				RunnerOptions: config.RunnerOptions{
+					Requests:      -1,
+					Concurrency:   1,
+					GlobalTimeout: 0,
+				},
+			}.WithURL(badURL)),
+			exp: ErrRequest,
 		},
 		{
 			label: "return ErrConnection early on connection error",
-			req:   New(config.New(goodURL, -1, 1, 0, 0)),
-			exp:   ErrConnection,
+			req: New(config.Config{
+				Request: config.Request{
+					Timeout: 0,
+				},
+				RunnerOptions: config.RunnerOptions{
+					Requests:      -1,
+					Concurrency:   1,
+					GlobalTimeout: 0,
+				},
+			}.WithURL(goodURL)),
+			exp: ErrConnection,
 		},
 		{
 			label: "return dispatcher.ErrInvalidValue early on bad dispatcher value",
-			req:   withNoopTransport(New(config.New(goodURL, 1, 2, time.Second, time.Minute))),
-			exp:   dispatcher.ErrInvalidValue,
+			req: withNoopTransport(New(config.Config{
+				Request: config.Request{
+					Timeout: time.Second,
+				},
+				RunnerOptions: config.RunnerOptions{
+					Requests:      1,
+					Concurrency:   2, // bad: Concurrency > Requests
+					GlobalTimeout: 3 * time.Second,
+				},
+			}.WithURL(goodURL))),
+			exp: dispatcher.ErrInvalidValue,
 		},
 	}
 
@@ -57,7 +84,16 @@ func TestRun(t *testing.T) {
 	}
 
 	t.Run("record failing requests", func(t *testing.T) {
-		r := withErrTransport(New(config.New(goodURL, 1, 1, time.Second, time.Minute)))
+		r := withErrTransport(New(config.Config{
+			Request: config.Request{
+				Timeout: time.Second,
+			},
+			RunnerOptions: config.RunnerOptions{
+				Requests:      1,
+				Concurrency:   1,
+				GlobalTimeout: 3 * time.Second,
+			},
+		}.WithURL(goodURL)))
 
 		rep, err := r.Run()
 		if err != nil {
@@ -80,7 +116,16 @@ func TestRun(t *testing.T) {
 	})
 
 	t.Run("happy path", func(t *testing.T) {
-		r := withNoopTransport(New(config.New(goodURL, 1, 1, time.Second, 2*time.Second)))
+		r := withNoopTransport(New(config.Config{
+			Request: config.Request{
+				Timeout: time.Second,
+			},
+			RunnerOptions: config.RunnerOptions{
+				Requests:      1,
+				Concurrency:   1,
+				GlobalTimeout: 3 * time.Second,
+			},
+		}.WithURL(goodURL)))
 
 		rep, err := r.Run()
 		if err != nil {

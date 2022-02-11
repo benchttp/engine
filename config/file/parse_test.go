@@ -2,6 +2,7 @@ package file_test
 
 import (
 	"errors"
+	"net/http"
 	"net/url"
 	"path"
 	"reflect"
@@ -137,8 +138,12 @@ func newExpConfig() config.Config {
 	u, _ := url.ParseRequestURI(testURL)
 	return config.Config{
 		Request: config.Request{
-			Method:  "GET",
-			URL:     u,
+			Method: "GET",
+			URL:    u,
+			Header: http.Header{
+				"key0": []string{"val0", "val1"},
+				"key1": []string{"val0"},
+			},
 			Timeout: 2 * time.Second,
 		},
 

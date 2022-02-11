@@ -13,6 +13,7 @@ import (
 type Request struct {
 	Method  string
 	URL     *url.URL
+	Header  http.Header
 	Timeout time.Duration
 }
 
@@ -49,7 +50,12 @@ func (cfg Config) HTTPRequest() (*http.Request, error) {
 		return nil, errors.New("bad url")
 	}
 	// TODO: handle body
-	return http.NewRequest(cfg.Request.Method, rawURL, nil)
+	req, err := http.NewRequest(cfg.Request.Method, rawURL, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header = cfg.Request.Header
+	return req, nil
 }
 
 // Override returns a new Config based on cfg with overridden values from c.
@@ -62,6 +68,8 @@ func (cfg Config) Override(c Config, fields ...string) Config {
 			cfg.Request.Method = c.Request.Method
 		case FieldURL:
 			cfg.Request.URL = c.Request.URL
+		case FieldHeader:
+			cfg.overrideHeader(c.Request.Header)
 		case FieldTimeout:
 			cfg.Request.Timeout = c.Request.Timeout
 		case FieldRequests:
@@ -77,6 +85,18 @@ func (cfg Config) Override(c Config, fields ...string) Config {
 	return cfg
 }
 
+func (cfg *Config) overrideHeader(newHeader http.Header) {
+	if newHeader == nil {
+		return
+	}
+	if cfg.Request.Header == nil {
+		cfg.Request.Header = http.Header{}
+	}
+	for k, v := range newHeader {
+		cfg.Request.Header[k] = v
+	}
+}
+
 // WithURL sets the current Config to the parsed *url.URL from rawURL
 // and returns it. Any errors is discarded as a Config can be invalid
 // until Config.Validate is called. The url is guaranteed not to be nil.
@@ -90,34 +110,13 @@ func (cfg Config) WithURL(rawURL string) Config {
 	return cfg
 }
 
-// New returns a Config initialized with given parameters. The returned Config
-// is not guaranteed to be safe: it must be validated using Config.Validate
-// before usage.
-func New(uri string, requests, concurrency int, requestTimeout, globalTimeout time.Duration) Config {
-	// ignore err: a Config can be invalid at this point
-	urlURL, _ := url.ParseRequestURI(uri)
-	if urlURL == nil {
-		urlURL = &url.URL{}
-	}
-	return Config{
-		Request: Request{
-			URL:     urlURL,
-			Timeout: requestTimeout,
-		},
-		RunnerOptions: RunnerOptions{
-			Requests:      requests,
-			Concurrency:   concurrency,
-			GlobalTimeout: globalTimeout,
-		},
-	}
-}
-
 // Validate returns the config and a not nil ErrInvalid if any of the fields provided by the user is not valid
 func (cfg Config) Validate() error { //nolint:gocognit
 	inputErrors := []error{}
 
-	_, err := url.ParseRequestURI(cfg.Request.URL.String())
-	if err != nil {
+	if cfg.Request.URL == nil {
+		inputErrors = append(inputErrors, errors.New("-url: missing url"))
+	} else if _, err := url.ParseRequestURI(cfg.Request.URL.String()); err != nil {
 		inputErrors = append(inputErrors, fmt.Errorf("-url: %s is not a valid url", cfg.Request.URL.String()))
 	}
 

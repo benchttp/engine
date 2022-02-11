@@ -39,14 +39,20 @@ Any configuration option can be overridden via the CLI:
 CLI options:
   -configFile string
         Path to config file (default ".benchttp.(yml|yaml|json)")
+  -method string
+        HTTP request method (default "GET")
+  -url string
+        HTTP request target url
+  -header string
+        HTTP request header in format "key:value", can be used several times to set several values
+  -timeout duration
+        HTTP request timeout (default 10s)
   -concurrency int
-        Number of connections to run concurrently (default 1)
+        Number of concurrent connections (default 1)
+  -requests int
+        Maximum number of requests to run, -1 means no limit (default -1)
   -globalTimeout duration
         Global timeout for the test (default 30s)
-  -requests int
-        Maximum number of requests to run, 0 means no limit (default 0)
-  -timeout duration
-        Timeout for each HTTP request (default 10s)
 ```
 
 ## Example and ouput
