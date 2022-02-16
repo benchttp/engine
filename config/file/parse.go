@@ -46,7 +46,7 @@ func Parse(cfgpath string) (cfg config.Config, err error) {
 // or the first non-nil error occurring in the process.
 func parseRawConfig(raw unmarshaledConfig) (config.Config, error) { //nolint:gocognit // acceptable complexity for a parsing func
 	cfg := config.Config{}
-	fields := make([]string, 0, 6)
+	fields := make([]string, 0, 9)
 
 	if method := raw.Request.Method; method != nil {
 		cfg.Request.Method = *method
@@ -106,6 +106,12 @@ func parseRawConfig(raw unmarshaledConfig) (config.Config, error) { //nolint:goc
 		}
 		cfg.RunnerOptions.GlobalTimeout = parsedGlobalTimeout
 		fields = append(fields, config.FieldGlobalTimeout)
+	}
+
+	body := config.Body{Type: raw.Request.Body.Type, Content: []byte(raw.Request.Body.Content)}
+	if body.Type != "" && len(body.Content) > 0 {
+		cfg.Request.Body = body
+		fields = append(fields, config.FieldBody)
 	}
 
 	return config.Default().Override(cfg, fields...), nil

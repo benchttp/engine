@@ -97,7 +97,7 @@ func TestParse(t *testing.T) {
 			restoreExpCfg := setTempValue(&expURL.RawQuery, "replaced by test")
 
 			if !reflect.DeepEqual(gotCfg, expCfg) {
-				t.Errorf("unexpected parsed config: exp %v\ngot %v", expCfg, gotCfg)
+				t.Errorf("unexpected parsed config for %s file: exp %v\ngot %v", ext, expCfg, gotCfg)
 			}
 
 			restoreExpCfg()
@@ -138,13 +138,14 @@ func newExpConfig() config.Config {
 	u, _ := url.ParseRequestURI(testURL)
 	return config.Config{
 		Request: config.Request{
-			Method: "GET",
+			Method: "POST",
 			URL:    u,
 			Header: http.Header{
 				"key0": []string{"val0", "val1"},
 				"key1": []string{"val0"},
 			},
 			Timeout: 2 * time.Second,
+			Body:    config.NewBody("raw", `{"key0":"val0","key1":"val1"}`),
 		},
 
 		RunnerOptions: config.RunnerOptions{

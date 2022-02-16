@@ -29,6 +29,7 @@ func TestRun(t *testing.T) {
 			label: "return ErrRequest early on request error",
 			req: New(config.Config{
 				Request: config.Request{
+					Method:  "GET",
 					Timeout: 0,
 				},
 				RunnerOptions: config.RunnerOptions{
@@ -43,7 +44,8 @@ func TestRun(t *testing.T) {
 			label: "return ErrConnection early on connection error",
 			req: New(config.Config{
 				Request: config.Request{
-					Timeout: 0,
+					Method:  "GET",
+					Timeout: 1,
 				},
 				RunnerOptions: config.RunnerOptions{
 					Requests:      -1,
@@ -57,6 +59,7 @@ func TestRun(t *testing.T) {
 			label: "return dispatcher.ErrInvalidValue early on bad dispatcher value",
 			req: withNoopTransport(New(config.Config{
 				Request: config.Request{
+					Method:  "GET",
 					Timeout: time.Second,
 				},
 				RunnerOptions: config.RunnerOptions{
@@ -86,6 +89,7 @@ func TestRun(t *testing.T) {
 	t.Run("record failing requests", func(t *testing.T) {
 		r := withErrTransport(New(config.Config{
 			Request: config.Request{
+				Method:  "GET",
 				Timeout: time.Second,
 			},
 			RunnerOptions: config.RunnerOptions{
@@ -118,7 +122,9 @@ func TestRun(t *testing.T) {
 	t.Run("happy path", func(t *testing.T) {
 		r := withNoopTransport(New(config.Config{
 			Request: config.Request{
+				Method:  "POST",
 				Timeout: time.Second,
+				Body:    config.NewBody("raw", `{"key0": "val0", "key1": "val1"}`),
 			},
 			RunnerOptions: config.RunnerOptions{
 				Requests:      1,

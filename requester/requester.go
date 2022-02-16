@@ -106,9 +106,16 @@ type Record struct {
 
 func (r *Requester) record(req *http.Request, interval time.Duration) func() {
 	return func() {
+		// It is necessary to clone the request because one request with a non-nil body cannot be used in concurrent threads
+		reqClone, err := cloneRequest(req)
+		if err != nil {
+			r.appendRecord(Record{Error: ErrRequestBody})
+			return
+		}
+
 		sent := time.Now()
 
-		resp, err := r.client.Do(req)
+		resp, err := r.client.Do(reqClone)
 		if err != nil {
 			r.appendRecord(Record{Error: err})
 			return
@@ -141,4 +148,17 @@ func (r *Requester) appendRecord(rec Record) {
 	if rec.Error != nil {
 		r.numErr++
 	}
+}
+
+// cloneRequest fully clones a http.Request by also cloning the body via Request.GetBody
+func cloneRequest(req *http.Request) (*http.Request, error) {
+	reqClone := req.Clone(req.Context())
+	if req.Body != nil {
+		bodyClone, err := req.GetBody()
+		if err != nil {
+			return nil, ErrRequestBody
+		}
+		reqClone.Body = bodyClone
+	}
+	return reqClone, nil
 }

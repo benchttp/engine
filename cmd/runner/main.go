@@ -28,6 +28,12 @@ var (
 	timeout       time.Duration // Timeout for each HTTP request
 	interval      time.Duration // Minimum duration between two groups of requests
 	globalTimeout time.Duration // Duration of test
+	method        string        // HTTP request method
+	// HTTP body in format "type:content", type may be "raw" or "file".
+	// If type is "raw", content is the data as a string. If type is "file",
+	// content is the path to the file holding the data. Note: only "raw"
+	// is supported at the moment.
+	body string
 )
 
 var defaultConfigFiles = []string{
@@ -54,7 +60,10 @@ func parseArgs() {
 	flag.DurationVar(&interval, "interval", 0, "Minimum duration between two non concurrent requests")
 	// global timeout
 	flag.DurationVar(&globalTimeout, config.FieldGlobalTimeout, 0, "Max duration of test")
-
+	// request method
+	flag.StringVar(&method, config.FieldMethod, "", "HTTP request method")
+	// body
+	flag.StringVar(&body, config.FieldBody, "", "HTTP request body")
 	flag.Parse()
 }
 
@@ -88,10 +97,16 @@ func parseConfig() (cfg config.Config, err error) {
 		return
 	}
 
+	body, err := config.ParseBody(body)
+	if err != nil {
+		return cfg, nil
+	}
+
 	cliCfg := config.Config{
 		Request: config.Request{
 			Header:  header,
 			Timeout: timeout,
+			Body:    body,
 		},
 		RunnerOptions: config.RunnerOptions{
 			Requests:      requests,
