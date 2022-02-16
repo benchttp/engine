@@ -75,6 +75,7 @@ func main() {
 
 func run() error {
 	parseArgs()
+	fmt.Println()
 
 	cfg, err := parseConfig()
 	if err != nil {

@@ -20,12 +20,15 @@ const (
 type Requester struct {
 	records []Record
 	numErr  int
+	runErr  error
+	start   time.Time
+	done    bool
 
 	config config.Config
 	client http.Client
 	tracer *tracer
 
-	mu sync.Mutex
+	mu sync.RWMutex
 }
 
 // New returns a Requester initialized with cfg. cfg is assumed valid:
@@ -77,7 +80,13 @@ func (r *Requester) Run() (Report, error) {
 
 	defer cancel()
 
-	if err := dispatcher.New(numWorker).Do(ctx, maxIter, r.record(req, interval)); err != nil {
+	r.start = time.Now()
+	go r.refreshState()
+
+	switch err := dispatcher.New(numWorker).Do(ctx, maxIter, r.record(req, interval)); err {
+	case nil, context.Canceled, context.DeadlineExceeded:
+		r.end(err)
+	default:
 		return Report{}, err
 	}
 
@@ -137,6 +146,7 @@ func (r *Requester) record(req *http.Request, interval time.Duration) func() {
 			Events: r.tracer.events,
 		})
 
+		fmt.Print(r.state())
 		time.Sleep(interval)
 	}
 }
@@ -148,6 +158,31 @@ func (r *Requester) appendRecord(rec Record) {
 	if rec.Error != nil {
 		r.numErr++
 	}
+}
+
+func (r *Requester) refreshState() {
+	ticker := time.NewTicker(time.Second)
+	tick := ticker.C
+	for {
+		if r.done {
+			ticker.Stop()
+			break
+		}
+		r.printState()
+		<-tick
+	}
+}
+
+func (r *Requester) end(runErr error) {
+	r.mu.Lock()
+	r.runErr = runErr
+	r.done = true
+	r.mu.Unlock()
+	r.printState()
+}
+
+func (r *Requester) printState() {
+	fmt.Print(r.state())
 }
 
 // cloneRequest fully clones a http.Request by also cloning the body via Request.GetBody

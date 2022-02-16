@@ -77,18 +77,23 @@ func TestDo(t *testing.T) {
 
 		var (
 			expIterMax = int(interval.Milliseconds()) + 1 // should not be reached
-			gotIter    = 0
+			gotIter    int
 		)
 
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
 
+		var gotErr error
 		gotDuration := timeFunc(func() {
-			dispatcher.New(numWorker).Do(ctx, maxIter, func() { //nolint:errcheck
+			gotErr = dispatcher.New(numWorker).Do(ctx, maxIter, func() {
 				gotIter++
 				time.Sleep(interval)
 			})
 		})
+
+		if expErr := context.DeadlineExceeded; !errors.Is(gotErr, expErr) {
+			t.Errorf("unexpected error:\nexp %v\ngot %v", expErr, gotErr)
+		}
 
 		if gotDuration > maxDuration {
 			t.Errorf(
@@ -97,7 +102,7 @@ func TestDo(t *testing.T) {
 			)
 		}
 
-		if gotIter >= expIterMax {
+		if int(gotIter) >= expIterMax {
 			t.Errorf(
 				"context timeout iterations: exp < %d, got %d",
 				expIterMax, gotIter,
@@ -118,7 +123,7 @@ func TestDo(t *testing.T) {
 
 		var (
 			expIterMax = int(interval.Milliseconds()) + 1 // should not be reached
-			gotIter    = 0
+			gotIter    int
 		)
 
 		ctx, cancel := context.WithCancel(context.Background())
@@ -127,11 +132,17 @@ func TestDo(t *testing.T) {
 			cancel()
 		}()
 
+		var gotErr error
 		gotDuration := timeFunc(func() {
-			dispatcher.New(numWorker).Do(ctx, maxIter, func() { //nolint:errcheck
+			gotErr = dispatcher.New(numWorker).Do(ctx, maxIter, func() {
+				gotIter++
 				time.Sleep(interval)
 			})
 		})
+
+		if expErr := context.Canceled; !errors.Is(gotErr, expErr) {
+			t.Errorf("unexpected error:\nexp %v\ngot %v", expErr, gotErr)
+		}
 
 		if gotDuration > maxDuration {
 			t.Errorf(
@@ -140,7 +151,7 @@ func TestDo(t *testing.T) {
 			)
 		}
 
-		if gotIter >= expIterMax {
+		if int(gotIter) >= expIterMax {
 			t.Errorf(
 				"context timeout iterations: exp < %d, got %d",
 				expIterMax, gotIter,
@@ -256,28 +267,28 @@ func TestValidate(t *testing.T) {
 	}{
 		{
 			label:     "return error if maxIter == 0",
-			exp:       errors.New("invalid value: maxIter: must be -1 or >= 1, got 0"),
+			exp:       dispatcher.ErrInvalidValue,
 			numWorker: 10,
 			maxIter:   0,
 			callback:  func() {},
 		},
 		{
 			label:     "return error if maxIter == -2",
-			exp:       errors.New("invalid value: maxIter: must be -1 or >= 1, got -2"),
+			exp:       dispatcher.ErrInvalidValue,
 			numWorker: 10,
 			maxIter:   -2,
 			callback:  func() {},
 		},
 		{
 			label:     "return error if maxIter < numWorker",
-			exp:       errors.New("invalid value: maxIter: must be >= numWorker (10), got 5"),
+			exp:       dispatcher.ErrInvalidValue,
 			numWorker: 10,
 			maxIter:   5,
 			callback:  func() {},
 		},
 		{
 			label:     "return error if callback == nil",
-			exp:       errors.New("invalid value: callback: must be non-nil"),
+			exp:       dispatcher.ErrInvalidValue,
 			numWorker: 10,
 			maxIter:   20,
 			callback:  nil,
@@ -290,8 +301,8 @@ func TestValidate(t *testing.T) {
 			callback:  func() {},
 		},
 		{
-			label:     "return nil if values are valid (maxIter == -1)",
-			exp:       nil,
+			label:     "return context error on timeout",
+			exp:       context.DeadlineExceeded,
 			numWorker: 1,
 			maxIter:   -1,
 			callback:  func() {},
@@ -303,9 +314,9 @@ func TestValidate(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
 			defer cancel()
 
-			got := dispatcher.New(tc.numWorker).Do(ctx, tc.maxIter, tc.callback)
-			if got != nil && got.Error() != tc.exp.Error() {
-				t.Errorf("unexpected error value:\nexp %v\ngot %v", tc.exp, got)
+			gotErr := dispatcher.New(tc.numWorker).Do(ctx, tc.maxIter, tc.callback)
+			if !errors.Is(gotErr, tc.exp) {
+				t.Errorf("unexpected error:\nexp %v\ngot %v", tc.exp, gotErr)
 			}
 		})
 	}
