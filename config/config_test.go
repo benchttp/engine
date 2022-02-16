@@ -15,17 +15,17 @@ var validBody = config.NewBody("raw", `{"key0": "val0", "key1": "val1"}`)
 
 func TestValidate(t *testing.T) {
 	t.Run("test valid configuration", func(t *testing.T) {
-		cfg := config.Config{
+		cfg := config.Global{
 			Request: config.Request{
-				Timeout: 5,
-				Body:    validBody,
+				Body: validBody,
+			}.WithURL("https://github.com/benchttp/"),
+			Runner: config.Runner{
+				Requests:       5,
+				Concurrency:    5,
+				RequestTimeout: 5,
+				GlobalTimeout:  5,
 			},
-			RunnerOptions: config.RunnerOptions{
-				Requests:      5,
-				Concurrency:   5,
-				GlobalTimeout: 5,
-			},
-		}.WithURL("https://github.com/benchttp/")
+		}
 		err := cfg.Validate()
 		if err != nil {
 			t.Errorf("valid configuration not considered as such")
@@ -33,17 +33,17 @@ func TestValidate(t *testing.T) {
 	})
 
 	t.Run("test invalid configuration returns ErrInvalid error with correct messages", func(t *testing.T) {
-		cfg := config.Config{
+		cfg := config.Global{
 			Request: config.Request{
-				Timeout: -5,
-				Body:    config.Body{},
+				Body: config.Body{},
+			}.WithURL("github-com/benchttp"),
+			Runner: config.Runner{
+				Requests:       -5,
+				Concurrency:    -5,
+				RequestTimeout: -5,
+				GlobalTimeout:  -5,
 			},
-			RunnerOptions: config.RunnerOptions{
-				Requests:      -5,
-				Concurrency:   -5,
-				GlobalTimeout: -5,
-			},
-		}.WithURL("github-com/benchttp")
+		}
 		err := cfg.Validate()
 		if err == nil {
 			t.Errorf("invalid configuration considered valid")
@@ -69,7 +69,7 @@ func TestValidate(t *testing.T) {
 
 func TestWithURL(t *testing.T) {
 	t.Run("set empty url if invalid", func(t *testing.T) {
-		cfg := config.Config{}.WithURL("abc")
+		cfg := config.Global{Request: config.Request{}.WithURL("abc")}
 		if got := cfg.Request.URL; !reflect.DeepEqual(got, &url.URL{}) {
 			t.Errorf("exp empty *url.URL, got %v", got)
 		}
@@ -79,7 +79,7 @@ func TestWithURL(t *testing.T) {
 		var (
 			rawURL    = "http://benchttp.app?cool=true"
 			expURL, _ = url.ParseRequestURI(rawURL)
-			gotURL    = config.Config{}.WithURL(rawURL).Request.URL
+			gotURL    = config.Request{}.WithURL(rawURL).URL
 		)
 
 		if !reflect.DeepEqual(gotURL, expURL) {
@@ -90,18 +90,18 @@ func TestWithURL(t *testing.T) {
 
 func TestOverride(t *testing.T) {
 	t.Run("do not override unspecified fields", func(t *testing.T) {
-		baseCfg := config.Config{}
-		newCfg := config.Config{
+		baseCfg := config.Global{}
+		newCfg := config.Global{
 			Request: config.Request{
-				Timeout: 3 * time.Second,
-				Body:    validBody,
+				Body: config.Body{},
+			}.WithURL("http://a.b?p=2"),
+			Runner: config.Runner{
+				Requests:       1,
+				Concurrency:    2,
+				RequestTimeout: 3 * time.Second,
+				GlobalTimeout:  4 * time.Second,
 			},
-			RunnerOptions: config.RunnerOptions{
-				Requests:      1,
-				Concurrency:   2,
-				GlobalTimeout: 4 * time.Second,
-			},
-		}.WithURL("http://a.b?p=2")
+		}
 
 		if gotCfg := baseCfg.Override(newCfg); !reflect.DeepEqual(gotCfg, baseCfg) {
 			t.Errorf("overrode unexpected fields:\nexp %#v\ngot %#v", baseCfg, gotCfg)
@@ -109,24 +109,24 @@ func TestOverride(t *testing.T) {
 	})
 
 	t.Run("override specified fields", func(t *testing.T) {
-		baseCfg := config.Config{}
-		newCfg := config.Config{
+		baseCfg := config.Global{}
+		newCfg := config.Global{
 			Request: config.Request{
-				Timeout: 3 * time.Second,
-				Body:    validBody,
+				Body: validBody,
+			}.WithURL("http://a.b?p=2"),
+			Runner: config.Runner{
+				Requests:       1,
+				Concurrency:    2,
+				RequestTimeout: 3 * time.Second,
+				GlobalTimeout:  4 * time.Second,
 			},
-			RunnerOptions: config.RunnerOptions{
-				Requests:      1,
-				Concurrency:   2,
-				GlobalTimeout: 4 * time.Second,
-			},
-		}.WithURL("http://a.b?p=2")
+		}
 		fields := []string{
 			config.FieldMethod,
 			config.FieldURL,
-			config.FieldTimeout,
 			config.FieldRequests,
 			config.FieldConcurrency,
+			config.FieldRequestTimeout,
 			config.FieldGlobalTimeout,
 			config.FieldBody,
 		}
@@ -203,13 +203,13 @@ func TestOverride(t *testing.T) {
 
 		for _, tc := range testcases {
 			t.Run(tc.label, func(t *testing.T) {
-				oldCfg := config.Config{
+				oldCfg := config.Global{
 					Request: config.Request{
 						Header: tc.oldHeader,
 					},
 				}
 
-				newCfg := config.Config{
+				newCfg := config.Global{
 					Request: config.Request{
 						Header: tc.newHeader,
 					},

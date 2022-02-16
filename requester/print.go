@@ -24,8 +24,8 @@ func (r *Requester) state() state {
 		done:    r.done,
 		err:     r.runErr,
 		reqcur:  len(r.records),
-		reqmax:  r.config.RunnerOptions.Requests,
-		timeout: r.config.RunnerOptions.GlobalTimeout,
+		reqmax:  r.config.Requests,
+		timeout: r.config.GlobalTimeout,
 		elapsed: time.Since(r.start),
 	}
 }

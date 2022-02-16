@@ -26,7 +26,7 @@ func TestYAMLParser(t *testing.T) {
 			},
 			{
 				label: "wrong type unknown value",
-				in:    []byte("runnerOptions:\n  requests: [123]\n"),
+				in:    []byte("runner:\n  requests: [123]\n"),
 				expErr: &yaml.TypeError{
 					Errors: []string{
 						`line 2: wrong type: want int`,
@@ -35,7 +35,7 @@ func TestYAMLParser(t *testing.T) {
 			},
 			{
 				label: "wrong type known value",
-				in:    []byte("runnerOptions:\n  requests: \"123\"\n"),
+				in:    []byte("runner:\n  requests: \"123\"\n"),
 				expErr: &yaml.TypeError{
 					Errors: []string{
 						`line 2: wrong type ("123"): want int`,
@@ -44,7 +44,7 @@ func TestYAMLParser(t *testing.T) {
 			},
 			{
 				label: "cumulate errors",
-				in:    []byte("runnerOptions:\n  requests: [123]\n  concurrency: \"123\"\nnotafield: 123\n"),
+				in:    []byte("runner:\n  requests: [123]\n  concurrency: \"123\"\nnotafield: 123\n"),
 				expErr: &yaml.TypeError{
 					Errors: []string{
 						`line 2: wrong type: want int`,
@@ -55,7 +55,7 @@ func TestYAMLParser(t *testing.T) {
 			},
 			{
 				label:  "no errors custom fields",
-				in:     []byte("x-data: &count\n  requests: 100\nrunnerOptions:\n  <<: *count\n"),
+				in:     []byte("x-data: &count\n  requests: 100\rrunner:\n  <<: *count\n"),
 				expErr: nil,
 			},
 		}
@@ -98,8 +98,8 @@ func TestJSONParser(t *testing.T) {
 		}{
 			{
 				label: "syntax error",
-				in:    []byte("{\n  \"runnerOptions\": {},\n}\n"),
-				exp:   "syntax error near 26: invalid character '}' looking for beginning of object key string",
+				in:    []byte("{\n  \"runner\": {},\n}\n"),
+				exp:   "syntax error near 19: invalid character '}' looking for beginning of object key string",
 			},
 			{
 				label: "unknown field",
@@ -108,12 +108,12 @@ func TestJSONParser(t *testing.T) {
 			},
 			{
 				label: "wrong type",
-				in:    []byte("{\n  \"runnerOptions\": {\n    \"requests\": [123]\n  }\n}\n"),
-				exp:   "wrong type for field runnerOptions.requests: want int, got array",
+				in:    []byte("{\n  \"runner\": {\n    \"requests\": [123]\n  }\n}\n"),
+				exp:   "wrong type for field runner.requests: want int, got array",
 			},
 			{
 				label: "valid config",
-				in:    []byte("{\n  \"runnerOptions\": {\n    \"requests\": 123\n  }\n}\n"),
+				in:    []byte("{\n  \"runner\": {\n    \"requests\": 123\n  }\n}\n"),
 				exp:   "",
 			},
 		}

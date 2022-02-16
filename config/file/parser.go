@@ -191,17 +191,17 @@ type unmarshaledConfig struct {
 		URL         *string             `yaml:"url" json:"url"`
 		QueryParams map[string]string   `yaml:"queryParams" json:"queryParams"`
 		Header      map[string][]string `yaml:"header" json:"header"`
-		Timeout     *string             `yaml:"timeout" json:"timeout"`
-		Body        struct {
+		Body        *struct {
 			Type    string `yaml:"type" json:"type"`
 			Content string `yaml:"content" json:"content"`
 		} `yaml:"body" json:"body"`
 	} `yaml:"request" json:"request"`
 
-	RunnerOptions struct {
-		Requests      *int    `yaml:"requests" json:"requests"`
-		Concurrency   *int    `yaml:"concurrency" json:"concurrency"`
-		Interval      *string `yaml:"interval" json:"interval"`
-		GlobalTimeout *string `yaml:"globalTimeout" json:"globalTimeout"`
-	} `yaml:"runnerOptions" json:"runnerOptions"`
+	Runner struct {
+		Requests       *int    `yaml:"requests" json:"requests"`
+		Concurrency    *int    `yaml:"concurrency" json:"concurrency"`
+		Interval       *string `yaml:"interval" json:"interval"`
+		RequestTimeout *string `yaml:"requestTimeout" json:"requestTimeout"`
+		GlobalTimeout  *string `yaml:"globalTimeout" json:"globalTimeout"`
+	} `yaml:"runner" json:"runner"`
 }

@@ -1,4 +1,4 @@
-runnerOptions:
+runner:
   requests: [123] # error: invalid type for field requests
   concurrency: "123" # error: invalid type for field concurrency
 notafield: 123 # error: field does not exist

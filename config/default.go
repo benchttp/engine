@@ -5,16 +5,17 @@ import (
 	"time"
 )
 
-var defaultConfig = Config{
+var defaultConfig = Global{
 	Request: Request{
-		Method:  "GET",
-		URL:     &url.URL{},
-		Timeout: 10 * time.Second,
-		Body:    Body{},
+		Method: "GET",
+		URL:    &url.URL{},
+		Body:   Body{},
 	},
-	RunnerOptions: RunnerOptions{
-		Concurrency:   1,
-		Requests:      -1, // Use GlobalTimeout as exit condition.
-		GlobalTimeout: 30 * time.Second,
+	Runner: Runner{
+		Concurrency:    1,
+		Requests:       -1, // Use GlobalTimeout as exit condition.
+		Interval:       0 * time.Second,
+		RequestTimeout: 10 * time.Second,
+		GlobalTimeout:  30 * time.Second,
 	},
 }

@@ -8,13 +8,20 @@ import (
 	"sync"
 	"time"
 
-	"github.com/benchttp/runner/config"
 	"github.com/benchttp/runner/dispatcher"
 )
 
 const (
 	defaultRecordsCap = 1000
 )
+
+type Config struct {
+	Requests       int
+	Concurrency    int
+	Interval       time.Duration
+	RequestTimeout time.Duration
+	GlobalTimeout  time.Duration
+}
 
 // Requester executes the benchmark. It wraps http.Client.
 type Requester struct {
@@ -24,7 +31,7 @@ type Requester struct {
 	start   time.Time
 	done    bool
 
-	config config.Config
+	config Config
 	client http.Client
 	tracer *tracer
 
@@ -34,8 +41,8 @@ type Requester struct {
 // New returns a Requester initialized with cfg. cfg is assumed valid:
 // it is the caller's responsibility to ensure cfg is valid using
 // cfg.Validate.
-func New(cfg config.Config) *Requester {
-	recordsCap := cfg.RunnerOptions.Requests
+func New(cfg Config) *Requester {
+	recordsCap := cfg.Requests
 	if recordsCap < 1 {
 		recordsCap = defaultRecordsCap
 	}
@@ -50,7 +57,7 @@ func New(cfg config.Config) *Requester {
 			// Timeout includes connection time, any redirects, and reading
 			// the response body.
 			// We may want exclude reading the response body in our benchmark tool.
-			Timeout: cfg.Request.Timeout,
+			Timeout: cfg.RequestTimeout,
 
 			// tracer keeps track of all events of the current request.
 			Transport: tracer,
@@ -60,21 +67,16 @@ func New(cfg config.Config) *Requester {
 
 // Run starts the benchmark test and pipelines the results inside a Report.
 // Returns the Report when the test ended and all results have been collected.
-func (r *Requester) Run() (Report, error) {
-	req, err := r.config.HTTPRequest()
-	if err != nil {
-		return Report{}, fmt.Errorf("%w: %s", ErrRequest, err)
-	}
-
+func (r *Requester) Run(req *http.Request) (Report, error) {
 	if err := r.ping(req); err != nil {
 		return Report{}, fmt.Errorf("%w: %s", ErrConnection, err)
 	}
 
 	var (
-		numWorker   = r.config.RunnerOptions.Concurrency
-		maxIter     = r.config.RunnerOptions.Requests
-		timeout     = r.config.RunnerOptions.GlobalTimeout
-		interval    = r.config.RunnerOptions.Interval
+		numWorker   = r.config.Concurrency
+		maxIter     = r.config.Requests
+		timeout     = r.config.GlobalTimeout
+		interval    = r.config.Interval
 		ctx, cancel = context.WithTimeout(context.Background(), timeout)
 	)
 
@@ -90,7 +92,7 @@ func (r *Requester) Run() (Report, error) {
 		return Report{}, err
 	}
 
-	return makeReport(r.config, r.records, r.numErr), nil
+	return makeReport(r.records, r.numErr), nil
 }
 
 func (r *Requester) ping(req *http.Request) error {

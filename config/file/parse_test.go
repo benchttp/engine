@@ -66,7 +66,7 @@ func TestParse(t *testing.T) {
 					t.Errorf("\nexp %v\ngot %v", tc.expErr, gotErr)
 				}
 
-				if !reflect.DeepEqual(gotCfg, config.Config{}) {
+				if !reflect.DeepEqual(gotCfg, config.Global{}) {
 					t.Errorf("\nexp config.Config{}\ngot %v", gotCfg)
 				}
 			})
@@ -118,11 +118,11 @@ func TestParse(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if gotRequests := cfg.RunnerOptions.Requests; gotRequests != expRequests {
+		if gotRequests := cfg.Runner.Requests; gotRequests != expRequests {
 			t.Errorf("did not override Requests: exp %d, got %d", expRequests, gotRequests)
 		}
 
-		if gotGlobalTimeout := cfg.RunnerOptions.GlobalTimeout; gotGlobalTimeout != expGlobalTimeout {
+		if gotGlobalTimeout := cfg.Runner.GlobalTimeout; gotGlobalTimeout != expGlobalTimeout {
 			t.Errorf("did not override GlobalTimeout: exp %d, got %d", expGlobalTimeout, gotGlobalTimeout)
 		}
 
@@ -134,9 +134,9 @@ func TestParse(t *testing.T) {
 
 // newExpConfig returns the expected config.Config result after parsing
 // one of the config files in testdataConfigPath.
-func newExpConfig() config.Config {
+func newExpConfig() config.Global {
 	u, _ := url.ParseRequestURI(testURL)
-	return config.Config{
+	return config.Global{
 		Request: config.Request{
 			Method: "POST",
 			URL:    u,
@@ -144,15 +144,15 @@ func newExpConfig() config.Config {
 				"key0": []string{"val0", "val1"},
 				"key1": []string{"val0"},
 			},
-			Timeout: 2 * time.Second,
-			Body:    config.NewBody("raw", `{"key0":"val0","key1":"val1"}`),
+			Body: config.NewBody("raw", `{"key0":"val0","key1":"val1"}`),
 		},
 
-		RunnerOptions: config.RunnerOptions{
-			Requests:      100,
-			Concurrency:   1,
-			Interval:      50 * time.Millisecond,
-			GlobalTimeout: 60 * time.Second,
+		Runner: config.Runner{
+			Requests:       100,
+			Concurrency:    1,
+			Interval:       50 * time.Millisecond,
+			RequestTimeout: 2 * time.Second,
+			GlobalTimeout:  60 * time.Second,
 		},
 	}
 }

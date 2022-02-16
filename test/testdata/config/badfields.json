@@ -1,5 +1,5 @@
 {
-  "runnerOptions": {
+  "runner": {
     "requests": [123],
     "concurrency": "123"
   },
