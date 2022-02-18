@@ -12,12 +12,8 @@ func TestTracer(t *testing.T) {
 		trace := tracer.trace()
 
 		trace.GetConn("")
-		trace.DNSStart(httptrace.DNSStartInfo{})
 		trace.DNSDone(httptrace.DNSDoneInfo{})
-		trace.ConnectStart("", "")
 		trace.ConnectDone("", "", nil)
-		trace.GotConn(httptrace.GotConnInfo{})
-		trace.TLSHandshakeStart()
 		trace.TLSHandshakeDone(tls.ConnectionState{}, nil)
 		trace.WroteHeaders()
 		trace.WroteRequest(httptrace.WroteRequestInfo{})
@@ -25,8 +21,7 @@ func TestTracer(t *testing.T) {
 		trace.PutIdleConn(nil)
 
 		expEventNames := []string{
-			"GetConn", "DNSStart", "DNSDone", "ConnectStart", "ConnectDone",
-			"GotConn", "TLSHandshakeStart", "TLSHandshakeDone", "WroteHeaders",
+			"DNSDone", "ConnectDone", "TLSHandshakeDone", "WroteHeaders",
 			"WroteRequest", "GotFirstResponseByte", "PutIdleConn",
 		}
 		gotEvents := tracer.events

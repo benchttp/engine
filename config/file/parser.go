@@ -128,7 +128,7 @@ func (p yamlParser) prettyErrorMessage(raw string) string {
 // jsonParser implements configParser.
 type jsonParser struct{}
 
-// parse decodes a raw json input in strict mode (unknown fields disallowed)
+// parse decodes a raw JSON input in strict mode (unknown fields disallowed)
 // and stores the resulting value into dst.
 func (p jsonParser) parse(in []byte, dst *unmarshaledConfig) error {
 	decoder := json.NewDecoder(bytes.NewReader(in))

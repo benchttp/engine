@@ -3,7 +3,6 @@ package requester
 import (
 	"context"
 	"fmt"
-	"io"
 	"net/http"
 	"sync"
 	"time"
@@ -31,9 +30,8 @@ type Requester struct {
 	start   time.Time
 	done    bool
 
-	config Config
-	client http.Client
-	tracer *tracer
+	config       Config
+	newTransport func() http.RoundTripper
 
 	mu sync.RWMutex
 }
@@ -47,20 +45,11 @@ func New(cfg Config) *Requester {
 		recordsCap = defaultRecordsCap
 	}
 
-	tracer := newTracer()
-
 	return &Requester{
 		records: make([]Record, 0, recordsCap),
 		config:  cfg,
-		tracer:  tracer,
-		client: http.Client{
-			// Timeout includes connection time, any redirects, and reading
-			// the response body.
-			// We may want exclude reading the response body in our benchmark tool.
-			Timeout: cfg.RequestTimeout,
-
-			// tracer keeps track of all events of the current request.
-			Transport: tracer,
+		newTransport: func() http.RoundTripper {
+			return newTracer()
 		},
 	}
 }
@@ -96,10 +85,12 @@ func (r *Requester) Run(req *http.Request) (Report, error) {
 }
 
 func (r *Requester) ping(req *http.Request) error {
-	resp, err := r.client.Do(req)
+	client := newClient(r.newTransport(), r.config.RequestTimeout)
+	resp, err := client.Do(req)
 	if resp != nil {
 		resp.Body.Close()
 	}
+	client.CloseIdleConnections()
 	return err
 }
 
@@ -117,38 +108,40 @@ type Record struct {
 
 func (r *Requester) record(req *http.Request, interval time.Duration) func() {
 	return func() {
-		// It is necessary to clone the request because one request with a non-nil body cannot be used in concurrent threads
-		reqClone, err := cloneRequest(req)
-		if err != nil {
-			r.appendRecord(Record{Error: ErrRequestBody})
-			return
-		}
+		// We need new client and request instances each call to this function
+		// to make it safe for concurrent use.
+		client := newClient(r.newTransport(), r.config.RequestTimeout)
+		newReq := cloneRequest(req)
 
-		sent := time.Now()
-
-		resp, err := r.client.Do(reqClone)
+		// Send request
+		resp, err := client.Do(newReq)
 		if err != nil {
 			r.appendRecord(Record{Error: err})
 			return
 		}
 
-		body, err := io.ReadAll(resp.Body)
-		defer resp.Body.Close()
+		// Read and close response body
+		body, err := readClose(resp)
 		if err != nil {
 			r.appendRecord(Record{Error: err})
 			return
 		}
 
-		duration := time.Since(sent)
+		// Retrieve tracer events and append BodyRead event
+		events := []Event{}
+		if reqtracer, ok := client.Transport.(*tracer); ok {
+			reqtracer.addEventBodyRead()
+			events = reqtracer.events
+		}
 
 		r.appendRecord(Record{
 			Code:   resp.StatusCode,
-			Time:   duration,
+			Time:   eventsTotalTime(events),
 			Bytes:  len(body),
-			Events: r.tracer.events,
+			Events: events,
 		})
 
-		fmt.Print(r.state())
+		r.printState()
 		time.Sleep(interval)
 	}
 }
@@ -185,17 +178,4 @@ func (r *Requester) end(runErr error) {
 
 func (r *Requester) printState() {
 	fmt.Print(r.state())
-}
-
-// cloneRequest fully clones a http.Request by also cloning the body via Request.GetBody
-func cloneRequest(req *http.Request) (*http.Request, error) {
-	reqClone := req.Clone(req.Context())
-	if req.Body != nil {
-		bodyClone, err := req.GetBody()
-		if err != nil {
-			return nil, ErrRequestBody
-		}
-		reqClone.Body = bodyClone
-	}
-	return reqClone, nil
 }

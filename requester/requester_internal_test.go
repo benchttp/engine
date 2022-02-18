@@ -205,7 +205,9 @@ func (t callbackTransport) RoundTrip(*http.Request) (*http.Response, error) {
 }
 
 func withCallbackTransport(req *Requester, callback func()) *Requester {
-	req.client.Transport = callbackTransport{callback: callback}
+	req.newTransport = func() http.RoundTripper {
+		return callbackTransport{callback: callback}
+	}
 	return req
 }
 
@@ -220,7 +222,9 @@ func (errTransport) RoundTrip(*http.Request) (*http.Response, error) {
 }
 
 func withErrTransport(req *Requester) *Requester {
-	req.client.Transport = errTransport{}
+	req.newTransport = func() http.RoundTripper {
+		return errTransport{}
+	}
 	return req
 }
 
