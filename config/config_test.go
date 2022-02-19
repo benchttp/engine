@@ -25,6 +25,9 @@ func TestValidate(t *testing.T) {
 				RequestTimeout: 5,
 				GlobalTimeout:  5,
 			},
+			Output: config.Output{
+				Out: []config.OutputStrategy{"benchttp", "json", "stdout"},
+			},
 		}
 		err := cfg.Validate()
 		if err != nil {

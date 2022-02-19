@@ -180,28 +180,3 @@ func (p jsonParser) parseUnknownFieldError(raw string) (field string) {
 	}
 	return ""
 }
-
-// unmarshaledConfig is a raw data model for runner config files.
-// It serves as a receiver for unmarshaling processes and for that reason
-// its types are kept simple (certain types are incompatible with certain
-// unmarshalers).
-type unmarshaledConfig struct {
-	Request struct {
-		Method      *string             `yaml:"method" json:"method"`
-		URL         *string             `yaml:"url" json:"url"`
-		QueryParams map[string]string   `yaml:"queryParams" json:"queryParams"`
-		Header      map[string][]string `yaml:"header" json:"header"`
-		Body        *struct {
-			Type    string `yaml:"type" json:"type"`
-			Content string `yaml:"content" json:"content"`
-		} `yaml:"body" json:"body"`
-	} `yaml:"request" json:"request"`
-
-	Runner struct {
-		Requests       *int    `yaml:"requests" json:"requests"`
-		Concurrency    *int    `yaml:"concurrency" json:"concurrency"`
-		Interval       *string `yaml:"interval" json:"interval"`
-		RequestTimeout *string `yaml:"requestTimeout" json:"requestTimeout"`
-		GlobalTimeout  *string `yaml:"globalTimeout" json:"globalTimeout"`
-	} `yaml:"runner" json:"runner"`
-}

@@ -79,11 +79,20 @@ type Runner struct {
 	GlobalTimeout  time.Duration
 }
 
+// Output contains options relative to the output.
+type Output struct {
+	Out []OutputStrategy
+
+	// TODO:
+	// Silent bool
+}
+
 // Global represents the global configuration of the runner.
 // It must be validated using Global.Validate before usage.
 type Global struct {
 	Request Request
 	Runner  Runner
+	Output  Output
 }
 
 // String returns an indented JSON representation of Config
@@ -117,6 +126,8 @@ func (cfg Global) Override(c Global, fields ...string) Global {
 			cfg.Runner.RequestTimeout = c.Runner.RequestTimeout
 		case FieldGlobalTimeout:
 			cfg.Runner.GlobalTimeout = c.Runner.GlobalTimeout
+		case FieldOut:
+			cfg.Output.Out = c.Output.Out
 		}
 	}
 	return cfg
@@ -138,30 +149,46 @@ func (cfg *Global) overrideHeader(newHeader http.Header) {
 func (cfg Global) Validate() error { //nolint:gocognit
 	inputErrors := []error{}
 
+	appendError := func(err error) {
+		inputErrors = append(inputErrors, err)
+	}
+
 	if cfg.Request.URL == nil {
-		inputErrors = append(inputErrors, errors.New("-url: missing url"))
+		appendError(errors.New("-url: missing url"))
 	} else if _, err := url.ParseRequestURI(cfg.Request.URL.String()); err != nil {
-		inputErrors = append(inputErrors, fmt.Errorf("-url: %s is not a valid url", cfg.Request.URL.String()))
+		appendError(fmt.Errorf("-url: %s is not a valid url", cfg.Request.URL.String()))
 	}
 
 	if cfg.Runner.Requests < 1 && cfg.Runner.Requests != -1 {
-		inputErrors = append(inputErrors, fmt.Errorf("-requests: must be >= 0, we got %d", cfg.Runner.Requests))
+		appendError(fmt.Errorf("-requests: must be >= 0, we got %d", cfg.Runner.Requests))
 	}
 
 	if cfg.Runner.Concurrency < 1 && cfg.Runner.Concurrency != -1 {
-		inputErrors = append(inputErrors, fmt.Errorf("-concurrency: must be > 0, we got %d", cfg.Runner.Concurrency))
+		appendError(fmt.Errorf("-concurrency: must be > 0, we got %d", cfg.Runner.Concurrency))
 	}
 
 	if cfg.Runner.Interval < 0 {
-		inputErrors = append(inputErrors, fmt.Errorf("-interval: must be > 0, we got %d", cfg.Runner.Interval))
+		appendError(fmt.Errorf("-interval: must be > 0, we got %d", cfg.Runner.Interval))
 	}
 
 	if cfg.Runner.RequestTimeout < 0 {
-		inputErrors = append(inputErrors, fmt.Errorf("-timeout: must be > 0, we got %d", cfg.Runner.RequestTimeout))
+		appendError(fmt.Errorf("-timeout: must be > 0, we got %d", cfg.Runner.RequestTimeout))
 	}
 
 	if cfg.Runner.GlobalTimeout < 0 {
-		inputErrors = append(inputErrors, fmt.Errorf("-globalTimeout: must be > 0, we got %d", cfg.Runner.GlobalTimeout))
+		appendError(fmt.Errorf("-globalTimeout: must be > 0, we got %d", cfg.Runner.GlobalTimeout))
+	}
+
+	if out := cfg.Output.Out; len(out) == 0 {
+		appendError(errors.New(`-out: missing (want one or many of "benchttp", "json", "stdin")`))
+	} else {
+		for _, o := range out {
+			if !IsOutput(string(o)) {
+				appendError(fmt.Errorf(
+					`-out: invalid value: %s (want one or many of "benchttp", "json", "stdin")`, o),
+				)
+			}
+		}
 	}
 
 	if len(inputErrors) > 0 {

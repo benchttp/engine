@@ -11,29 +11,29 @@ import (
 
 	"github.com/benchttp/runner/config"
 	configfile "github.com/benchttp/runner/config/file"
+	"github.com/benchttp/runner/output"
 	"github.com/benchttp/runner/requester"
-)
-
-const (
-	// API server endpoint. May live is some config file later.
-	reportURL = "http://localhost:9998/report"
 )
 
 var (
 	configFile string
-	uri        string
-	method     string // HTTP request method
-	header     = http.Header{}
+
+	uri    string
+	method string // HTTP request method
+	header = http.Header{}
 	// HTTP body in format "type:content", type may be "raw" or "file".
 	// If type is "raw", content is the data as a string. If type is "file",
 	// content is the path to the file holding the data. Note: only "raw"
 	// is supported at the moment.
-	body           config.Body
-	concurrency    int           // Number of connections to run concurrently
+	body config.Body
+
 	requests       int           // Number of requests to run, use duration as exit condition if omitted.
+	concurrency    int           // Number of connections to run concurrently
 	interval       time.Duration // Minimum duration between two groups of requests
 	requestTimeout time.Duration // Timeout for each HTTP request
 	globalTimeout  time.Duration // Duration of test
+
+	out []config.OutputStrategy // Output destinations (benchttp/json/stdin)
 )
 
 var defaultConfigFiles = []string{
@@ -48,22 +48,27 @@ func parseArgs() {
 
 	// request url
 	flag.StringVar(&uri, config.FieldURL, "", "Target URL to request")
+	// request method
+	flag.StringVar(&method, config.FieldMethod, "", "HTTP request method")
 	// request header
 	flag.Var(headerValue{header: &header}, config.FieldHeader, "HTTP request header")
 	// request body
 	flag.Var(bodyValue{body: &body}, config.FieldBody, "HTTP request body")
-	// concurrency
-	flag.IntVar(&concurrency, config.FieldConcurrency, 0, "Number of connections to run concurrently")
+
 	// requests number
 	flag.IntVar(&requests, config.FieldRequests, 0, "Number of requests to run, use duration as exit condition if omitted")
+	// concurrency
+	flag.IntVar(&concurrency, config.FieldConcurrency, 0, "Number of connections to run concurrently")
 	// non-conurrent requests interval
 	flag.DurationVar(&interval, "interval", 0, "Minimum duration between two non concurrent requests")
 	// request timeout
 	flag.DurationVar(&requestTimeout, config.FieldRequestTimeout, 0, "Timeout for each HTTP request")
 	// global timeout
 	flag.DurationVar(&globalTimeout, config.FieldGlobalTimeout, 0, "Max duration of test")
-	// request method
-	flag.StringVar(&method, config.FieldMethod, "", "HTTP request method")
+
+	// output strategies
+	flag.Var(outValue{out: &out}, config.FieldOut, "Output destination (benchttp/json/stdin)")
+
 	flag.Parse()
 }
 
@@ -92,12 +97,7 @@ func run() error {
 		return err
 	}
 
-	// TODO: handle output
-	if err := requester.SendReport(reportURL, rep); err != nil {
-		return err
-	}
-
-	return nil
+	return output.New(rep, cfg).Export()
 }
 
 // parseConfig returns a config.Config initialized with config file
@@ -120,6 +120,9 @@ func parseConfig() (cfg config.Global, err error) {
 			Interval:       interval,
 			RequestTimeout: requestTimeout,
 			GlobalTimeout:  globalTimeout,
+		},
+		Output: config.Output{
+			Out: out,
 		},
 	}
 
@@ -205,6 +208,29 @@ func (v bodyValue) Set(raw string) error {
 	// 	// TODO
 	default:
 		return fmt.Errorf(`unsupported type: %s (only "raw" accepted`, btype)
+	}
+	return nil
+}
+
+// outValue implements flag.Value
+type outValue struct {
+	out *[]config.OutputStrategy
+}
+
+// String returns a string representation of outValue.out.
+func (v outValue) String() string {
+	return fmt.Sprint(v.out)
+}
+
+// Set reads input string as comma-separated values and appends the values
+// to the key's values of the referenced header.
+func (v outValue) Set(in string) error {
+	values := strings.Split(in, ",")
+	if len(values) < 1 {
+		return errors.New(`expect comma-separated values`)
+	}
+	for _, value := range values {
+		*v.out = append(*v.out, config.OutputStrategy(value))
 	}
 	return nil
 }

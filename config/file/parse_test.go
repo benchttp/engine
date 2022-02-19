@@ -89,7 +89,7 @@ func TestParse(t *testing.T) {
 			// compare *url.URLs separately, as they contain unpredictable values
 			// they need special checks
 			if !sameURL(gotURL, expURL) {
-				t.Errorf("unexpected parsed URL: exp %v, got %v", expURL, gotURL)
+				t.Errorf("unexpected parsed URL:\nexp %v, got %v", expURL, gotURL)
 			}
 
 			// replace unpredictable values (undetermined query params order)
@@ -146,13 +146,15 @@ func newExpConfig() config.Global {
 			},
 			Body: config.NewBody("raw", `{"key0":"val0","key1":"val1"}`),
 		},
-
 		Runner: config.Runner{
 			Requests:       100,
 			Concurrency:    1,
 			Interval:       50 * time.Millisecond,
 			RequestTimeout: 2 * time.Second,
 			GlobalTimeout:  60 * time.Second,
+		},
+		Output: config.Output{
+			Out: []config.OutputStrategy{"benchttp", "json", "stdin"},
 		},
 	}
 }

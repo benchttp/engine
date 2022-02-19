@@ -11,6 +11,35 @@ import (
 	"github.com/benchttp/runner/config"
 )
 
+// unmarshaledConfig is a raw data model for runner config files.
+// It serves as a receiver for unmarshaling processes and for that reason
+// its types are kept simple (certain types are incompatible with certain
+// unmarshalers).
+type unmarshaledConfig struct {
+	Request struct {
+		Method      *string             `yaml:"method" json:"method"`
+		URL         *string             `yaml:"url" json:"url"`
+		QueryParams map[string]string   `yaml:"queryParams" json:"queryParams"`
+		Header      map[string][]string `yaml:"header" json:"header"`
+		Body        *struct {
+			Type    string `yaml:"type" json:"type"`
+			Content string `yaml:"content" json:"content"`
+		} `yaml:"body" json:"body"`
+	} `yaml:"request" json:"request"`
+
+	Runner struct {
+		Requests       *int    `yaml:"requests" json:"requests"`
+		Concurrency    *int    `yaml:"concurrency" json:"concurrency"`
+		Interval       *string `yaml:"interval" json:"interval"`
+		RequestTimeout *string `yaml:"requestTimeout" json:"requestTimeout"`
+		GlobalTimeout  *string `yaml:"globalTimeout" json:"globalTimeout"`
+	} `yaml:"runner" json:"runner"`
+
+	Output struct {
+		Out *[]string `yaml:"out" json:"out"`
+	} `yaml:"output" json:"output"`
+}
+
 // Parse parses a benchttp runner config file into a config.Config
 // and returns it or the first non-nil error occurring in the process.
 func Parse(cfgpath string) (cfg config.Global, err error) {
@@ -45,12 +74,18 @@ func Parse(cfgpath string) (cfg config.Global, err error) {
 // parseRawConfig parses an input raw config as a config.Config and returns it
 // or the first non-nil error occurring in the process.
 func parseRawConfig(raw unmarshaledConfig) (config.Global, error) { //nolint:gocognit // acceptable complexity for a parsing func
+	const numField = 10 // should match the number of config Fields (not critical)
+
 	cfg := config.Global{}
-	fields := make([]string, 0, 9)
+	fields := make([]string, 0, numField)
+
+	appendField := func(field string) {
+		fields = append(fields, field)
+	}
 
 	if method := raw.Request.Method; method != nil {
 		cfg.Request.Method = *method
-		fields = append(fields, config.FieldMethod)
+		appendField(config.FieldMethod)
 	}
 
 	if rawURL := raw.Request.URL; rawURL != nil {
@@ -59,7 +94,7 @@ func parseRawConfig(raw unmarshaledConfig) (config.Global, error) { //nolint:goc
 			return config.Global{}, err
 		}
 		cfg.Request.URL = parsedURL
-		fields = append(fields, config.FieldURL)
+		appendField(config.FieldURL)
 	}
 
 	if header := raw.Request.Header; header != nil {
@@ -68,44 +103,7 @@ func parseRawConfig(raw unmarshaledConfig) (config.Global, error) { //nolint:goc
 			httpHeader[key] = val
 		}
 		cfg.Request.Header = httpHeader
-		fields = append(fields, config.FieldHeader)
-	}
-
-	if requests := raw.Runner.Requests; requests != nil {
-		cfg.Runner.Requests = *requests
-		fields = append(fields, config.FieldRequests)
-	}
-
-	if concurrency := raw.Runner.Concurrency; concurrency != nil {
-		cfg.Runner.Concurrency = *concurrency
-		fields = append(fields, config.FieldConcurrency)
-	}
-
-	if interval := raw.Runner.Interval; interval != nil {
-		parsedInterval, err := parseOptionalDuration(*interval)
-		if err != nil {
-			return config.Global{}, err
-		}
-		cfg.Runner.Interval = parsedInterval
-		fields = append(fields, config.FieldInterval)
-	}
-
-	if requestTimeout := raw.Runner.RequestTimeout; requestTimeout != nil {
-		parsedTimeout, err := parseOptionalDuration(*requestTimeout)
-		if err != nil {
-			return config.Global{}, err
-		}
-		cfg.Runner.RequestTimeout = parsedTimeout
-		fields = append(fields, config.FieldRequestTimeout)
-	}
-
-	if globalTimeout := raw.Runner.GlobalTimeout; globalTimeout != nil {
-		parsedGlobalTimeout, err := parseOptionalDuration(*globalTimeout)
-		if err != nil {
-			return config.Global{}, err
-		}
-		cfg.Runner.GlobalTimeout = parsedGlobalTimeout
-		fields = append(fields, config.FieldGlobalTimeout)
+		appendField(config.FieldHeader)
 	}
 
 	if body := raw.Request.Body; body != nil {
@@ -114,6 +112,50 @@ func parseRawConfig(raw unmarshaledConfig) (config.Global, error) { //nolint:goc
 			Content: []byte(body.Content),
 		}
 		fields = append(fields, config.FieldBody)
+	}
+
+	if requests := raw.Runner.Requests; requests != nil {
+		cfg.Runner.Requests = *requests
+		appendField(config.FieldRequests)
+	}
+
+	if concurrency := raw.Runner.Concurrency; concurrency != nil {
+		cfg.Runner.Concurrency = *concurrency
+		appendField(config.FieldConcurrency)
+	}
+
+	if interval := raw.Runner.Interval; interval != nil {
+		parsedInterval, err := parseOptionalDuration(*interval)
+		if err != nil {
+			return config.Global{}, err
+		}
+		cfg.Runner.Interval = parsedInterval
+		appendField(config.FieldInterval)
+	}
+
+	if requestTimeout := raw.Runner.RequestTimeout; requestTimeout != nil {
+		parsedTimeout, err := parseOptionalDuration(*requestTimeout)
+		if err != nil {
+			return config.Global{}, err
+		}
+		cfg.Runner.RequestTimeout = parsedTimeout
+		appendField(config.FieldRequestTimeout)
+	}
+
+	if globalTimeout := raw.Runner.GlobalTimeout; globalTimeout != nil {
+		parsedGlobalTimeout, err := parseOptionalDuration(*globalTimeout)
+		if err != nil {
+			return config.Global{}, err
+		}
+		cfg.Runner.GlobalTimeout = parsedGlobalTimeout
+		appendField(config.FieldGlobalTimeout)
+	}
+
+	if outs := raw.Output.Out; outs != nil {
+		for _, out := range *outs {
+			cfg.Output.Out = append(cfg.Output.Out, config.OutputStrategy(out))
+		}
+		appendField(config.FieldOut)
 	}
 
 	return config.Default().Override(cfg, fields...), nil

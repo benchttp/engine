@@ -16,3 +16,9 @@ runner:
   interval: 50ms
   requestTimeout: 2s
   globalTimeout: 60s
+
+output:
+  out:
+    - benchttp
+    - json
+    - stdin

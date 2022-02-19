@@ -80,8 +80,9 @@ func (r *Requester) Run(req *http.Request) (Report, error) {
 	default:
 		return Report{}, err
 	}
+	runDuration := time.Since(r.start)
 
-	return makeReport(r.records, r.numErr), nil
+	return newReport(r.records, r.numErr, runDuration), nil
 }
 
 func (r *Requester) ping(req *http.Request) error {
