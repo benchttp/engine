@@ -26,3 +26,4 @@ output:
     - json
     - stdin
   silent: true
+  template: "{{ .Report.Length }}"

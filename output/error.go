@@ -5,8 +5,13 @@ import (
 	"strings"
 )
 
-// ErrInvalidStrategy reports an unknown strategy set.
-var ErrInvalidStrategy = errors.New("invalid strategy")
+var (
+	// ErrInvalidStrategy reports an unknown strategy set.
+	ErrInvalidStrategy = errors.New("invalid strategy")
+
+	errTemplateEmpty  = errors.New("empty template")
+	errTemplateSyntax = errors.New("template syntax error")
+)
 
 // ExportErroris the error type returned by Output.Export.
 type ExportError struct {

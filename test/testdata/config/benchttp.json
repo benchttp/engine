@@ -23,6 +23,7 @@
   },
   "output": {
     "out": ["benchttp", "json", "stdin"],
-    "silent": true
+    "silent": true,
+    "template": "{{ .Report.Length }}"
   }
 }

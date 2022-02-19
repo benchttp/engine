@@ -97,7 +97,7 @@ func TestParse(t *testing.T) {
 			restoreExpCfg := setTempValue(&expURL.RawQuery, "replaced by test")
 
 			if !reflect.DeepEqual(gotCfg, expCfg) {
-				t.Errorf("unexpected parsed config for %s file: exp %v\ngot %v", ext, expCfg, gotCfg)
+				t.Errorf("unexpected parsed config for %s file:\nexp %v\ngot %v", ext, expCfg, gotCfg)
 			}
 
 			restoreExpCfg()
@@ -154,8 +154,9 @@ func newExpConfig() config.Global {
 			GlobalTimeout:  60 * time.Second,
 		},
 		Output: config.Output{
-			Out:    []config.OutputStrategy{"benchttp", "json", "stdin"},
-			Silent: true,
+			Out:      []config.OutputStrategy{"benchttp", "json", "stdin"},
+			Silent:   true,
+			Template: "{{ .Report.Length }}",
 		},
 	}
 }

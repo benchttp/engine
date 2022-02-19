@@ -33,8 +33,9 @@ var (
 	requestTimeout time.Duration // Timeout for each HTTP request
 	globalTimeout  time.Duration // Duration of test
 
-	out    []config.OutputStrategy // Output destinations (benchttp/json/stdin)
-	silent bool                    // Silent mode (no write to stdout)
+	out      []config.OutputStrategy // Output destinations (benchttp,json,stdin)
+	silent   bool                    // Silent mode (no write to stdout)
+	template string
 )
 
 var defaultConfigFiles = []string{
@@ -68,9 +69,11 @@ func parseArgs() {
 	flag.DurationVar(&globalTimeout, config.FieldGlobalTimeout, 0, "Max duration of test")
 
 	// output strategies
-	flag.Var(outValue{out: &out}, config.FieldOut, "Output destination (benchttp/json/stdin)")
+	flag.Var(outValue{out: &out}, config.FieldOut, "Output destination (benchttp,json,stdin)")
 	// silent mode
 	flag.BoolVar(&silent, config.FieldSilent, false, "Silent mode (no write to stdout)")
+	// output template
+	flag.StringVar(&template, "template", "", "Custom stdout output template")
 
 	flag.Parse()
 }
@@ -124,8 +127,9 @@ func parseConfig() (cfg config.Global, err error) {
 			GlobalTimeout:  globalTimeout,
 		},
 		Output: config.Output{
-			Out:    out,
-			Silent: silent,
+			Out:      out,
+			Silent:   silent,
+			Template: template,
 		},
 	}
 

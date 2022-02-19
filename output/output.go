@@ -3,6 +3,7 @@ package output
 import (
 	"bytes"
 	"encoding/gob"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -10,6 +11,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"text/template"
 	"time"
 
 	"github.com/benchttp/runner/ansi"
@@ -102,9 +104,22 @@ var _ export.Interface = (*Output)(nil)
 
 // String returns a default summary of an Output as a string.
 func (o Output) String() string {
+	var b strings.Builder
+
+	if s, err := o.applyTemplate(o.Metadata.Config.Output.Template); err == nil {
+		// template is non-empty and correctly executed,
+		// returns its result instead of default summary.
+		return s
+	} else if errors.Is(err, errTemplateSyntax) {
+		// template is non-empty but has syntax errors,
+		// inform the user about it and fallback to default summary.
+		b.WriteString(err.Error())
+		b.WriteString("\nFalling back to default summary:\n")
+	} // template is empty, use default summary.
+
 	line := func(name string, value interface{}) string {
-		const pattern = "%-18s %v\n"
-		return fmt.Sprintf(pattern, name, value)
+		const template = "%-18s %v\n"
+		return fmt.Sprintf(template, name, value)
 	}
 
 	msString := func(d time.Duration) string {
@@ -120,8 +135,6 @@ func (o Output) String() string {
 	}
 
 	var (
-		b strings.Builder
-
 		cfg            = o.Metadata.Config
 		rep            = o.Report
 		min, max, mean = rep.Stats()
@@ -135,6 +148,28 @@ func (o Output) String() string {
 	b.WriteString(line("Mean response time", msString(mean)))
 	b.WriteString(line("Test duration", msString(rep.Duration)))
 	return b.String()
+}
+
+// applyTemplate applies Output to a template using given pattern and returns
+// the result as a string. If pattern == "", it returns errTemplateEmpty.
+// If an error occurs parsing the pattern or executing the template,
+// it returns errTemplateSyntax.
+func (o Output) applyTemplate(pattern string) (string, error) {
+	if pattern == "" {
+		return "", errTemplateEmpty
+	}
+
+	t, err := template.New("template").Parse(o.Metadata.Config.Output.Template)
+	if err != nil {
+		return "", fmt.Errorf("%w: %s", errTemplateSyntax, err)
+	}
+
+	var b strings.Builder
+	if err := t.Execute(&b, o); err != nil {
+		return "", fmt.Errorf("%w: %s", errTemplateSyntax, err)
+	}
+
+	return b.String(), nil
 }
 
 // HTTPRequest returns the *http.Request to be sent to Benchttp server.

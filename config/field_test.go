@@ -21,6 +21,7 @@ func TestIsField(t *testing.T) {
 		{In: config.FieldGlobalTimeout, Exp: true},
 		{In: config.FieldOut, Exp: true},
 		{In: config.FieldSilent, Exp: true},
+		{In: config.FieldTemplate, Exp: true},
 		{In: "notafield", Exp: false},
 	}).Run(t)
 }
