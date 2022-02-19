@@ -154,7 +154,8 @@ func newExpConfig() config.Global {
 			GlobalTimeout:  60 * time.Second,
 		},
 		Output: config.Output{
-			Out: []config.OutputStrategy{"benchttp", "json", "stdin"},
+			Out:    []config.OutputStrategy{"benchttp", "json", "stdin"},
+			Silent: true,
 		},
 	}
 }

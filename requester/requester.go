@@ -14,12 +14,14 @@ const (
 	defaultRecordsCap = 1000
 )
 
+// Config is the requester config that determines its behavior.
 type Config struct {
 	Requests       int
 	Concurrency    int
 	Interval       time.Duration
 	RequestTimeout time.Duration
 	GlobalTimeout  time.Duration
+	Silent         bool
 }
 
 // Requester executes the benchmark. It wraps http.Client.
@@ -72,7 +74,13 @@ func (r *Requester) Run(req *http.Request) (Report, error) {
 	defer cancel()
 
 	r.start = time.Now()
-	go r.refreshState()
+
+	if !r.config.Silent {
+		// state print always erase the previous line, so we print
+		// an empty line to be erased instead.
+		fmt.Println()
+		go r.refreshState()
+	}
 
 	switch err := dispatcher.New(numWorker).Do(ctx, maxIter, r.record(req, interval)); err {
 	case nil, context.Canceled, context.DeadlineExceeded:
@@ -178,5 +186,7 @@ func (r *Requester) end(runErr error) {
 }
 
 func (r *Requester) printState() {
-	fmt.Print(r.state())
+	if !r.config.Silent {
+		fmt.Print(r.state())
+	}
 }

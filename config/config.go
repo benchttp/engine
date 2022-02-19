@@ -81,10 +81,8 @@ type Runner struct {
 
 // Output contains options relative to the output.
 type Output struct {
-	Out []OutputStrategy
-
-	// TODO:
-	// Silent bool
+	Out    []OutputStrategy
+	Silent bool
 }
 
 // Global represents the global configuration of the runner.
@@ -128,6 +126,8 @@ func (cfg Global) Override(c Global, fields ...string) Global {
 			cfg.Runner.GlobalTimeout = c.Runner.GlobalTimeout
 		case FieldOut:
 			cfg.Output.Out = c.Output.Out
+		case FieldSilent:
+			cfg.Output.Silent = c.Output.Silent
 		}
 	}
 	return cfg

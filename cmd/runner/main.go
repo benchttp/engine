@@ -33,7 +33,8 @@ var (
 	requestTimeout time.Duration // Timeout for each HTTP request
 	globalTimeout  time.Duration // Duration of test
 
-	out []config.OutputStrategy // Output destinations (benchttp/json/stdin)
+	out    []config.OutputStrategy // Output destinations (benchttp/json/stdin)
+	silent bool                    // Silent mode (no write to stdout)
 )
 
 var defaultConfigFiles = []string{
@@ -68,6 +69,8 @@ func parseArgs() {
 
 	// output strategies
 	flag.Var(outValue{out: &out}, config.FieldOut, "Output destination (benchttp/json/stdin)")
+	// silent mode
+	flag.BoolVar(&silent, config.FieldSilent, false, "Silent mode (no write to stdout)")
 
 	flag.Parse()
 }
@@ -80,7 +83,6 @@ func main() {
 
 func run() error {
 	parseArgs()
-	fmt.Println()
 
 	cfg, err := parseConfig()
 	if err != nil {
@@ -92,7 +94,7 @@ func run() error {
 		return err
 	}
 
-	rep, err := requester.New(requester.Config(cfg.Runner)).Run(req)
+	rep, err := requester.New(requesterConfig(cfg)).Run(req)
 	if err != nil {
 		return err
 	}
@@ -122,7 +124,8 @@ func parseConfig() (cfg config.Global, err error) {
 			GlobalTimeout:  globalTimeout,
 		},
 		Output: config.Output{
-			Out: out,
+			Out:    out,
+			Silent: silent,
 		},
 	}
 
@@ -140,6 +143,18 @@ func configFlags() []string {
 		}
 	})
 	return fields
+}
+
+// requesterConfig returns a requester.Config generated from cfg.
+func requesterConfig(cfg config.Global) requester.Config {
+	return requester.Config{
+		Requests:       cfg.Runner.Requests,
+		Concurrency:    cfg.Runner.Concurrency,
+		Interval:       cfg.Runner.Interval,
+		RequestTimeout: cfg.Runner.RequestTimeout,
+		GlobalTimeout:  cfg.Runner.GlobalTimeout,
+		Silent:         cfg.Output.Silent,
+	}
 }
 
 // headerValue implements flag.Value

@@ -11,13 +11,14 @@ const (
 	FieldRequestTimeout = "requestTimeout"
 	FieldGlobalTimeout  = "globalTimeout"
 	FieldOut            = "out"
+	FieldSilent         = "silent"
 )
 
 func IsField(v string) bool {
 	switch v {
 	case FieldMethod, FieldURL, FieldHeader, FieldBody, FieldRequests,
 		FieldConcurrency, FieldInterval, FieldRequestTimeout,
-		FieldGlobalTimeout, FieldOut:
+		FieldGlobalTimeout, FieldOut, FieldSilent:
 		return true
 	}
 	return false

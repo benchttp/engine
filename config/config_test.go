@@ -104,6 +104,10 @@ func TestOverride(t *testing.T) {
 				RequestTimeout: 3 * time.Second,
 				GlobalTimeout:  4 * time.Second,
 			},
+			Output: config.Output{
+				Out:    []config.OutputStrategy{config.OutputStdout},
+				Silent: true,
+			},
 		}
 
 		if gotCfg := baseCfg.Override(newCfg); !reflect.DeepEqual(gotCfg, baseCfg) {
@@ -123,6 +127,10 @@ func TestOverride(t *testing.T) {
 				RequestTimeout: 3 * time.Second,
 				GlobalTimeout:  4 * time.Second,
 			},
+			Output: config.Output{
+				Out:    []config.OutputStrategy{config.OutputStdout},
+				Silent: true,
+			},
 		}
 		fields := []string{
 			config.FieldMethod,
@@ -132,6 +140,8 @@ func TestOverride(t *testing.T) {
 			config.FieldRequestTimeout,
 			config.FieldGlobalTimeout,
 			config.FieldBody,
+			config.FieldOut,
+			config.FieldSilent,
 		}
 
 		if gotCfg := baseCfg.Override(newCfg, fields...); !reflect.DeepEqual(gotCfg, newCfg) {

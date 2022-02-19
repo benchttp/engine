@@ -25,3 +25,4 @@ output:
     - benchttp
     - json
     - stdin
+  silent: true

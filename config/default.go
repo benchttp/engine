@@ -18,4 +18,8 @@ var defaultConfig = Global{
 		RequestTimeout: 10 * time.Second,
 		GlobalTimeout:  30 * time.Second,
 	},
+	Output: Output{
+		Out:    []OutputStrategy{OutputStdout},
+		Silent: false,
+	},
 }

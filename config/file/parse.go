@@ -36,7 +36,8 @@ type unmarshaledConfig struct {
 	} `yaml:"runner" json:"runner"`
 
 	Output struct {
-		Out *[]string `yaml:"out" json:"out"`
+		Out    *[]string `yaml:"out" json:"out"`
+		Silent *bool     `yaml:"silent" json:"silent"`
 	} `yaml:"output" json:"output"`
 }
 
@@ -156,6 +157,11 @@ func parseRawConfig(raw unmarshaledConfig) (config.Global, error) { //nolint:goc
 			cfg.Output.Out = append(cfg.Output.Out, config.OutputStrategy(out))
 		}
 		appendField(config.FieldOut)
+	}
+
+	if silent := raw.Output.Silent; silent != nil {
+		cfg.Output.Silent = *silent
+		appendField(config.FieldSilent)
 	}
 
 	return config.Default().Override(cfg, fields...), nil
