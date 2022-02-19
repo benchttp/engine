@@ -200,8 +200,3 @@ func (cfg Global) Validate() error { //nolint:gocognit
 
 	return nil
 }
-
-// Default returns a default config that is safe to use.
-func Default() Global {
-	return defaultConfig
-}
