@@ -58,19 +58,21 @@ func New(cfg Config) *Requester {
 
 // Run starts the benchmark test and pipelines the results inside a Report.
 // Returns the Report when the test ended and all results have been collected.
-func (r *Requester) Run(req *http.Request) (Report, error) {
+func (r *Requester) Run(ctx context.Context, req *http.Request) (Report, error) {
 	if err := r.ping(req); err != nil {
 		return Report{}, fmt.Errorf("%w: %s", ErrConnection, err)
 	}
 
 	var (
-		numWorker   = r.config.Concurrency
-		maxIter     = r.config.Requests
-		timeout     = r.config.GlobalTimeout
-		interval    = r.config.Interval
-		ctx, cancel = context.WithTimeout(context.Background(), timeout)
+		errRun error
+
+		numWorker = r.config.Concurrency
+		maxIter   = r.config.Requests
+		timeout   = r.config.GlobalTimeout
+		interval  = r.config.Interval
 	)
 
+	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
 	r.start = time.Now()
@@ -82,15 +84,20 @@ func (r *Requester) Run(req *http.Request) (Report, error) {
 		go r.refreshState()
 	}
 
-	switch err := dispatcher.New(numWorker).Do(ctx, maxIter, r.record(req, interval)); err {
-	case nil, context.Canceled, context.DeadlineExceeded:
+	err := dispatcher.New(numWorker).Do(ctx, maxIter, r.record(req, interval))
+	runDuration := time.Since(r.start)
+
+	switch err {
+	case nil, context.DeadlineExceeded:
 		r.end(err)
+	case context.Canceled:
+		r.end(err)
+		errRun = ErrCanceled
 	default:
 		return Report{}, err
 	}
-	runDuration := time.Since(r.start)
 
-	return newReport(r.records, r.numErr, runDuration), nil
+	return newReport(r.records, r.numErr, runDuration), errRun
 }
 
 func (r *Requester) ping(req *http.Request) error {

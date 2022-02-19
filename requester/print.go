@@ -88,7 +88,7 @@ func (s state) status() string {
 	case nil:
 		return ansi.Green("DONE")
 	case context.Canceled:
-		return ansi.Cyan("CANCELED")
+		return ansi.Red("CANCELED")
 	case context.DeadlineExceeded:
 		return ansi.Cyan("TIMEOUT")
 	}

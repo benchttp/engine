@@ -2,6 +2,7 @@ package requester
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"net/http"
 	"reflect"
@@ -46,7 +47,7 @@ func TestRun(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.label, func(t *testing.T) {
-			gotRep, gotErr := tc.req.Run(validRequest())
+			gotRep, gotErr := tc.req.Run(context.Background(), validRequest())
 
 			if !errors.Is(gotErr, tc.exp) {
 				t.Errorf("unexpected error value:\nexp %v\ngot %v", tc.exp, gotErr)
@@ -66,7 +67,7 @@ func TestRun(t *testing.T) {
 			GlobalTimeout:  3 * time.Second,
 		}))
 
-		rep, err := r.Run(validRequest())
+		rep, err := r.Run(context.Background(), validRequest())
 		if err != nil {
 			t.Errorf("exp nil error, got %v", err)
 		}
@@ -94,7 +95,10 @@ func TestRun(t *testing.T) {
 			GlobalTimeout:  3 * time.Second,
 		}))
 
-		rep, err := r.Run(validRequestWithBody([]byte(`{"key0": "val0", "key1": "val1"}`)))
+		rep, err := r.Run(
+			context.Background(),
+			validRequestWithBody([]byte(`{"key0": "val0", "key1": "val1"}`)),
+		)
 		if err != nil {
 			t.Errorf("exp nil error, got %v", err)
 		}
@@ -164,7 +168,7 @@ func TestRun(t *testing.T) {
 			gotTimes = append(gotTimes, elapsed)
 		})
 
-		if _, err := r.Run(validRequest()); err != nil {
+		if _, err := r.Run(context.Background(), validRequest()); err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
 

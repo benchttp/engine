@@ -1,11 +1,14 @@
 package main
 
 import (
+	"bufio"
+	"context"
 	"errors"
 	"flag"
 	"fmt"
-	"log"
 	"net/http"
+	"os"
+	"os/signal"
 	"strings"
 	"time"
 
@@ -80,7 +83,8 @@ func parseArgs() {
 
 func main() {
 	if err := run(); err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
+		os.Exit(1)
 	}
 }
 
@@ -97,9 +101,18 @@ func run() error {
 		return err
 	}
 
-	rep, err := requester.New(requesterConfig(cfg)).Run(req)
+	ctx, cancel := context.WithCancel(context.Background())
+	go listenOSInterrupt(cancel)
+
+	rep, err := requester.New(requesterConfig(cfg)).Run(ctx, req)
 	if err != nil {
-		return err
+		if errors.Is(err, requester.ErrCanceled) {
+			if err := handleRunInterrupt(); err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
 	}
 
 	return output.New(rep, cfg).Export()
@@ -250,6 +263,33 @@ func (v outValue) Set(in string) error {
 	}
 	for _, value := range values {
 		*v.out = append(*v.out, config.OutputStrategy(value))
+	}
+	return nil
+}
+
+// listenOSInterrupt listens for OS interrupt signals and calls callback.
+// It should be called in a separate goroutine from main as it blocks
+// the execution until the OS interrupt signal is received.
+func listenOSInterrupt(callback func()) {
+	sigC := make(chan os.Signal, 1)
+	signal.Notify(sigC, os.Interrupt)
+	<-sigC
+	callback()
+}
+
+// handleRunInterrupt handles the case when the runner is interrupted.
+func handleRunInterrupt() error {
+	reader := bufio.NewReader(os.Stdin)
+	// TODO: list output strategies
+	// TODO: do not prompt if strategy is stdout only
+	// TODO: add config option "output.generateOnCancel" and remove prompt?
+	fmt.Printf("\nBenchmark interrupted, generate output anyway? (yes/no): ")
+	line, _, err := reader.ReadLine()
+	if err != nil {
+		return err
+	}
+	if string(line) != "yes" {
+		return errors.New("benchmark interrupted without output")
 	}
 	return nil
 }
