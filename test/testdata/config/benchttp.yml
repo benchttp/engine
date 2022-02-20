@@ -21,6 +21,6 @@ output:
   out:
     - benchttp
     - json
-    - stdin
+    - stdout
   silent: true
   template: "{{ .Report.Length }}"

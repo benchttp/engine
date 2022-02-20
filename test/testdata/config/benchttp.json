@@ -22,7 +22,7 @@
     "globalTimeout": "60s"
   },
   "output": {
-    "out": ["benchttp", "json", "stdin"],
+    "out": ["benchttp", "json", "stdout"],
     "silent": true,
     "template": "{{ .Report.Length }}"
   }

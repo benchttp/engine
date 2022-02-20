@@ -36,7 +36,7 @@ var (
 	requestTimeout time.Duration // Timeout for each HTTP request
 	globalTimeout  time.Duration // Duration of test
 
-	out      []config.OutputStrategy // Output destinations (benchttp,json,stdin)
+	out      []config.OutputStrategy // Output destinations (benchttp,json,stdout)
 	silent   bool                    // Silent mode (no write to stdout)
 	template string
 )
@@ -72,7 +72,7 @@ func parseArgs() {
 	flag.DurationVar(&globalTimeout, config.FieldGlobalTimeout, 0, "Max duration of test")
 
 	// output strategies
-	flag.Var(outValue{out: &out}, config.FieldOut, "Output destination (benchttp,json,stdin)")
+	flag.Var(outValue{out: &out}, config.FieldOut, "Output destination (benchttp,json,stdout)")
 	// silent mode
 	flag.BoolVar(&silent, config.FieldSilent, false, "Silent mode (no write to stdout)")
 	// output template
