@@ -110,15 +110,15 @@ func (r *Requester) ping(req *http.Request) error {
 	return err
 }
 
-// Record is the summary of a HTTP response. If Record.Error is non-nil,
-// the HTTP call failed anywhere from making the request to decoding the
-// response body, invalidating the entire response, as it is not a remote
-// server error.
+// Record is the summary of a HTTP response. If Record.Error is not
+// empty string, the HTTP call failed somewhere between sending the request
+// to decoding the response body. In that cas invalidating the entire response,
+// as it is not a remote server error.
 type Record struct {
 	Time   time.Duration `json:"time"`
 	Code   int           `json:"code"`
 	Bytes  int           `json:"bytes"`
-	Error  error         `json:"error,omitempty"`
+	Error  string        `json:"error,omitempty"`
 	Events []Event       `json:"events"`
 }
 
@@ -132,14 +132,14 @@ func (r *Requester) record(req *http.Request, interval time.Duration) func() {
 		// Send request
 		resp, err := client.Do(newReq)
 		if err != nil {
-			r.appendRecord(Record{Error: err})
+			r.appendRecord(Record{Error: recordErr(err)})
 			return
 		}
 
 		// Read and close response body
 		body, err := readClose(resp)
 		if err != nil {
-			r.appendRecord(Record{Error: err})
+			r.appendRecord(Record{Error: recordErr(err)})
 			return
 		}
 
@@ -166,7 +166,7 @@ func (r *Requester) appendRecord(rec Record) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.records = append(r.records, rec)
-	if rec.Error != nil {
+	if rec.Error != "" {
 		r.numErr++
 	}
 }
