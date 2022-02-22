@@ -2,9 +2,10 @@ package file_test
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
-	"path"
+	"path/filepath"
 	"reflect"
 	"testing"
 	"time"
@@ -14,7 +15,7 @@ import (
 )
 
 const (
-	testdataConfigPath = "../../test/testdata/config"
+	testdataConfigPath = "./testdata"
 	testURL            = "http://localhost:9999?fib=30&delay=200ms"
 )
 
@@ -34,23 +35,33 @@ func TestParse(t *testing.T) {
 		}{
 			{
 				label:  "not found",
-				path:   configPath("bad path"),
+				path:   configPath("invalid/bad path"),
 				expErr: file.ErrFileNotFound,
 			},
 			{
 				label:  "unsupported extension",
-				path:   configPath("badext.yams"),
+				path:   configPath("invalid/badext.yams"),
 				expErr: file.ErrFileExt,
 			},
 			{
 				label:  "yaml invalid fields",
-				path:   configPath("badfields.yml"),
+				path:   configPath("invalid/badfields.yml"),
 				expErr: file.ErrParse,
 			},
 			{
 				label:  "json invalid fields",
-				path:   configPath("badfields.json"),
+				path:   configPath("invalid/badfields.json"),
 				expErr: file.ErrParse,
+			},
+			{
+				label:  "self reference",
+				path:   configPath("extends/extends-circular-self.yml"),
+				expErr: file.ErrCircularExtends,
+			},
+			{
+				label:  "circular reference",
+				path:   configPath("extends/extends-circular-0.yml"),
+				expErr: file.ErrCircularExtends,
 			},
 		}
 
@@ -76,7 +87,7 @@ func TestParse(t *testing.T) {
 	t.Run("happy path for all extensions", func(t *testing.T) {
 		for _, ext := range supportedExt {
 			expCfg := newExpConfig()
-			fname := path.Join(testdataConfigPath, "benchttp"+ext)
+			fname := configPath("valid/benchttp" + ext)
 
 			gotCfg, err := file.Parse(fname)
 			if err != nil {
@@ -111,7 +122,7 @@ func TestParse(t *testing.T) {
 			expGlobalTimeout = 42 * time.Millisecond
 		)
 
-		fname := path.Join(testdataConfigPath, "benchttp-zeros.yml")
+		fname := configPath("valid/benchttp-zeros.yml")
 
 		cfg, err := file.Parse(fname)
 		if err != nil {
@@ -127,6 +138,47 @@ func TestParse(t *testing.T) {
 		}
 
 		t.Log(cfg)
+	})
+
+	t.Run("extend config files", func(t *testing.T) {
+		testcases := []struct {
+			label  string
+			cfname string
+			cfpath string
+		}{
+			{
+				label:  "same directory",
+				cfname: "child",
+				cfpath: configPath("extends/extends-valid-child.yml"),
+			},
+			{
+				label:  "nested directory",
+				cfname: "nested",
+				cfpath: configPath("extends/nest-0/nest-1/extends-valid-nested.yml"),
+			},
+		}
+
+		for _, tc := range testcases {
+			t.Run(tc.label, func(t *testing.T) {
+				cfg, err := file.Parse(tc.cfpath)
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				var (
+					expMethod = "POST"
+					expURL    = fmt.Sprintf("http://%s.config", tc.cfname)
+				)
+
+				if gotMethod := cfg.Request.Method; gotMethod != expMethod {
+					t.Errorf("method: exp %s, got %s", expMethod, gotMethod)
+				}
+
+				if gotURL := cfg.Request.URL.String(); gotURL != expURL {
+					t.Errorf("method: exp %s, got %s", expURL, gotURL)
+				}
+			})
+		}
 	})
 }
 
@@ -189,5 +241,5 @@ func setTempValue(ptr *string, val string) (restore func()) {
 }
 
 func configPath(name string) string {
-	return path.Join(testdataConfigPath, name)
+	return filepath.Join(testdataConfigPath, name)
 }

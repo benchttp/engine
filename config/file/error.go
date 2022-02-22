@@ -22,6 +22,9 @@ var (
 	// It is returned if it contains an unexpected field or an unexpected
 	// value for a field.
 	ErrParse = errors.New("parsing error: invalid config file")
+
+	// ErrCircularExtends signals a circular reference in the config file.
+	ErrCircularExtends = errors.New("circular reference detected")
 )
 
 // errWithDetails returns an error wrapping err, appended with a string
