@@ -54,7 +54,7 @@ func TestRun(t *testing.T) {
 			}
 
 			if !reflect.ValueOf(gotRep).IsZero() {
-				t.Errorf("report value:\nexp %v\ngot %v", Report{}, gotRep)
+				t.Errorf("report value:\nexp %v\ngot %v", Benchmark{}, gotRep)
 			}
 		})
 	}

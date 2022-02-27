@@ -26,4 +26,4 @@ output:
     - json
     - stdout
   silent: true
-  template: "{{ .Report.Length }}"
+  template: "{{ .Benchmark.Length }}"

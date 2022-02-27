@@ -76,9 +76,18 @@ func HTTP(src HTTPRequester) error {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("%w: response code %d", ErrHTTPResponse, resp.StatusCode)
-	}
+	return checkStatusCode(resp.StatusCode)
+}
 
+// checkStatusCode returns a non-nil error if the given status code
+// is not a 2xx code.
+func checkStatusCode(code int) error {
+	if !is2xx(code) {
+		return fmt.Errorf("%w: response code %d", ErrHTTPResponse, code)
+	}
 	return nil
+}
+
+func is2xx(code int) bool {
+	return 200 <= code && code <= 299
 }

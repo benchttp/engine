@@ -5,8 +5,8 @@ import (
 	"time"
 )
 
-// Report represents the collected results of a benchmark test.
-type Report struct {
+// Benchmark represents the collected results of a benchmark test.
+type Benchmark struct {
 	Records  []Record      `json:"records"`
 	Length   int           `json:"length"`
 	Success  int           `json:"success"`
@@ -14,19 +14,19 @@ type Report struct {
 	Duration time.Duration `json:"duration"`
 }
 
-// String returns an indented JSON representation of the report.
-func (rep Report) String() string {
-	b, _ := json.MarshalIndent(rep, "", "  ")
+// String returns an indented JSON representation of the Benchmark.
+func (bk Benchmark) String() string {
+	b, _ := json.MarshalIndent(bk, "", "  ")
 	return string(b)
 }
 
-// Stats returns basic stats about the report's records:
+// Stats returns basic stats about the Benchmark's records:
 // min duration, max duration, and mean duration.
 // It does not replace the remote computing and should only be used
 // when a local reporting is needed.
-func (rep Report) Stats() (min, max, mean time.Duration) {
+func (bk Benchmark) Stats() (min, max, mean time.Duration) {
 	var sum time.Duration
-	for _, rec := range rep.Records {
+	for _, rec := range bk.Records {
 		d := rec.Time
 		if d < min || min == 0 {
 			min = d
@@ -36,12 +36,12 @@ func (rep Report) Stats() (min, max, mean time.Duration) {
 		}
 		sum += rec.Time
 	}
-	return min, max, sum / time.Duration(rep.Length)
+	return min, max, sum / time.Duration(bk.Length)
 }
 
-// newReport generates and returns a Report given a Run dataset.
-func newReport(records []Record, numErr int, d time.Duration) Report {
-	return Report{
+// newReport generates and returns a Benchmark given a Run dataset.
+func newReport(records []Record, numErr int, d time.Duration) Benchmark {
+	return Benchmark{
 		Records:  records,
 		Length:   len(records),
 		Success:  len(records) - numErr,

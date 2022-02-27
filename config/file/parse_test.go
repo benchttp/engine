@@ -208,7 +208,7 @@ func newExpConfig() config.Global {
 		Output: config.Output{
 			Out:      []config.OutputStrategy{"benchttp", "json", "stdout"},
 			Silent:   true,
-			Template: "{{ .Report.Length }}",
+			Template: "{{ .Benchmark.Length }}",
 		},
 	}
 }

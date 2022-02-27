@@ -2,5 +2,4 @@
 
 package output
 
-// TODO: replace placeholder with actual value
-const benchttpEndpoint = "https://api.benchttp.app/report" // placeholder
+const benchttpEndpoint = "https://api.benchttp.app/v1/report"

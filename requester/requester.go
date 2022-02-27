@@ -58,9 +58,9 @@ func New(cfg Config) *Requester {
 
 // Run starts the benchmark test and pipelines the results inside a Report.
 // Returns the Report when the test ended and all results have been collected.
-func (r *Requester) Run(ctx context.Context, req *http.Request) (Report, error) {
+func (r *Requester) Run(ctx context.Context, req *http.Request) (Benchmark, error) {
 	if err := r.ping(req); err != nil {
-		return Report{}, fmt.Errorf("%w: %s", ErrConnection, err)
+		return Benchmark{}, fmt.Errorf("%w: %s", ErrConnection, err)
 	}
 
 	var (
@@ -94,7 +94,7 @@ func (r *Requester) Run(ctx context.Context, req *http.Request) (Report, error) 
 		r.end(err)
 		errRun = ErrCanceled
 	default:
-		return Report{}, err
+		return Benchmark{}, err
 	}
 
 	return newReport(r.records, r.numErr, runDuration), errRun
