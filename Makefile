@@ -38,10 +38,13 @@ test-cov:
 	@go-acc ./...
 
 # Build
-
 .PHONY: build
 build:
-	@go build -v -o ./bin/benchttp ./cmd/runner/main.go
+	@./script/build
+
+.PHONY: clear
+clear:
+	@rm -rf ./bin/*
 
 # Docs
 
