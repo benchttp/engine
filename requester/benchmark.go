@@ -25,6 +25,11 @@ func (bk Benchmark) String() string {
 // It does not replace the remote computing and should only be used
 // when a local reporting is needed.
 func (bk Benchmark) Stats() (min, max, mean time.Duration) {
+	n := len(bk.Records)
+	if n == 0 {
+		return 0, 0, 0
+	}
+
 	var sum time.Duration
 	for _, rec := range bk.Records {
 		d := rec.Time
@@ -36,7 +41,7 @@ func (bk Benchmark) Stats() (min, max, mean time.Duration) {
 		}
 		sum += rec.Time
 	}
-	return min, max, sum / time.Duration(bk.Length)
+	return min, max, sum / time.Duration(n)
 }
 
 // newReport generates and returns a Benchmark given a Run dataset.

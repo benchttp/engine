@@ -13,14 +13,14 @@ var (
 	errTemplateSyntax = errors.New("template syntax error")
 )
 
-// ExportErroris the error type returned by Output.Export.
+// ExportError is the error type returned by Report.Export.
 type ExportError struct {
 	Errors []error
 }
 
 // Error returns the joined errors of ExportError as a string.
 func (e *ExportError) Error() string {
-	const sep = "\n- "
+	const sep = "\n  - "
 
 	var b strings.Builder
 	b.WriteString("output:")

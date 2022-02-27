@@ -3,7 +3,7 @@ package output
 import "github.com/benchttp/runner/config"
 
 // Strategy reprents an output strategy for the input value.
-type Strategy int
+type Strategy uint8
 
 const (
 	// StrategyStdout writes the input value to os.Stdout.
@@ -18,7 +18,7 @@ const (
 // is returns true if s matches the target strategy.
 // s can match several strategies.
 func (s Strategy) is(target Strategy) bool {
-	return s&target == target
+	return s&target != 0
 }
 
 // exportStrategy returns the strategy to use for exporting the report.

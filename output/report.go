@@ -150,7 +150,7 @@ func (rep Report) String() string {
 	b.WriteString(line("Min response time", msString(min)))
 	b.WriteString(line("Max response time", msString(max)))
 	b.WriteString(line("Mean response time", msString(mean)))
-	b.WriteString(line("Test duration", msString(bk.Duration)))
+	b.WriteString(line("Total duration", msString(bk.Duration)))
 	return b.String()
 }
 
@@ -163,7 +163,7 @@ func (rep Report) applyTemplate(pattern string) (string, error) {
 		return "", errTemplateEmpty
 	}
 
-	t, err := template.New("report").Parse(rep.Metadata.Config.Output.Template)
+	t, err := template.New("report").Parse(pattern)
 	if err != nil {
 		return "", fmt.Errorf("%w: %s", errTemplateSyntax, err)
 	}
@@ -211,7 +211,7 @@ func genFilename() string {
 	return fmt.Sprintf("./benchttp.report.%s.json", timestamp())
 }
 
-// timestamp returns the current time in format yy-mm-ddThh:mm:ssZhh:mm.
+// timestamp returns the current time in format YYYYMMDDhhmmss.
 func timestamp() string {
 	now := time.Now().UTC()
 	y, m, d := now.Date()

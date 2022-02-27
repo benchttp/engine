@@ -15,9 +15,11 @@ var (
 	ErrFileCreate = errors.New("export: error creating file")
 	// ErrFileWrite reports an error writing a file.
 	ErrFileWrite = errors.New("export: error writing file")
-	// ErrHTTPRequest reports an HTTP request error, creating or sending it.
+	// ErrHTTPRequest reports an error generating a HTTP request.
 	ErrHTTPRequest = errors.New("export: request error")
-	// ErrHTTPResponse reports an HTTP response error, such as bad status code.
+	// ErrHTTPConnection reports an error sending a HTTP request.
+	ErrHTTPConnection = errors.New("export: HTTP connection error")
+	// ErrHTTPResponse reports a HTTP response error, such as bad status code.
 	ErrHTTPResponse = errors.New("export: server response error")
 )
 
@@ -67,12 +69,12 @@ func JSONFile(filename string, src interface{}) error {
 func HTTP(src HTTPRequester) error {
 	req, err := src.HTTPRequest()
 	if err != nil {
-		return fmt.Errorf("%w: creation: %s", ErrHTTPRequest, err)
+		return fmt.Errorf("%w: %s", ErrHTTPRequest, err)
 	}
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return fmt.Errorf("%w: send: %s", ErrHTTPRequest, err)
+		return fmt.Errorf("%w: %s", ErrHTTPConnection, err)
 	}
 	defer resp.Body.Close()
 
