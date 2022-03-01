@@ -2,6 +2,13 @@
 
 platforms="darwin/amd64 darwin/arm64 linux/386 linux/amd64 windows/386 windows/amd64"
 
+version=$(git describe --tags --abbrev=0)
+ldflags="-X main.benchttpVersion=$version"
+tags="prod"
+
+cmddir="./cmd/benchttp"
+bindir="./bin"
+
 # clear bin directory
 rm -rf ./bin/*
 
@@ -17,10 +24,10 @@ for platform in ${platforms}; do
     # add .exe to windows binaries
     [[ "$goos" == "windows" ]] && output="$output.exe"
 
-    output="./bin/$output"
+    output="$bindir/$output"
 
     # build binary
-    GOOS="$goos" GOARCH="$goarch" go build -tags prod -o "$output" ./cmd/benchttp
+    GOOS="$goos" GOARCH="$goarch" go build -tags "$tags" -ldflags "$ldflags" -o "$output" "$cmddir"
 
     echo "[$i/6] $output"
 done

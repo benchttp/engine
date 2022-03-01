@@ -41,6 +41,7 @@ test-cov:
 .PHONY: build
 build:
 	@./script/build
+	@./script/build-healthcheck
 
 .PHONY: clear
 clear:

@@ -7,6 +7,7 @@ import (
 	"os"
 )
 
+// errUsage reports an incorrect usage of the benchttp command.
 var errUsage = errors.New("usage")
 
 func main() {
@@ -32,6 +33,8 @@ func run() error {
 		cmd = &cmdRun{flagset: flag.NewFlagSet("run", flag.ExitOnError)}
 	case "auth":
 		cmd = &cmdAuth{flagset: flag.NewFlagSet("auth", flag.ExitOnError)}
+	case "version":
+		cmd = &cmdVersion{}
 	default:
 		return fmt.Errorf("%w: unknown command: %s", errUsage, sub)
 	}
