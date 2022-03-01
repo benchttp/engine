@@ -1,9 +1,9 @@
-package file_test
+package configfile_test
 
 import (
 	"testing"
 
-	"github.com/benchttp/runner/config/file"
+	"github.com/benchttp/runner/internal/configfile"
 )
 
 var (
@@ -16,7 +16,7 @@ func TestFind(t *testing.T) {
 	t.Run("return first existing file", func(t *testing.T) {
 		files := []string{badFile, goodFileYML, goodFileJSON}
 
-		if got := file.Find(files); got != goodFileYML {
+		if got := configfile.Find(files); got != goodFileYML {
 			t.Errorf("did not retrieve good file: exp %s, got %s", goodFileYML, got)
 		}
 	})
@@ -24,7 +24,7 @@ func TestFind(t *testing.T) {
 	t.Run("return empty string when no match", func(t *testing.T) {
 		files := []string{badFile}
 
-		if got := file.Find(files); got != "" {
+		if got := configfile.Find(files); got != "" {
 			t.Errorf("retrieved unexpected file: %s", got)
 		}
 	})

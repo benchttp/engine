@@ -20,7 +20,7 @@ for platform in ${platforms}; do
     output="./bin/$output"
 
     # build binary
-    GOOS="$goos" GOARCH="$goarch" go build -tags prod -o "$output" ./cmd/runner
+    GOOS="$goos" GOARCH="$goarch" go build -tags prod -o "$output" ./cmd/benchttp
 
     echo "[$i/6] $output"
 done
