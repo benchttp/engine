@@ -151,7 +151,6 @@ func (cfg *Global) overrideHeader(newHeader http.Header) {
 // Validate returns the config and a not nil ErrInvalid if any of the fields provided by the user is not valid
 func (cfg Global) Validate() error { //nolint:gocognit
 	inputErrors := []error{}
-
 	appendError := func(err error) {
 		inputErrors = append(inputErrors, err)
 	}
@@ -166,8 +165,11 @@ func (cfg Global) Validate() error { //nolint:gocognit
 		appendError(fmt.Errorf("-requests: must be >= 0, we got %d", cfg.Runner.Requests))
 	}
 
-	if cfg.Runner.Concurrency < 1 && cfg.Runner.Concurrency != -1 {
-		appendError(fmt.Errorf("-concurrency: must be > 0, we got %d", cfg.Runner.Concurrency))
+	if cfg.Runner.Concurrency < 1 || cfg.Runner.Concurrency > cfg.Runner.Requests {
+		appendError(fmt.Errorf(
+			"-concurrency: must be > 0 and <= requests (%d), we got %d",
+			cfg.Runner.Requests, cfg.Runner.Concurrency,
+		))
 	}
 
 	if cfg.Runner.Interval < 0 {

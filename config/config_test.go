@@ -57,7 +57,7 @@ func TestValidate(t *testing.T) {
 			if !errorContains(err, "-requests: must be >= 0, we got ") {
 				t.Errorf("\n- information about invalid requests number missing from error message")
 			}
-			if !errorContains(err, "-concurrency: must be > 0, we got ") {
+			if !errorContains(err, "-concurrency: must be > 0 and <= requests") {
 				t.Errorf("\n- information about invalid concurrency number missing from error message")
 			}
 			if !errorContains(err, "-timeout: must be > 0, we got") {
