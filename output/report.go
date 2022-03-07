@@ -20,6 +20,14 @@ import (
 	"github.com/benchttp/runner/requester"
 )
 
+type basicStats struct {
+	Min, Max, Mean time.Duration
+}
+
+func (s basicStats) isZero() bool {
+	return s == basicStats{}
+}
+
 // Report represent a benchmark result as exported by the runner.
 type Report struct {
 	Benchmark requester.Benchmark
@@ -27,6 +35,8 @@ type Report struct {
 		Config     config.Global
 		FinishedAt time.Time
 	}
+
+	stats basicStats
 
 	log func(v ...interface{})
 }
@@ -60,7 +70,7 @@ func newLogger(silent bool) *log.Logger {
 // Export exports the Report using the Strategies set in the embedded
 // config.Global. If any error occurs for a given Strategy, it does not
 // block the other exports and returns an ExportError listing the errors.
-func (rep Report) Export() error {
+func (rep *Report) Export() error {
 	var ok bool
 	var errs []error
 
@@ -103,7 +113,7 @@ func (rep Report) Export() error {
 var _ export.Interface = (*Report)(nil)
 
 // String returns a default summary of the Report as a string.
-func (rep Report) String() string {
+func (rep *Report) String() string {
 	var b strings.Builder
 
 	s, err := rep.applyTemplate(rep.Metadata.Config.Output.Template)
@@ -158,12 +168,15 @@ func (rep Report) String() string {
 // the result as a string. If pattern == "", it returns errTemplateEmpty.
 // If an error occurs parsing the pattern or executing the template,
 // it returns errTemplateSyntax.
-func (rep Report) applyTemplate(pattern string) (string, error) {
+func (rep *Report) applyTemplate(pattern string) (string, error) {
 	if pattern == "" {
 		return "", errTemplateEmpty
 	}
 
-	t, err := template.New("report").Parse(pattern)
+	t, err := template.
+		New("report").
+		Funcs(rep.templateFuncs()).
+		Parse(pattern)
 	if err != nil {
 		return "", fmt.Errorf("%w: %s", errTemplateSyntax, err)
 	}
@@ -176,9 +189,20 @@ func (rep Report) applyTemplate(pattern string) (string, error) {
 	return b.String(), nil
 }
 
+func (rep *Report) templateFuncs() template.FuncMap {
+	return template.FuncMap{
+		"stats": func() basicStats {
+			if rep.stats.isZero() {
+				rep.stats.Min, rep.stats.Max, rep.stats.Mean = rep.Benchmark.Stats()
+			}
+			return rep.stats
+		},
+	}
+}
+
 // HTTPRequest returns the *http.Request to be sent to Benchttp server.
 // The Report is encoded as gob in the request body.
-func (rep Report) HTTPRequest() (*http.Request, error) {
+func (rep *Report) HTTPRequest() (*http.Request, error) {
 	// Encode request body as gob
 	b, err := encodeGob(rep)
 	if err != nil {
@@ -197,7 +221,7 @@ func (rep Report) HTTPRequest() (*http.Request, error) {
 // helpers
 
 // encodeGob encodes the given Report as gob-encoded bytes.
-func encodeGob(rep Report) ([]byte, error) {
+func encodeGob(rep *Report) ([]byte, error) {
 	var buf bytes.Buffer
 	if err := gob.NewEncoder(&buf).Encode(rep); err != nil {
 		return nil, err
