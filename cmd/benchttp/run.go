@@ -20,10 +20,6 @@ import (
 type cmdRun struct {
 	flagset *flag.FlagSet
 
-	// defaultConfigFiles is a slice of default config files to look up for
-	// by order of priority if none is provided via the -configFile flag.
-	defaultConfigFiles []string
-
 	// configFile is the parsed value for flag -configFile
 	configFile string
 
@@ -37,11 +33,11 @@ var _ command = (*cmdRun)(nil)
 // init initializes cmdRun with default values.
 func (cmd *cmdRun) init() {
 	cmd.config = config.Default()
-	cmd.defaultConfigFiles = []string{
+	cmd.configFile = configfile.Find([]string{
 		"./.benchttp.yml",
 		"./.benchttp.yaml",
 		"./.benchttp.json",
-	}
+	})
 }
 
 // execute runs the benchttp runner: it parses CLI flags, loads config
@@ -83,6 +79,7 @@ func (cmd *cmdRun) execute(args []string) error {
 // a slice of fields that were set by the user.
 func (cmd *cmdRun) parseArgs(args []string) []string {
 	// first arg is subcommand "run"
+	// skip parsing if no flags are provided
 	if len(args) <= 1 {
 		return []string{}
 	}
@@ -90,11 +87,12 @@ func (cmd *cmdRun) parseArgs(args []string) []string {
 	// config file path
 	cmd.flagset.StringVar(&cmd.configFile,
 		"configFile",
-		configfile.Find(cmd.defaultConfigFiles),
+		cmd.configFile,
 		"Config file path",
 	)
 
-	// cli config
+	// attach config options flags to the flagset
+	// and bind their value to the config struct
 	configflags.Set(cmd.flagset, &cmd.config)
 
 	cmd.flagset.Parse(args[1:]) //nolint:errcheck // never occurs due to flag.ExitOnError
@@ -102,13 +100,20 @@ func (cmd *cmdRun) parseArgs(args []string) []string {
 	return configflags.Which(cmd.flagset)
 }
 
-// makeConfig returns a config.Config initialized with config file
+// makeConfig returns a config.Global initialized with config file
 // options if found, overridden with CLI options listed in fields
 // slice param.
 func (cmd *cmdRun) makeConfig(fields []string) (cfg config.Global, err error) {
+	// configFile not set and default ones not found:
+	// skip the merge and return the cli config
+	if cmd.configFile == "" {
+		return cmd.config, cmd.config.Validate()
+	}
+
 	fileConfig, err := configfile.Parse(cmd.configFile)
 	if err != nil && !errors.Is(err, configfile.ErrFileNotFound) {
-		// config file is not mandatory, other errors are critical
+		// config file is not mandatory: discard ErrFileNotFound.
+		// other errors are critical
 		return
 	}
 
