@@ -197,6 +197,15 @@ func (rep *Report) templateFuncs() template.FuncMap {
 			}
 			return rep.stats
 		},
+
+		"event": func(rec requester.Record, name string) time.Duration {
+			for _, e := range rec.Events {
+				if e.Name == name {
+					return e.Time
+				}
+			}
+			return 0
+		},
 	}
 }
 
