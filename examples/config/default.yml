@@ -1,0 +1,14 @@
+request:
+  method: GET
+  url: '' # empty
+
+runner:
+  requests: 100
+  concurrency: 10
+  interval: 0ms
+  requestTimeout: 5s
+  globalTimeout: 30s
+
+output:
+  out: [stdout]
+  silent: false
