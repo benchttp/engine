@@ -8,7 +8,7 @@ import (
 	"github.com/benchttp/runner/config"
 )
 
-func TestIsOutputStrategy(t *testing.T) {
+func TestIsOutput(t *testing.T) {
 	testx.Table(config.IsOutput).Cases([]testx.Case{
 		{Lab: "valid lowercase", In: "benchttp", Exp: true},
 		{Lab: "valid lowercase", In: "json", Exp: true},

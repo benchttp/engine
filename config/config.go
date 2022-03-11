@@ -10,24 +10,21 @@ import (
 	"time"
 )
 
+// Body represents a request body associated with a type.
+// The type affects the way the content is processed.
+// If Type == "file", Content is read as a filepath to be resolved.
+// If Type == "raw", Content is attached as-is.
+//
+// Note: only "raw" is supported at the moment.
 type Body struct {
 	Type    string
 	Content []byte
 }
 
-// // To return a Body pbject with Body.Content as a string
-// func (b Body) String() string {
-// 	bodyObject := "\"Body\": "
-// 	bodyType := "\"Type\" :\"" + b.Type + "\""
-// 	bodyContent := "\"Content\": \"" + string(b.Content) + "\""
-// 	return fmt.Sprintf("{%s\r\t%s\r\t%s\r}", bodyObject, bodyType, bodyContent)
-// }
-
-func NewBody(bodyType, bodyContent string) Body {
-	var body Body
-	body.Type = bodyType
-	body.Content = []byte(bodyContent)
-	return body
+// NewBody returns a Body initialized with the given type and content.
+// For now, the only valid value for type is "raw".
+func NewBody(typ, content string) Body {
+	return Body{Type: typ, Content: []byte(content)}
 }
 
 // Request contains the confing options relative to a single request.
@@ -136,6 +133,14 @@ func (cfg Global) Override(c Global, fields ...string) Global {
 	return cfg
 }
 
+// overrideHeader overrides cfg's Request.Header with the values from newHeader.
+// For every key in newHeader:
+//
+// - If it's not present in cfg.Request.Header, it is added.
+//
+// - If it's already present in cfg.Request.Header, the value is replaced.
+//
+// - All other keys in cfg.Request.Header are left untouched.
 func (cfg *Global) overrideHeader(newHeader http.Header) {
 	if newHeader == nil {
 		return
@@ -148,56 +153,57 @@ func (cfg *Global) overrideHeader(newHeader http.Header) {
 	}
 }
 
-// Validate returns the config and a not nil ErrInvalid if any of the fields provided by the user is not valid
+// Validate returns a non-nil InvalidConfigError if any of its fields
+// does not meet the requirements.
 func (cfg Global) Validate() error { //nolint:gocognit
-	inputErrors := []error{}
+	errs := []error{}
 	appendError := func(err error) {
-		inputErrors = append(inputErrors, err)
+		errs = append(errs, err)
 	}
 
 	if cfg.Request.URL == nil {
-		appendError(errors.New("-url: missing url"))
+		appendError(errors.New("url: missing"))
 	} else if _, err := url.ParseRequestURI(cfg.Request.URL.String()); err != nil {
-		appendError(fmt.Errorf("-url: %s is not a valid url", cfg.Request.URL.String()))
+		appendError(fmt.Errorf("url (%q): invalid", cfg.Request.URL.String()))
 	}
 
 	if cfg.Runner.Requests < 1 && cfg.Runner.Requests != -1 {
-		appendError(fmt.Errorf("-requests: must be >= 0, we got %d", cfg.Runner.Requests))
+		appendError(fmt.Errorf("requests (%d): want >= 0", cfg.Runner.Requests))
 	}
 
 	if cfg.Runner.Concurrency < 1 || cfg.Runner.Concurrency > cfg.Runner.Requests {
 		appendError(fmt.Errorf(
-			"-concurrency: must be > 0 and <= requests (%d), we got %d",
-			cfg.Runner.Requests, cfg.Runner.Concurrency,
+			"concurrency (%d): want > 0 and <= requests (%d)",
+			cfg.Runner.Concurrency, cfg.Runner.Requests,
 		))
 	}
 
 	if cfg.Runner.Interval < 0 {
-		appendError(fmt.Errorf("-interval: must be > 0, we got %d", cfg.Runner.Interval))
+		appendError(fmt.Errorf("interval (%d): want >= 0", cfg.Runner.Interval))
 	}
 
-	if cfg.Runner.RequestTimeout < 0 {
-		appendError(fmt.Errorf("-timeout: must be > 0, we got %d", cfg.Runner.RequestTimeout))
+	if cfg.Runner.RequestTimeout < 1 {
+		appendError(fmt.Errorf("requestTimeout (%d): want > 0", cfg.Runner.RequestTimeout))
 	}
 
-	if cfg.Runner.GlobalTimeout < 0 {
-		appendError(fmt.Errorf("-globalTimeout: must be > 0, we got %d", cfg.Runner.GlobalTimeout))
+	if cfg.Runner.GlobalTimeout < 1 {
+		appendError(fmt.Errorf("globalTimeout (%d): want > 0", cfg.Runner.GlobalTimeout))
 	}
 
 	if out := cfg.Output.Out; len(out) == 0 {
-		appendError(errors.New(`-out: missing (want one or many of "benchttp", "json", "stdout")`))
+		appendError(errors.New(`out: missing (want one or many of "benchttp", "json", "stdout")`))
 	} else {
 		for _, o := range out {
 			if !IsOutput(string(o)) {
 				appendError(fmt.Errorf(
-					`-out: invalid value: %s (want one or many of "benchttp", "json", "stdout")`, o),
+					`out (%q): want one or many of "benchttp", "json", "stdout"`, o),
 				)
 			}
 		}
 	}
 
-	if len(inputErrors) > 0 {
-		return &ErrInvalid{inputErrors}
+	if len(errs) > 0 {
+		return &InvalidConfigError{errs}
 	}
 
 	return nil

@@ -1,10 +1,12 @@
 package config_test
 
 import (
+	"bytes"
+	"errors"
+	"io"
 	"net/http"
 	"net/url"
 	"reflect"
-	"strings"
 	"testing"
 	"time"
 
@@ -13,8 +15,8 @@ import (
 
 var validBody = config.NewBody("raw", `{"key0": "val0", "key1": "val1"}`)
 
-func TestValidate(t *testing.T) {
-	t.Run("test valid configuration", func(t *testing.T) {
+func TestGlobal_Validate(t *testing.T) {
+	t.Run("return nil if config is valid", func(t *testing.T) {
 		cfg := config.Global{
 			Request: config.Request{
 				Body: validBody,
@@ -22,76 +24,60 @@ func TestValidate(t *testing.T) {
 			Runner: config.Runner{
 				Requests:       5,
 				Concurrency:    5,
+				Interval:       5,
 				RequestTimeout: 5,
 				GlobalTimeout:  5,
 			},
 			Output: config.Output{
-				Out: []config.OutputStrategy{"benchttp", "json", "stdout"},
+				Out: []config.OutputStrategy{"stdout", "json", "benchttp"},
 			},
 		}
-		err := cfg.Validate()
-		if err != nil {
-			t.Errorf("valid configuration not considered as such")
+		if err := cfg.Validate(); err != nil {
+			t.Errorf("unexpected error: %v", err)
 		}
 	})
 
-	t.Run("test invalid configuration returns ErrInvalid error with correct messages", func(t *testing.T) {
+	t.Run("return cumulated errors if config is invalid", func(t *testing.T) {
 		cfg := config.Global{
 			Request: config.Request{
 				Body: config.Body{},
-			}.WithURL("github-com/benchttp"),
+			}.WithURL("abc"),
 			Runner: config.Runner{
 				Requests:       -5,
 				Concurrency:    -5,
+				Interval:       -5,
 				RequestTimeout: -5,
 				GlobalTimeout:  -5,
 			},
+			Output: config.Output{
+				Out: []config.OutputStrategy{config.OutputStdout, "bad-output"},
+			},
 		}
+
 		err := cfg.Validate()
 		if err == nil {
-			t.Errorf("invalid configuration considered valid")
-		} else {
-			if !errorContains(err, "-url: "+cfg.Request.URL.String()+" is not a valid url") {
-				t.Errorf("\n- information about invalid url missing from error message")
-			}
-			if !errorContains(err, "-requests: must be >= 0, we got ") {
-				t.Errorf("\n- information about invalid requests number missing from error message")
-			}
-			if !errorContains(err, "-concurrency: must be > 0 and <= requests") {
-				t.Errorf("\n- information about invalid concurrency number missing from error message")
-			}
-			if !errorContains(err, "-timeout: must be > 0, we got") {
-				t.Errorf("\n- information about invalid timeout missing from error message")
-			}
-			if !errorContains(err, "-globalTimeout: must be > 0, we got ") {
-				t.Errorf("\n- information about invalid globalTimeout missing from error message")
-			}
+			t.Fatal("invalid configuration considered valid")
 		}
+
+		var errInvalid *config.InvalidConfigError
+		if !errors.As(err, &errInvalid) {
+			t.Fatalf("unexpected error type: %T", err)
+		}
+
+		errs := errInvalid.Errors
+		findErrorOrFail(t, errs, `url (""): invalid`)
+		findErrorOrFail(t, errs, `requests (-5): want >= 0`)
+		findErrorOrFail(t, errs, `concurrency (-5): want > 0 and <= requests (-5)`)
+		findErrorOrFail(t, errs, `interval (-5): want >= 0`)
+		findErrorOrFail(t, errs, `requestTimeout (-5): want > 0`)
+		findErrorOrFail(t, errs, `globalTimeout (-5): want > 0`)
+		findErrorOrFail(t, errs, `out ("bad-output"): want one or many of "benchttp", "json", "stdout"`)
+
+		t.Logf("got error:\n%v", errInvalid)
 	})
 }
 
-func TestWithURL(t *testing.T) {
-	t.Run("set empty url if invalid", func(t *testing.T) {
-		cfg := config.Global{Request: config.Request{}.WithURL("abc")}
-		if got := cfg.Request.URL; !reflect.DeepEqual(got, &url.URL{}) {
-			t.Errorf("exp empty *url.URL, got %v", got)
-		}
-	})
-
-	t.Run("set parsed url", func(t *testing.T) {
-		var (
-			rawURL    = "http://benchttp.app?cool=true"
-			expURL, _ = url.ParseRequestURI(rawURL)
-			gotURL    = config.Request{}.WithURL(rawURL).URL
-		)
-
-		if !reflect.DeepEqual(gotURL, expURL) {
-			t.Errorf("\nexp %v\ngot %v", expURL, gotURL)
-		}
-	})
-}
-
-func TestOverride(t *testing.T) {
+func TestGlobal_Override(t *testing.T) {
 	t.Run("do not override unspecified fields", func(t *testing.T) {
 		baseCfg := config.Global{}
 		newCfg := config.Global{
@@ -238,13 +224,118 @@ func TestOverride(t *testing.T) {
 	})
 }
 
-// To check that the error message is as expected
-func errorContains(err error, expected string) bool {
-	if err == nil {
-		return expected == ""
+func TestRequest_WithURL(t *testing.T) {
+	t.Run("set empty url if invalid", func(t *testing.T) {
+		cfg := config.Global{Request: config.Request{}.WithURL("abc")}
+		if got := cfg.Request.URL; !reflect.DeepEqual(got, &url.URL{}) {
+			t.Errorf("exp empty *url.URL, got %v", got)
+		}
+	})
+
+	t.Run("set parsed url", func(t *testing.T) {
+		var (
+			rawURL    = "http://benchttp.app?cool=true"
+			expURL, _ = url.ParseRequestURI(rawURL)
+			gotURL    = config.Request{}.WithURL(rawURL).URL
+		)
+
+		if !reflect.DeepEqual(gotURL, expURL) {
+			t.Errorf("\nexp %v\ngot %v", expURL, gotURL)
+		}
+	})
+}
+
+func TestRequest_Value(t *testing.T) {
+	testcases := []struct {
+		label  string
+		in     config.Request
+		expMsg string
+	}{
+		{
+			label:  "return error if url is empty",
+			in:     config.Request{},
+			expMsg: "empty url",
+		},
+		{
+			label:  "return error if url is invalid",
+			in:     config.Request{URL: &url.URL{Scheme: ""}},
+			expMsg: "bad url",
+		},
+		{
+			label:  "return error if NewRequest fails",
+			in:     config.Request{Method: "é", URL: &url.URL{Scheme: "http"}},
+			expMsg: `net/http: invalid method "é"`,
+		},
 	}
-	if expected == "" {
-		return false
+
+	for _, tc := range testcases {
+		t.Run(tc.label, func(t *testing.T) {
+			gotReq, gotErr := tc.in.Value()
+			if gotErr == nil {
+				t.Fatal("exp error, got nil")
+			}
+
+			if gotMsg := gotErr.Error(); gotMsg != tc.expMsg {
+				t.Errorf("\nexp %q\ngot %q", tc.expMsg, gotMsg)
+			}
+
+			if gotReq != nil {
+				t.Errorf("exp nil, got %v", gotReq)
+			}
+		})
 	}
-	return strings.Contains(err.Error(), expected)
+
+	t.Run("return request with added headers", func(t *testing.T) {
+		in := config.Request{
+			Method: "POST",
+			Header: http.Header{"key": []string{"val"}},
+			Body:   config.Body{Content: []byte("abc")},
+		}.WithURL("http://a.b")
+
+		expReq, err := http.NewRequest(
+			in.Method,
+			in.URL.String(),
+			bytes.NewReader(in.Body.Content),
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+		expReq.Header = in.Header
+
+		gotReq, gotErr := in.Value()
+		if gotErr != nil {
+			t.Fatal(err)
+		}
+
+		if !sameRequests(gotReq, expReq) {
+			t.Errorf("\nexp %#v\ngot %#v", expReq, gotReq)
+		}
+	})
+}
+
+// helpers
+
+// findErrorOrFail fails t if no error in src matches msg.
+func findErrorOrFail(t *testing.T, src []error, msg string) {
+	t.Helper()
+	for _, err := range src {
+		if err.Error() == msg {
+			return
+		}
+	}
+	t.Errorf("missing error: %v", msg)
+}
+
+func sameRequests(a, b *http.Request) bool {
+	if a == nil || b == nil {
+		return a == b
+	}
+
+	ab, _ := io.ReadAll(a.Body)
+	bb, _ := io.ReadAll(b.Body)
+
+	return a.Method == b.Method &&
+		a.URL.String() == b.URL.String() &&
+		bytes.Equal(ab, bb) &&
+		reflect.DeepEqual(a.Header, b.Header)
 }

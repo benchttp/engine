@@ -20,12 +20,6 @@ func (v bodyValue) String() string {
 // Set reads input string in format "type:content" and sets
 // the referenced body accordingly.
 //
-// If type is "raw", content is the data as a string.
-//	"raw:{\"key\":\"value\"}" // escaped JSON
-//	"raw:text" // plain text
-// If type is "file", content is the path to the file holding the data.
-//	"file:./path/to/file.txt"
-//
 // Note: only type "raw" is supported at the moment.
 func (v bodyValue) Set(raw string) error {
 	errFormat := fmt.Errorf(`expect format "<type>:<content>", got "%s"`, raw)
@@ -50,7 +44,7 @@ func (v bodyValue) Set(raw string) error {
 	// case "file":
 	// 	// TODO
 	default:
-		return fmt.Errorf(`unsupported type: %s (only "raw" accepted`, btype)
+		return fmt.Errorf(`unsupported type: %s (only "raw" accepted)`, btype)
 	}
 	return nil
 }
