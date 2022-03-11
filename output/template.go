@@ -61,10 +61,10 @@ func (rep *Report) templateFuncs() template.FuncMap {
 		// fail sets rep.errTplFailTriggered to the given error, causing
 		// the test to fail
 		"fail": func(a ...interface{}) string {
-			if rep.errTplFailTriggered == nil {
-				rep.errTplFailTriggered = fmt.Errorf(
+			if rep.errTemplateFailTriggered == nil {
+				rep.errTemplateFailTriggered = fmt.Errorf(
 					"%w: %s",
-					ErrTplFailTriggered, fmt.Sprint(a...),
+					ErrTemplateFailTriggered, fmt.Sprint(a...),
 				)
 			}
 			return ""

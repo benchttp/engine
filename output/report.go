@@ -19,6 +19,13 @@ import (
 	"github.com/benchttp/runner/requester"
 )
 
+// make export functions mockable
+var (
+	exportStdout   = export.Stdout
+	exportJSONFile = export.JSONFile
+	exportHTTP     = export.HTTP
+)
+
 type basicStats struct {
 	Min, Max, Mean time.Duration
 }
@@ -39,7 +46,7 @@ type Report struct {
 
 	stats basicStats
 
-	errTplFailTriggered error
+	errTemplateFailTriggered error
 
 	log func(v ...interface{})
 }
@@ -84,7 +91,7 @@ func (rep *Report) Export() error {
 	s := exportStrategy(rep.Metadata.Config.Output.Out)
 	if s.is(Stdout) {
 		rep.log(ansi.Bold("Summary"))
-		export.Stdout(rep)
+		exportStdout(rep)
 		ok = true
 	}
 	if s.is(JSONFile) {
@@ -106,14 +113,14 @@ func (rep *Report) Export() error {
 	if len(errs) != 0 {
 		return &ExportError{Errors: errs}
 	}
-	return rep.errTplFailTriggered
+	return rep.errTemplateFailTriggered
 }
 
 // exportJSONFile exports the Report as a timestamped JSON file
 // located in the working directory.
 func (rep *Report) exportJSONFile() error {
-	filename := genFilename()
-	if err := export.JSONFile(filename, rep); err != nil {
+	filename := genFilename(time.Now().UTC())
+	if err := exportJSONFile(filename, rep); err != nil {
 		return err
 	}
 	rep.log(ansi.Bold("JSON generated"))
@@ -126,7 +133,7 @@ func (rep *Report) exportHTTP() error {
 	if rep.userToken == "" {
 		return ErrNoToken
 	}
-	if err := export.HTTP(rep); err != nil {
+	if err := exportHTTP(rep); err != nil {
 		return err
 	}
 	rep.log(ansi.Bold("Report sent to Benchttp"))
@@ -155,6 +162,8 @@ func (rep *Report) String() string {
 	case errors.Is(err, errTemplateEmpty):
 		// template is empty, use default summary.
 	}
+
+	// generate default summary
 
 	line := func(name string, value interface{}) string {
 		const template = "%-18s %v\n"
@@ -222,16 +231,15 @@ func encodeGob(rep *Report) ([]byte, error) {
 }
 
 // genFilename generates a JSON file name suffixed with a timestamp
-// located in the working directory.
-func genFilename() string {
-	return fmt.Sprintf("./benchttp.report.%s.json", timestamp())
+// of the given time, located in the working directory.
+func genFilename(t time.Time) string {
+	return fmt.Sprintf("./benchttp.report.%s.json", timestamp(t))
 }
 
-// timestamp returns the current time in format YYYYMMDDhhmmss.
-func timestamp() string {
-	now := time.Now().UTC()
-	y, m, d := now.Date()
-	hh, mm, ss := now.Clock()
+// timestamp returns the given time.Time in format YYYYMMDDhhmmss.
+func timestamp(t time.Time) string {
+	y, m, d := t.Date()
+	hh, mm, ss := t.Clock()
 	return strings.ReplaceAll(
 		fmt.Sprintf("%4d%2d%2d%2d%2d%2d", y, m, d, hh, mm, ss),
 		" ", "0",
