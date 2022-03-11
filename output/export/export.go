@@ -2,25 +2,9 @@ package export
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"os"
-)
-
-var (
-	// ErrJSONMarshal reports an error marshaling JSON.
-	ErrJSONMarshal = errors.New("export: error marshaling JSON")
-	// ErrFileCreate reports an error creating a file.
-	ErrFileCreate = errors.New("export: error creating file")
-	// ErrFileWrite reports an error writing a file.
-	ErrFileWrite = errors.New("export: error writing file")
-	// ErrHTTPRequest reports an error generating a HTTP request.
-	ErrHTTPRequest = errors.New("export: request error")
-	// ErrHTTPConnection reports an error sending a HTTP request.
-	ErrHTTPConnection = errors.New("export: HTTP connection error")
-	// ErrHTTPResponse reports a HTTP response error, such as bad status code.
-	ErrHTTPResponse = errors.New("export: server response error")
 )
 
 // Interface gathers the necessary methods to use any function exposed
@@ -81,11 +65,11 @@ func HTTP(src HTTPRequester) error {
 	return checkStatusCode(resp.StatusCode)
 }
 
-// checkStatusCode returns a non-nil error if the given status code
-// is not a 2xx code.
+// checkStatusCode returns a HTTPResponseError if the given status code
+// is not a 2xx.
 func checkStatusCode(code int) error {
 	if !is2xx(code) {
-		return fmt.Errorf("%w: response code %d", ErrHTTPResponse, code)
+		return ErrHTTPResponse.WithCode(code)
 	}
 	return nil
 }

@@ -18,6 +18,7 @@ func TestHTTP(t *testing.T) {
 	for _, tc := range []struct {
 		label         string
 		expErrName    string
+		expErrCode    int
 		expErr        error
 		httpRequester export.HTTPRequester
 		httpTransport http.RoundTripper
@@ -39,6 +40,7 @@ func TestHTTP(t *testing.T) {
 		{
 			label:         "return ErrHTTPResponse on bad status code",
 			expErrName:    "ErrHTTPResponse",
+			expErrCode:    200,
 			expErr:        export.ErrHTTPResponse,
 			httpRequester: mockRequester{valid: true},
 			httpTransport: mockTransport{valid: true, code: 400},
@@ -59,6 +61,22 @@ func TestHTTP(t *testing.T) {
 			if !errors.Is(gotErr, tc.expErr) {
 				t.Errorf("unexpected error:\nexp %v\ngot %v", tc.expErrName, gotErr)
 			}
+
+			if tc.expErrCode == 0 {
+				return
+			}
+
+			t.Run("HTTPResponseError contains status code", func(t *testing.T) {
+				var errHTTPResponse *export.HTTPResponseError
+				if !errors.As(gotErr, &errHTTPResponse) {
+					t.Errorf("exp HTTPResponseError, got %v", gotErr)
+				}
+				expCode := tc.httpTransport.(mockTransport).code
+				if errHTTPResponse == nil || errHTTPResponse.Code != expCode {
+					expErr := export.HTTPResponseError{Code: expCode}
+					t.Errorf("\nexp %v\ngot %v", expErr, errHTTPResponse)
+				}
+			})
 		})
 	}
 }

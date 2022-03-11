@@ -15,9 +15,6 @@ var benchttpVersion = "development"
 // cmdVersion handles subcommand "benchttp version".
 type cmdVersion struct{}
 
-// ensure cmdVersion implements command
-var _ command = (*cmdVersion)(nil)
-
 func (cmdVersion) execute([]string) error {
 	fmt.Println("benchttp", benchttpVersion)
 	return nil

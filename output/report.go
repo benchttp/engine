@@ -35,6 +35,8 @@ type Report struct {
 		FinishedAt time.Time
 	}
 
+	userToken string
+
 	stats basicStats
 
 	errTplFailTriggered error
@@ -42,8 +44,11 @@ type Report struct {
 	log func(v ...interface{})
 }
 
-// New returns a Report initialized with bk and cfg.
-func New(bk requester.Benchmark, cfg config.Global) *Report {
+// New returns a Report initialized with the input benchmark, the config
+// used to run it and a user token. The user token is used to send export
+// the Report to Benchttp server. If config.OutputBenchttp is not set in
+// cfg, then the token is ignored.
+func New(bk requester.Benchmark, cfg config.Global, token string) *Report {
 	outputLogger := newLogger(cfg.Output.Silent)
 	return &Report{
 		Benchmark: bk,
@@ -55,7 +60,8 @@ func New(bk requester.Benchmark, cfg config.Global) *Report {
 			FinishedAt: time.Now(),
 		},
 
-		log: outputLogger.Println,
+		userToken: token,
+		log:       outputLogger.Println,
 	}
 }
 
@@ -82,20 +88,14 @@ func (rep *Report) Export() error {
 		ok = true
 	}
 	if s.is(JSONFile) {
-		filename := genFilename()
-		if err := export.JSONFile(filename, rep); err != nil {
+		if err := rep.exportJSONFile(); err != nil {
 			errs = append(errs, err)
-		} else {
-			rep.log(ansi.Bold("JSON generated"))
-			fmt.Println(filename) // always print output filename
 		}
 		ok = true
 	}
 	if s.is(Benchttp) {
-		if err := export.HTTP(rep); err != nil {
+		if err := rep.exportHTTP(); err != nil {
 			errs = append(errs, err)
-		} else {
-			rep.log(ansi.Bold("Report sent to Benchttp"))
 		}
 		ok = true
 	}
@@ -107,6 +107,30 @@ func (rep *Report) Export() error {
 		return &ExportError{Errors: errs}
 	}
 	return rep.errTplFailTriggered
+}
+
+// exportJSONFile exports the Report as a timestamped JSON file
+// located in the working directory.
+func (rep *Report) exportJSONFile() error {
+	filename := genFilename()
+	if err := export.JSONFile(filename, rep); err != nil {
+		return err
+	}
+	rep.log(ansi.Bold("JSON generated"))
+	fmt.Println(filename) // always print output filename
+	return nil
+}
+
+// exportHTTP exports the Report to Benchttp server.
+func (rep *Report) exportHTTP() error {
+	if rep.userToken == "" {
+		return ErrNoToken
+	}
+	if err := export.HTTP(rep); err != nil {
+		return err
+	}
+	rep.log(ansi.Bold("Report sent to Benchttp"))
+	return nil
 }
 
 // export.Interface implementation
@@ -179,6 +203,9 @@ func (rep *Report) HTTPRequest() (*http.Request, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// Set request headers with user token
+	r.Header.Set("Authorization", "Bearer "+rep.userToken)
 
 	return r, nil
 }

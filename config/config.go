@@ -83,6 +83,15 @@ type Output struct {
 	Template string
 }
 
+func (o Output) HasStrategy(s OutputStrategy) bool {
+	for _, out := range o.Out {
+		if out == s {
+			return true
+		}
+	}
+	return false
+}
+
 // Global represents the global configuration of the runner.
 // It must be validated using Global.Validate before usage.
 type Global struct {
