@@ -8,7 +8,7 @@ import (
 	"github.com/benchttp/engine/internal/configparse"
 )
 
-func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (s *server) handleRun(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/run" {
 		http.NotFound(w, r)
 		return
