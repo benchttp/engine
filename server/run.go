@@ -31,7 +31,7 @@ func (h runHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	report, err := doRun(cfg)
+	report, err := doRun(silentConfig(cfg))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -47,12 +47,22 @@ func doRun(cfg config.Global) (output.Report, error) {
 		return output.Report{}, err
 	}
 
+	// Run benchmark
 	bk, err := requester.New(requesterConfig(cfg)).Run(context.Background(), req)
 	if err != nil {
 		return output.Report{}, err
 	}
 
 	return *output.New(bk, cfg, ""), nil
+}
+
+func silentConfig(cfg config.Global) config.Global {
+	cfg.Output = config.Output{
+		Silent:   true,
+		Out:      []config.OutputStrategy{},
+		Template: "",
+	}
+	return cfg
 }
 
 // requesterConfig returns a requester.Config generated from cfg.

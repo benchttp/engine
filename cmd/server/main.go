@@ -15,6 +15,7 @@ func main() {
 }
 
 func run() error {
-	fmt.Println("http://localhost:" + port)
-	return server.ListenAndServe(port)
+	addr := ":" + port
+	fmt.Println("http://localhost" + addr)
+	return server.ListenAndServe(addr)
 }
