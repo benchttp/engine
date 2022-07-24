@@ -17,6 +17,7 @@ func ListenAndServe(addr string) error {
 type server struct {
 	mu               sync.RWMutex
 	currentRequester *requester.Requester
+	stopRun          context.CancelFunc
 }
 
 func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -25,6 +26,8 @@ func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		s.handleRun(w, r)
 	case "/state":
 		s.handleState(w, r)
+	case "/stop":
+		s.handleStop(w, r)
 	default:
 		http.NotFound(w, r)
 	}
@@ -37,27 +40,17 @@ func (s *server) doRun(cfg config.Global) (output.Report, error) {
 		return output.Report{}, err
 	}
 
+	ctx, cancel := context.WithCancel(context.Background())
 	s.setCurrentRequester(requester.New(requesterConfig(cfg)))
+	s.setStopRun(cancel)
 
 	// Run benchmark
-	bk, err := s.currentRequester.Run(context.Background(), httpRequest)
+	bk, err := s.currentRequester.Run(ctx, httpRequest)
 	if err != nil {
 		return output.Report{}, err
 	}
 
 	return *output.New(bk, cfg, ""), nil
-}
-
-func (s *server) flush() {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.currentRequester = nil
-}
-
-func (s *server) isRequesterRunning() bool {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	return s.currentRequester != nil
 }
 
 func (s *server) setCurrentRequester(r *requester.Requester) {
@@ -66,13 +59,42 @@ func (s *server) setCurrentRequester(r *requester.Requester) {
 	s.currentRequester = r
 }
 
+func (s *server) setStopRun(cancelFunc context.CancelFunc) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.stopRun = cancelFunc
+}
+
+func (s *server) flush() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.currentRequester = nil
+	s.stopRun = nil
+}
+
+func (s *server) isRequesterRunning() bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.currentRequester != nil
+}
+
 func (s *server) requesterState() (state requester.State, ok bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	if !s.isRequesterRunning() {
+	if s.currentRequester == nil {
 		return requester.State{}, false
 	}
 	return s.currentRequester.State(), true
+}
+
+func (s *server) stopRequester() bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.currentRequester == nil {
+		return false
+	}
+	s.stopRun()
+	return true
 }
 
 // requesterConfig returns a requester.Config generated from cfg.
