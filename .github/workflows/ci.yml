@@ -21,7 +21,7 @@ jobs:
         run: go get github.com/ory/go-acc
 
       # Check #1: Lint
-      - name: golangci-lint
+      - name: Lint
         uses: golangci/golangci-lint-action@v3
         with:
           version: v1.47.2
@@ -30,8 +30,8 @@ jobs:
       - name: Test & coverage
         run: make test-cov
 
-      # Check #3: Build
-      - name: Build Server
+      # Check #3: Build binaries
+      - name: Build
         run: make build
 
       - name: Upload coverage report
