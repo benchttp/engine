@@ -7,8 +7,8 @@ import (
 
 	"github.com/benchttp/runner/config"
 	"github.com/benchttp/runner/internal/auth"
-	"github.com/benchttp/runner/internal/configfile"
 	"github.com/benchttp/runner/internal/configflags"
+	"github.com/benchttp/runner/internal/configparse"
 	"github.com/benchttp/runner/internal/signals"
 	"github.com/benchttp/runner/output"
 	"github.com/benchttp/runner/requester"
@@ -31,7 +31,7 @@ type cmdRun struct {
 // init initializes cmdRun with default values.
 func (cmd *cmdRun) init() {
 	cmd.config = config.Default()
-	cmd.configFile = configfile.Find([]string{
+	cmd.configFile = configparse.Find([]string{
 		"./.benchttp.yml",
 		"./.benchttp.yaml",
 		"./.benchttp.json",
@@ -128,8 +128,8 @@ func (cmd *cmdRun) makeConfig(fields []string) (cfg config.Global, err error) {
 		return cmd.config, cmd.config.Validate()
 	}
 
-	fileConfig, err := configfile.Parse(cmd.configFile)
-	if err != nil && !errors.Is(err, configfile.ErrFileNotFound) {
+	fileConfig, err := configparse.Parse(cmd.configFile)
+	if err != nil && !errors.Is(err, configparse.ErrFileNotFound) {
 		// config file is not mandatory: discard ErrFileNotFound.
 		// other errors are critical
 		return
