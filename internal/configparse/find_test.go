@@ -3,7 +3,7 @@ package configparse_test
 import (
 	"testing"
 
-	"github.com/benchttp/runner/internal/configparse"
+	"github.com/benchttp/engine/internal/configparse"
 )
 
 var (

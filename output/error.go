@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/benchttp/runner/output/export"
+	"github.com/benchttp/engine/output/export"
 )
 
 var (

@@ -5,13 +5,13 @@ import (
 	"errors"
 	"flag"
 
-	"github.com/benchttp/runner/config"
-	"github.com/benchttp/runner/internal/auth"
-	"github.com/benchttp/runner/internal/configflags"
-	"github.com/benchttp/runner/internal/configparse"
-	"github.com/benchttp/runner/internal/signals"
-	"github.com/benchttp/runner/output"
-	"github.com/benchttp/runner/requester"
+	"github.com/benchttp/engine/config"
+	"github.com/benchttp/engine/internal/auth"
+	"github.com/benchttp/engine/internal/configflags"
+	"github.com/benchttp/engine/internal/configparse"
+	"github.com/benchttp/engine/internal/signals"
+	"github.com/benchttp/engine/output"
+	"github.com/benchttp/engine/requester"
 )
 
 // errAuth reports an error retrieving the user token.

@@ -14,10 +14,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/benchttp/runner/ansi"
-	"github.com/benchttp/runner/config"
-	"github.com/benchttp/runner/output/export"
-	"github.com/benchttp/runner/requester"
+	"github.com/benchttp/engine/ansi"
+	"github.com/benchttp/engine/config"
+	"github.com/benchttp/engine/output/export"
+	"github.com/benchttp/engine/requester"
 )
 
 // make export functions mockable

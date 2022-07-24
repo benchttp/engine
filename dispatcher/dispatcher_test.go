@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/benchttp/runner/dispatcher"
+	"github.com/benchttp/engine/dispatcher"
 )
 
 func TestNew(t *testing.T) {

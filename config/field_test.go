@@ -5,7 +5,7 @@ import (
 
 	"github.com/drykit-go/testx"
 
-	"github.com/benchttp/runner/config"
+	"github.com/benchttp/engine/config"
 )
 
 func TestIsField(t *testing.T) {

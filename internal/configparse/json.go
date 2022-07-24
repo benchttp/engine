@@ -1,7 +1,7 @@
 package configparse
 
 import (
-	"github.com/benchttp/runner/config"
+	"github.com/benchttp/engine/config"
 )
 
 // JSON reads input bytes as JSON and unmarshals it into a config.Global.

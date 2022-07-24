@@ -6,8 +6,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/benchttp/runner/config"
-	"github.com/benchttp/runner/internal/configparse"
+	"github.com/benchttp/engine/config"
+	"github.com/benchttp/engine/internal/configparse"
 )
 
 const validInput = `

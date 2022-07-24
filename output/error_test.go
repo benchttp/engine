@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/benchttp/runner/output"
-	"github.com/benchttp/runner/output/export"
+	"github.com/benchttp/engine/output"
+	"github.com/benchttp/engine/output/export"
 )
 
 func TestExportError_HasAuthError(t *testing.T) {

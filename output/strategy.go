@@ -1,6 +1,6 @@
 package output
 
-import "github.com/benchttp/runner/config"
+import "github.com/benchttp/engine/config"
 
 // Strategy reprents an output strategy for the input value.
 type Strategy uint8

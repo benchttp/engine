@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/benchttp/runner/ansi"
+	"github.com/benchttp/engine/ansi"
 )
 
 // state represents the progression of a benchmark at a given time.

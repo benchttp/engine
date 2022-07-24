@@ -4,8 +4,8 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/benchttp/runner/ansi"
-	"github.com/benchttp/runner/internal/auth"
+	"github.com/benchttp/engine/ansi"
+	"github.com/benchttp/engine/internal/auth"
 )
 
 // tokenURL is the URL to the webapp where the user can get a token.

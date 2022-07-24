@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/benchttp/runner/server"
+	"github.com/benchttp/engine/server"
 )
 
 const port = "8080"

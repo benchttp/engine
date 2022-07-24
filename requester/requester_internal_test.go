@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/benchttp/runner/dispatcher"
+	"github.com/benchttp/engine/dispatcher"
 )
 
 var errTest = errors.New("test-generated error")

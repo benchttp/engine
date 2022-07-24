@@ -3,7 +3,7 @@ package configflags
 import (
 	"flag"
 
-	"github.com/benchttp/runner/config"
+	"github.com/benchttp/engine/config"
 )
 
 // Which returns a slice of all config fields set via the CLI

@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/benchttp/runner/config"
+	"github.com/benchttp/engine/config"
 )
 
 // unmarshaledConfig is a raw data model for runner config files.
