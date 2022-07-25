@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"flag"
+	"fmt"
 
 	"github.com/benchttp/engine/config"
 	"github.com/benchttp/engine/internal/configflags"
@@ -73,7 +74,8 @@ func (cmd *cmdRun) execute(args []string) error {
 	}
 
 	// Output results according to the config
-	return output.New(ben, cfg).Export()
+	fmt.Println(output.New(ben, cfg).String())
+	return nil
 }
 
 // parseArgs parses input args as config fields and returns

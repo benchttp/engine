@@ -51,7 +51,6 @@ func (s *server) handleRun(w http.ResponseWriter, r *http.Request) {
 func silentConfig(cfg config.Global) config.Global {
 	cfg.Output = config.Output{
 		Silent:   true,
-		Out:      []config.OutputStrategy{},
 		Template: "",
 	}
 	return cfg

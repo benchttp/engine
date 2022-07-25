@@ -1,14 +1,11 @@
 package output
 
 import (
-	"bytes"
-	"encoding/gob"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"log"
-	"net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -16,15 +13,7 @@ import (
 
 	"github.com/benchttp/engine/ansi"
 	"github.com/benchttp/engine/config"
-	"github.com/benchttp/engine/output/export"
 	"github.com/benchttp/engine/requester"
-)
-
-// make export functions mockable
-var (
-	exportStdout   = export.Stdout
-	exportJSONFile = export.JSONFile
-	exportHTTP     = export.HTTP
 )
 
 type basicStats struct {
@@ -75,66 +64,6 @@ func newLogger(silent bool) *log.Logger {
 	}
 	return log.New(w, ansi.Bold("→ "), 0)
 }
-
-// Export exports the Report using the Strategies set in the embedded
-// config.Global. If any error occurs for a given Strategy, it does not
-// block the other exports and returns an ExportError listing the errors.
-func (rep *Report) Export() error {
-	var ok bool
-	var errs []error
-
-	s := exportStrategy(rep.Metadata.Config.Output.Out)
-	if s.is(Stdout) {
-		rep.log(ansi.Bold("Summary"))
-		exportStdout(rep)
-		ok = true
-	}
-	if s.is(JSONFile) {
-		if err := rep.exportJSONFile(); err != nil {
-			errs = append(errs, err)
-		}
-		ok = true
-	}
-	if s.is(Benchttp) {
-		if err := rep.exportHTTP(); err != nil {
-			errs = append(errs, err)
-		}
-		ok = true
-	}
-
-	if !ok {
-		return ErrInvalidStrategy
-	}
-	if len(errs) != 0 {
-		return &ExportError{Errors: errs}
-	}
-	return rep.errTemplateFailTriggered
-}
-
-// exportJSONFile exports the Report as a timestamped JSON file
-// located in the working directory.
-func (rep *Report) exportJSONFile() error {
-	filename := genFilename(time.Now().UTC())
-	if err := exportJSONFile(filename, rep); err != nil {
-		return err
-	}
-	rep.log(ansi.Bold("JSON generated"))
-	fmt.Println(filename) // always print output filename
-	return nil
-}
-
-// exportHTTP exports the Report to Benchttp server.
-func (rep *Report) exportHTTP() error {
-	if err := exportHTTP(rep); err != nil {
-		return err
-	}
-	rep.log(ansi.Bold("Report sent to Benchttp"))
-	return nil
-}
-
-// export.Interface implementation
-
-var _ export.Interface = (*Report)(nil)
 
 // String returns a default summary of the Report as a string.
 func (rep *Report) String() string {
@@ -192,51 +121,6 @@ func (rep *Report) String() string {
 
 func (rep *Report) JSON() ([]byte, error) {
 	return json.Marshal(rep)
-}
-
-// HTTPRequest returns the *http.Request to be sent to Benchttp server.
-// The Report is encoded as gob in the request body.
-func (rep *Report) HTTPRequest() (*http.Request, error) {
-	// Encode request body as gob
-	b, err := encodeGob(rep)
-	if err != nil {
-		return nil, err
-	}
-
-	// Create request
-	r, err := http.NewRequest("POST", benchttpEndpoint, bytes.NewReader(b))
-	if err != nil {
-		return nil, err
-	}
-
-	return r, nil
-}
-
-// helpers
-
-// encodeGob encodes the given Report as gob-encoded bytes.
-func encodeGob(rep *Report) ([]byte, error) {
-	var buf bytes.Buffer
-	if err := gob.NewEncoder(&buf).Encode(rep); err != nil {
-		return nil, err
-	}
-	return buf.Bytes(), nil
-}
-
-// genFilename generates a JSON file name suffixed with a timestamp
-// of the given time, located in the working directory.
-func genFilename(t time.Time) string {
-	return fmt.Sprintf("./benchttp.report.%s.json", timestamp(t))
-}
-
-// timestamp returns the given time.Time in format YYYYMMDDhhmmss.
-func timestamp(t time.Time) string {
-	y, m, d := t.Date()
-	hh, mm, ss := t.Clock()
-	return strings.ReplaceAll(
-		fmt.Sprintf("%4d%2d%2d%2d%2d%2d", y, m, d, hh, mm, ss),
-		" ", "0",
-	)
 }
 
 type nopWriter struct{}

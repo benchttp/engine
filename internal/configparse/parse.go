@@ -38,9 +38,8 @@ type unmarshaledConfig struct {
 	} `yaml:"runner" json:"runner"`
 
 	Output struct {
-		Out      *[]string `yaml:"out" json:"out"`
-		Silent   *bool     `yaml:"silent" json:"silent"`
-		Template *string   `yaml:"template" json:"template"`
+		Silent   *bool   `yaml:"silent" json:"silent"`
+		Template *string `yaml:"template" json:"template"`
 	} `yaml:"output" json:"output"`
 }
 
@@ -237,13 +236,6 @@ func newParsedConfig(uconf unmarshaledConfig) (parsedConfig, error) { //nolint:g
 		}
 		pconf.Runner.GlobalTimeout = parsedGlobalTimeout
 		pconf.add(config.FieldGlobalTimeout)
-	}
-
-	if out := uconf.Output.Out; out != nil {
-		for _, o := range *out {
-			pconf.Output.Out = append(pconf.Output.Out, config.OutputStrategy(o))
-		}
-		pconf.add(config.FieldOut)
 	}
 
 	if silent := uconf.Output.Silent; silent != nil {

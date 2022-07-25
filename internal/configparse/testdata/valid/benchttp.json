@@ -22,7 +22,6 @@
     "globalTimeout": "60s"
   },
   "output": {
-    "out": ["benchttp", "json", "stdout"],
     "silent": true,
     "template": "{{ .Benchmark.Length }}"
   }

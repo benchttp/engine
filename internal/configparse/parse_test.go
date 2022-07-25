@@ -206,7 +206,6 @@ func newExpConfig() config.Global {
 			GlobalTimeout:  60 * time.Second,
 		},
 		Output: config.Output{
-			Out:      []config.OutputStrategy{"benchttp", "json", "stdout"},
 			Silent:   true,
 			Template: "{{ .Benchmark.Length }}",
 		},

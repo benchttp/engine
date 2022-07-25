@@ -39,7 +39,6 @@ func TestSet(t *testing.T) {
 			"-interval", "3s",
 			"-requestTimeout", "4s",
 			"-globalTimeout", "5s",
-			"-out", "stdout,json",
 			"-silent",
 			"-template", "{{ .Report.Length }}",
 		}
@@ -64,7 +63,6 @@ func TestSet(t *testing.T) {
 				GlobalTimeout:  5 * time.Second,
 			},
 			Output: config.Output{
-				Out:      []config.OutputStrategy{config.OutputStdout, config.OutputJSON},
 				Silent:   true,
 				Template: "{{ .Report.Length }}",
 			},

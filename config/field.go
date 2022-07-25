@@ -10,7 +10,6 @@ const (
 	FieldInterval       = "interval"
 	FieldRequestTimeout = "requestTimeout"
 	FieldGlobalTimeout  = "globalTimeout"
-	FieldOut            = "out"
 	FieldSilent         = "silent"
 	FieldTemplate       = "template"
 )
@@ -26,7 +25,6 @@ var FieldsUsage = map[string]string{
 	FieldInterval:       "Minimum duration between two non concurrent requests",
 	FieldRequestTimeout: "Timeout for each HTTP request",
 	FieldGlobalTimeout:  "Max duration of test",
-	FieldOut:            "Output destination (benchttp,json,stdout)",
 	FieldSilent:         "Silent mode (no write to stdout)",
 	FieldTemplate:       "Output template",
 }

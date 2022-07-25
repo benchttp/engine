@@ -1,13 +1,7 @@
 package output_test
 
 import (
-	"bytes"
-	"encoding/gob"
-	"fmt"
-	"io"
-	"net/http"
 	"net/url"
-	"reflect"
 	"strconv"
 	"strings"
 	"testing"
@@ -57,19 +51,6 @@ func TestReport_String(t *testing.T) {
 	})
 }
 
-func TestReport_HTTPRequest(t *testing.T) {
-	t.Run("generate gob-encoded POST request to target endpoint", func(t *testing.T) {
-		bk, cfg := newBenchmark(), newConfigWithTemplate("")
-		rep := output.New(bk, cfg)
-
-		req, err := rep.HTTPRequest()
-		if err != nil {
-			t.Fatalf("unexpected error:\n%s", err)
-		}
-		checkRequest(t, req, rep)
-	})
-}
-
 // helpers
 
 func newBenchmark() requester.Benchmark {
@@ -111,68 +92,4 @@ Total duration     4000ms
 	if summary != expSummary {
 		t.Errorf("\nexp summary:\n%q\ngot summary:\n%q", expSummary, summary)
 	}
-}
-
-func checkRequest(t *testing.T, r *http.Request, rep *output.Report) {
-	t.Helper()
-
-	if r == nil {
-		t.Fatal("returned nil request")
-	}
-
-	t.Run("set method to POST", func(t *testing.T) {
-		const expMethod = "POST"
-		if r.Method != expMethod {
-			t.Errorf("request method: exp %q, got %q", expMethod, r.Method)
-		}
-	})
-
-	t.Run("set target url to correct endpoint", func(t *testing.T) {
-		const expURL = "http://localhost:9998/v1/report"
-		if gotURL := fmt.Sprint(r.URL); gotURL != expURL {
-			t.Errorf("request method: exp %q, got %q", expURL, gotURL)
-		}
-	})
-
-	t.Run("set body to gob encoded report", func(t *testing.T) {
-		b, err := io.ReadAll(r.Body)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		gotReport := &output.Report{}
-		if err := gob.NewDecoder(bytes.NewReader(b)).Decode(gotReport); err != nil {
-			t.Fatal(err)
-		}
-		if !sameReports(rep, gotReport) {
-			t.Errorf("unexpected report:\nexp %#v\ngot %#v", rep, gotReport)
-		}
-	})
-}
-
-// sameReports performs a deep equality check for two output.Report,
-// ignoring Report.log value.
-func sameReports(a, b *output.Report) bool {
-	// cannot rely on reflect.DeepEqual for time.Time
-	// https://github.com/golang/go/issues/10089
-	if !a.Metadata.FinishedAt.Equal(b.Metadata.FinishedAt) {
-		return false
-	}
-
-	// times are equal, use exact same value for both reports
-	// so we can perform deep equality check
-	bMetadata := b.Metadata
-	bMetadata.FinishedAt = a.Metadata.FinishedAt
-
-	// exclude Report.log func
-	return reflect.DeepEqual(
-		output.Report{
-			Benchmark: a.Benchmark,
-			Metadata:  a.Metadata,
-		},
-		output.Report{
-			Benchmark: b.Benchmark,
-			Metadata:  bMetadata,
-		},
-	)
 }

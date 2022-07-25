@@ -28,9 +28,6 @@ func TestGlobal_Validate(t *testing.T) {
 				RequestTimeout: 5,
 				GlobalTimeout:  5,
 			},
-			Output: config.Output{
-				Out: []config.OutputStrategy{"stdout", "json", "benchttp"},
-			},
 		}
 		if err := cfg.Validate(); err != nil {
 			t.Errorf("unexpected error: %v", err)
@@ -48,9 +45,6 @@ func TestGlobal_Validate(t *testing.T) {
 				Interval:       -5,
 				RequestTimeout: -5,
 				GlobalTimeout:  -5,
-			},
-			Output: config.Output{
-				Out: []config.OutputStrategy{config.OutputStdout, "bad-output"},
 			},
 		}
 
@@ -71,7 +65,6 @@ func TestGlobal_Validate(t *testing.T) {
 		findErrorOrFail(t, errs, `interval (-5): want >= 0`)
 		findErrorOrFail(t, errs, `requestTimeout (-5): want > 0`)
 		findErrorOrFail(t, errs, `globalTimeout (-5): want > 0`)
-		findErrorOrFail(t, errs, `out ("bad-output"): want one or many of "benchttp", "json", "stdout"`)
 
 		t.Logf("got error:\n%v", errInvalid)
 	})
@@ -91,7 +84,6 @@ func TestGlobal_Override(t *testing.T) {
 				GlobalTimeout:  4 * time.Second,
 			},
 			Output: config.Output{
-				Out:    []config.OutputStrategy{config.OutputStdout},
 				Silent: true,
 			},
 		}
@@ -114,7 +106,6 @@ func TestGlobal_Override(t *testing.T) {
 				GlobalTimeout:  4 * time.Second,
 			},
 			Output: config.Output{
-				Out:    []config.OutputStrategy{config.OutputStdout},
 				Silent: true,
 			},
 		}
@@ -126,7 +117,6 @@ func TestGlobal_Override(t *testing.T) {
 			config.FieldRequestTimeout,
 			config.FieldGlobalTimeout,
 			config.FieldBody,
-			config.FieldOut,
 			config.FieldSilent,
 		}
 

@@ -6,9 +6,6 @@ import (
 )
 
 var (
-	// ErrInvalidStrategy reports an unknown strategy set.
-	ErrInvalidStrategy = errors.New("invalid strategy")
-
 	// ErrTemplateFailTriggered a fail triggered by a user
 	// using the function {{ fail }} in an output template.
 	ErrTemplateFailTriggered = errors.New("test failed")

@@ -78,18 +78,8 @@ type Runner struct {
 
 // Output contains options relative to the output.
 type Output struct {
-	Out      []OutputStrategy
 	Silent   bool
 	Template string
-}
-
-func (o Output) HasStrategy(s OutputStrategy) bool {
-	for _, out := range o.Out {
-		if out == s {
-			return true
-		}
-	}
-	return false
 }
 
 // Global represents the global configuration of the runner.
@@ -131,8 +121,6 @@ func (cfg Global) Override(c Global, fields ...string) Global {
 			cfg.Runner.RequestTimeout = c.Runner.RequestTimeout
 		case FieldGlobalTimeout:
 			cfg.Runner.GlobalTimeout = c.Runner.GlobalTimeout
-		case FieldOut:
-			cfg.Output.Out = c.Output.Out
 		case FieldSilent:
 			cfg.Output.Silent = c.Output.Silent
 		case FieldTemplate:
@@ -197,18 +185,6 @@ func (cfg Global) Validate() error { //nolint:gocognit
 
 	if cfg.Runner.GlobalTimeout < 1 {
 		appendError(fmt.Errorf("globalTimeout (%d): want > 0", cfg.Runner.GlobalTimeout))
-	}
-
-	if out := cfg.Output.Out; len(out) == 0 {
-		appendError(errors.New(`out: missing (want one or many of "benchttp", "json", "stdout")`))
-	} else {
-		for _, o := range out {
-			if !IsOutput(string(o)) {
-				appendError(fmt.Errorf(
-					`out (%q): want one or many of "benchttp", "json", "stdout"`, o),
-				)
-			}
-		}
 	}
 
 	if len(errs) > 0 {

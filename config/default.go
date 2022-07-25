@@ -21,7 +21,6 @@ var defaultConfig = Global{
 		GlobalTimeout:  30 * time.Second,
 	},
 	Output: Output{
-		Out:      []OutputStrategy{OutputStdout},
 		Silent:   false,
 		Template: "",
 	},

@@ -74,11 +74,6 @@ func Set(flagset *flag.FlagSet, dst *config.Global) {
 		config.FieldsUsage[config.FieldGlobalTimeout],
 	)
 
-	// output strategies
-	flagset.Var(outValue{out: &dst.Output.Out},
-		config.FieldOut,
-		config.FieldsUsage[config.FieldOut],
-	)
 	// silent mode
 	flagset.BoolVar(&dst.Output.Silent,
 		config.FieldSilent,
