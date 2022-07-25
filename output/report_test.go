@@ -22,7 +22,7 @@ func TestReport_String(t *testing.T) {
 	t.Run("return default summary if template is empty", func(t *testing.T) {
 		const tpl = ""
 
-		rep := output.New(newBenchmark(), newConfigWithTemplate(tpl), "")
+		rep := output.New(newBenchmark(), newConfigWithTemplate(tpl))
 		checkSummary(t, rep.String())
 	})
 
@@ -30,7 +30,7 @@ func TestReport_String(t *testing.T) {
 		const tpl = "{{ .Benchmark.Length }}"
 
 		bk := newBenchmark()
-		rep := output.New(bk, newConfigWithTemplate(tpl), "")
+		rep := output.New(bk, newConfigWithTemplate(tpl))
 
 		if got, exp := rep.String(), strconv.Itoa(bk.Length); got != exp {
 			t.Errorf("\nunexpected output\nexp %s\ngot %s", exp, got)
@@ -40,7 +40,7 @@ func TestReport_String(t *testing.T) {
 	t.Run("fallback to default summary if template is invalid", func(t *testing.T) {
 		const tpl = "{{ .Marcel.Patulacci }}"
 
-		rep := output.New(newBenchmark(), newConfigWithTemplate(tpl), "")
+		rep := output.New(newBenchmark(), newConfigWithTemplate(tpl))
 		got := rep.String()
 		split := strings.Split(got, "Falling back to default summary:\n")
 
@@ -60,7 +60,7 @@ func TestReport_String(t *testing.T) {
 func TestReport_HTTPRequest(t *testing.T) {
 	t.Run("generate gob-encoded POST request to target endpoint", func(t *testing.T) {
 		bk, cfg := newBenchmark(), newConfigWithTemplate("")
-		rep := output.New(bk, cfg, "")
+		rep := output.New(bk, cfg)
 
 		req, err := rep.HTTPRequest()
 		if err != nil {

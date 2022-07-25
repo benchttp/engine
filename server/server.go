@@ -50,7 +50,7 @@ func (s *server) doRun(cfg config.Global) (output.Report, error) {
 		return output.Report{}, err
 	}
 
-	return *output.New(bk, cfg, ""), nil
+	return *output.New(bk, cfg), nil
 }
 
 func (s *server) setCurrentRequester(r *requester.Requester) {

@@ -43,8 +43,6 @@ type Report struct {
 		FinishedAt time.Time
 	}
 
-	userToken string
-
 	stats basicStats
 
 	errTemplateFailTriggered error
@@ -52,11 +50,9 @@ type Report struct {
 	log func(v ...interface{})
 }
 
-// New returns a Report initialized with the input benchmark, the config
-// used to run it and a user token. The user token is used to send export
-// the Report to Benchttp server. If config.OutputBenchttp is not set in
-// cfg, then the token is ignored.
-func New(bk requester.Benchmark, cfg config.Global, token string) *Report {
+// New returns a Report initialized with the input benchmark and the config
+// used to run it.
+func New(bk requester.Benchmark, cfg config.Global) *Report {
 	outputLogger := newLogger(cfg.Output.Silent)
 	return &Report{
 		Benchmark: bk,
@@ -67,9 +63,7 @@ func New(bk requester.Benchmark, cfg config.Global, token string) *Report {
 			Config:     cfg,
 			FinishedAt: time.Now(),
 		},
-
-		userToken: token,
-		log:       outputLogger.Println,
+		log: outputLogger.Println,
 	}
 }
 
@@ -131,9 +125,6 @@ func (rep *Report) exportJSONFile() error {
 
 // exportHTTP exports the Report to Benchttp server.
 func (rep *Report) exportHTTP() error {
-	if rep.userToken == "" {
-		return ErrNoToken
-	}
 	if err := exportHTTP(rep); err != nil {
 		return err
 	}
@@ -217,9 +208,6 @@ func (rep *Report) HTTPRequest() (*http.Request, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	// Set request headers with user token
-	r.Header.Set("Authorization", "Bearer "+rep.userToken)
 
 	return r, nil
 }

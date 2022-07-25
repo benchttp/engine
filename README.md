@@ -33,28 +33,6 @@ Highly configurable, it can serve many purposes such as monitoring (paired with 
 benchttp run [options]
 ```
 
-If you choose to export the benchmark report to the webapp for monitoring,
-you will be asked to authenticate. This is done using the next command.
-
-### Authentication
-
-#### Log in
-
-This command will ask you a benchttp token.
-Once given, it is stored in `~/.config/benchttp/token.txt`
-
-```sh
-benchttp auth login
-```
-
-#### Log out
-
-This command deletes the stored token at `~/.config/benchttp/token.txt`
-
-```sh
-benchttp auth logout
-```
-
 ## Configuration
 
 In this section we dive into the many configuration options provided by the runner.

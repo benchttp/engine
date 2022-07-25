@@ -6,16 +6,12 @@ import (
 	"flag"
 
 	"github.com/benchttp/engine/config"
-	"github.com/benchttp/engine/internal/auth"
 	"github.com/benchttp/engine/internal/configflags"
 	"github.com/benchttp/engine/internal/configparse"
 	"github.com/benchttp/engine/internal/signals"
 	"github.com/benchttp/engine/output"
 	"github.com/benchttp/engine/requester"
 )
-
-// errAuth reports an error retrieving the user token.
-var errAuth = errors.New(`authentication failed, please run "benchttp auth login" and restart the benchmark`)
 
 // cmdRun handles subcommand "benchttp run [options]".
 type cmdRun struct {
@@ -59,15 +55,6 @@ func (cmd *cmdRun) execute(args []string) error {
 		return err
 	}
 
-	// Retrieve user token if necessary (i.e. exports to benchttp server)
-	var token string
-	if cfg.Output.HasStrategy(config.OutputBenchttp) {
-		token, err = auth.ReadToken()
-		if err != nil {
-			return errAuth
-		}
-	}
-
 	// Prepare graceful shutdown in case of os.Interrupt (Ctrl+C)
 	ctx, cancel := context.WithCancel(context.Background())
 	go signals.ListenOSInterrupt(cancel)
@@ -86,11 +73,7 @@ func (cmd *cmdRun) execute(args []string) error {
 	}
 
 	// Output results according to the config
-	err = output.New(ben, cfg, token).Export()
-	if output.ExportErrorOf(err).HasAuthError() {
-		return errAuth
-	}
-	return err
+	return output.New(ben, cfg).Export()
 }
 
 // parseArgs parses input args as config fields and returns
