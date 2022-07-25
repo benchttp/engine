@@ -1,6 +1,7 @@
 package configparse_test
 
 import (
+	"encoding/json"
 	"errors"
 	"net/url"
 	"reflect"
@@ -10,37 +11,13 @@ import (
 	"github.com/benchttp/engine/internal/configparse"
 )
 
-const validInput = `
-{
-  "request": {
-    "url": "https://example.com"
-  },
-  "runner": {
-    "concurrency": 3
-  }
-}`
-
-const inputWithBadKeys = `
-{
-  "request": {
-    "url": "https://example.com"
-  },
-  "runner": {
-    "badkey": "marcel patulacci"
-  }
-}`
-
-const inputWithBadValues = `
-{
-  "request": {
-    "url": "https://example.com"
-  },
-  "runner": {
-    "concurrency": "bad value"
-  }
-}`
-
 func TestJSON(t *testing.T) {
+	baseInput := object{
+		"request": object{
+			"url": "https://example.com",
+		},
+	}
+
 	testcases := []struct {
 		name      string
 		input     []byte
@@ -48,20 +25,28 @@ func TestJSON(t *testing.T) {
 		expError  error
 	}{
 		{
-			name:      "returns error if input json has bad keys",
-			input:     []byte(inputWithBadKeys),
+			name: "returns error if input json has bad keys",
+			input: baseInput.assign(object{
+				"badkey": "marcel-patulacci",
+			}).json(),
 			expConfig: config.Global{},
 			expError:  errors.New(`invalid field ("badkey"): does not exist`),
 		},
 		{
-			name:      "returns error if input json has bad values",
-			input:     []byte(inputWithBadValues),
+			name: "returns error if input json has bad values",
+			input: baseInput.assign(object{
+				"runner": object{
+					"concurrency": "bad value", // want int
+				},
+			}).json(),
 			expConfig: config.Global{},
 			expError:  errors.New(`wrong type for field runner.concurrency: want int, got string`),
 		},
 		{
-			name:  "unmarshals JSON config and merges it with default",
-			input: []byte(validInput),
+			name: "unmarshals JSON config and merges it with default",
+			input: baseInput.assign(object{
+				"runner": object{"concurrency": 3},
+			}).json(),
 			expConfig: config.Default().Override(
 				config.Global{
 					Request: config.Request{
@@ -92,6 +77,27 @@ func TestJSON(t *testing.T) {
 	}
 }
 
+type object map[string]interface{}
+
+func (o object) json() []byte {
+	b, err := json.Marshal(o)
+	if err != nil {
+		panic(err)
+	}
+	return b
+}
+
+func (o object) assign(other object) object {
+	newObject := object{}
+	for k, v := range o {
+		newObject[k] = v
+	}
+	for k, v := range other {
+		newObject[k] = v
+	}
+	return newObject
+}
+
 func mustParseURL(rawURL string) *url.URL {
 	u, err := url.Parse(rawURL)
 	if err != nil {
@@ -108,4 +114,12 @@ func sameErrors(a, b error) bool {
 		return false
 	}
 	return a.Error() == b.Error()
+}
+
+func TestMap(t *testing.T) {
+	base := object{"a": "a"}
+	base.assign(object{"a": "CHANGED"})
+	if base["a"] != "a" {
+		t.Errorf("base map was mutated")
+	}
 }
