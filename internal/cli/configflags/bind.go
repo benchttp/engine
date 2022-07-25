@@ -8,11 +8,11 @@ import (
 	"github.com/benchttp/engine/config"
 )
 
-// Set reads arguments provided to flagset as config.Fields and binds
+// Bind reads arguments provided to flagset as config.Fields and binds
 // their value to the appropriate fields of given *config.Global.
 // The provided *flag.Flagset must not have been parsed yet, otherwise
 // bindings its values would fail.
-func Set(flagset *flag.FlagSet, dst *config.Global) {
+func Bind(flagset *flag.FlagSet, dst *config.Global) {
 	// avoid nil pointer dereferences
 	if dst.Request.URL == nil {
 		dst.Request.URL = &url.URL{}

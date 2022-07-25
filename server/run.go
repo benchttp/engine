@@ -14,7 +14,7 @@ func (s *server) handleRun(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Allow single run at a tinme
+	// Allow single run at a time
 	if s.isRequesterRunning() {
 		http.Error(w, "already running", http.StatusConflict)
 		return

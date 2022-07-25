@@ -8,16 +8,16 @@ import (
 	"time"
 
 	"github.com/benchttp/engine/config"
-	"github.com/benchttp/engine/internal/configflags"
+	"github.com/benchttp/engine/internal/cli/configflags"
 )
 
-func TestSet(t *testing.T) {
+func TestBind(t *testing.T) {
 	t.Run("default to base config", func(t *testing.T) {
 		flagset := flag.NewFlagSet("run", flag.ExitOnError)
 		args := []string{} // no args
 
 		cfg := config.Default()
-		configflags.Set(flagset, &cfg)
+		configflags.Bind(flagset, &cfg)
 		if err := flagset.Parse(args); err != nil {
 			t.Fatal(err) // critical error, stop the test
 		}
@@ -44,7 +44,7 @@ func TestSet(t *testing.T) {
 		}
 
 		cfg := config.Global{}
-		configflags.Set(flagset, &cfg)
+		configflags.Bind(flagset, &cfg)
 		if err := flagset.Parse(args); err != nil {
 			t.Fatal(err) // critical error, stop the test
 		}

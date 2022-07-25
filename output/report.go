@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/benchttp/engine/ansi"
 	"github.com/benchttp/engine/config"
+	"github.com/benchttp/engine/internal/cli/ansi"
 	"github.com/benchttp/engine/requester"
 )
 

@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/benchttp/engine/config"
-	"github.com/benchttp/engine/internal/configflags"
+	"github.com/benchttp/engine/internal/cli/configflags"
 )
 
 func TestWhich(t *testing.T) {
@@ -38,7 +38,7 @@ func TestWhich(t *testing.T) {
 	} {
 		flagset := flag.NewFlagSet("run", flag.ExitOnError)
 
-		configflags.Set(flagset, &config.Global{})
+		configflags.Bind(flagset, &config.Global{})
 
 		if err := flagset.Parse(tc.args); err != nil {
 			t.Fatal(err) // critical error, stop the test

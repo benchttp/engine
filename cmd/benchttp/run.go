@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/benchttp/engine/config"
-	"github.com/benchttp/engine/internal/configflags"
+	"github.com/benchttp/engine/internal/cli/configflags"
 	"github.com/benchttp/engine/internal/configparse"
 	"github.com/benchttp/engine/internal/signals"
 	"github.com/benchttp/engine/output"
@@ -99,7 +99,7 @@ func (cmd *cmdRun) parseArgs(args []string) []string {
 
 	// attach config options flags to the flagset
 	// and bind their value to the config struct
-	configflags.Set(cmd.flagset, &cmd.config)
+	configflags.Bind(cmd.flagset, &cmd.config)
 
 	cmd.flagset.Parse(args[1:]) //nolint:errcheck // never occurs due to flag.ExitOnError
 
