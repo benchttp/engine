@@ -119,8 +119,16 @@ func (rep *Report) String() string {
 	return b.String()
 }
 
-func (rep *Report) JSON() ([]byte, error) {
-	return json.Marshal(rep)
+func (rep *Report) Write(w io.Writer) (int, error) {
+	return w.Write([]byte(rep.String()))
+}
+
+func (rep *Report) WriteJSON(w io.Writer) (int, error) {
+	b, err := json.Marshal(rep)
+	if err != nil {
+		return 0, err
+	}
+	return w.Write(b)
 }
 
 type nopWriter struct{}

@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"flag"
-	"fmt"
+	"os"
 
 	"github.com/benchttp/engine/config"
 	"github.com/benchttp/engine/internal/configflags"
@@ -74,7 +74,10 @@ func (cmd *cmdRun) execute(args []string) error {
 	}
 
 	// Output results according to the config
-	fmt.Println(output.New(ben, cfg).String())
+	if _, err := output.New(ben, cfg).Write(os.Stdout); err != nil {
+		return err
+	}
+
 	return nil
 }
 

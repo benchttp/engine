@@ -39,13 +39,10 @@ func (s *server) handleRun(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jsonReport, err := report.JSON()
-	if err != nil {
+	if _, err := report.WriteJSON(w); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	w.Write(jsonReport)
 }
 
 func silentConfig(cfg config.Global) config.Global {
