@@ -115,11 +115,3 @@ func sameErrors(a, b error) bool {
 	}
 	return a.Error() == b.Error()
 }
-
-func TestMap(t *testing.T) {
-	base := object{"a": "a"}
-	base.assign(object{"a": "CHANGED"})
-	if base["a"] != "a" {
-		t.Errorf("base map was mutated")
-	}
-}
