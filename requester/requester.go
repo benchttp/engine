@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/benchttp/engine/dispatcher"
+	"github.com/benchttp/engine/internal/dispatcher"
 )
 
 const (
