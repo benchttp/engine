@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/benchttp/runner/output/export"
+	"github.com/benchttp/engine/output/export"
 )
 
 func TestHTTP(t *testing.T) {

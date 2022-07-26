@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/benchttp/runner/dispatcher"
+	"github.com/benchttp/engine/dispatcher"
 )
 
 const (
@@ -194,6 +194,6 @@ func (r *Requester) end(runErr error) {
 
 func (r *Requester) printState() {
 	if !r.config.Silent {
-		fmt.Print(r.state())
+		fmt.Print(r.State())
 	}
 }

@@ -6,7 +6,7 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/benchttp/runner/requester"
+	"github.com/benchttp/engine/requester"
 )
 
 // applyTemplate applies Report to a template using given pattern and returns

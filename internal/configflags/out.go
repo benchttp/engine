@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/benchttp/runner/config"
+	"github.com/benchttp/engine/config"
 )
 
 // outValue implements flag.Value

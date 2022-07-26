@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/benchttp/runner/config"
+	"github.com/benchttp/engine/config"
 )
 
 var validBody = config.NewBody("raw", `{"key0": "val0", "key1": "val1"}`)

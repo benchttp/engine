@@ -1,4 +1,4 @@
-package configfile_test
+package configparse_test
 
 import (
 	"errors"
@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/benchttp/runner/config"
-	"github.com/benchttp/runner/internal/configfile"
+	"github.com/benchttp/engine/config"
+	"github.com/benchttp/engine/internal/configparse"
 )
 
 const (
@@ -36,38 +36,38 @@ func TestParse(t *testing.T) {
 			{
 				label:  "not found",
 				path:   configPath("invalid/bad path"),
-				expErr: configfile.ErrFileNotFound,
+				expErr: configparse.ErrFileNotFound,
 			},
 			{
 				label:  "unsupported extension",
 				path:   configPath("invalid/badext.yams"),
-				expErr: configfile.ErrFileExt,
+				expErr: configparse.ErrFileExt,
 			},
 			{
 				label:  "yaml invalid fields",
 				path:   configPath("invalid/badfields.yml"),
-				expErr: configfile.ErrParse,
+				expErr: configparse.ErrParse,
 			},
 			{
 				label:  "json invalid fields",
 				path:   configPath("invalid/badfields.json"),
-				expErr: configfile.ErrParse,
+				expErr: configparse.ErrParse,
 			},
 			{
 				label:  "self reference",
 				path:   configPath("extends/extends-circular-self.yml"),
-				expErr: configfile.ErrCircularExtends,
+				expErr: configparse.ErrCircularExtends,
 			},
 			{
 				label:  "circular reference",
 				path:   configPath("extends/extends-circular-0.yml"),
-				expErr: configfile.ErrCircularExtends,
+				expErr: configparse.ErrCircularExtends,
 			},
 		}
 
 		for _, tc := range testcases {
 			t.Run(tc.label, func(t *testing.T) {
-				gotCfg, gotErr := configfile.Parse(tc.path)
+				gotCfg, gotErr := configparse.Parse(tc.path)
 
 				if gotErr == nil {
 					t.Fatal("exp non-nil error, got nil")
@@ -89,7 +89,7 @@ func TestParse(t *testing.T) {
 			expCfg := newExpConfig()
 			fname := configPath("valid/benchttp" + ext)
 
-			gotCfg, err := configfile.Parse(fname)
+			gotCfg, err := configparse.Parse(fname)
 			if err != nil {
 				// critical error, stop the test
 				t.Fatal(err)
@@ -124,7 +124,7 @@ func TestParse(t *testing.T) {
 
 		fname := configPath("valid/benchttp-zeros.yml")
 
-		cfg, err := configfile.Parse(fname)
+		cfg, err := configparse.Parse(fname)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -160,7 +160,7 @@ func TestParse(t *testing.T) {
 
 		for _, tc := range testcases {
 			t.Run(tc.label, func(t *testing.T) {
-				cfg, err := configfile.Parse(tc.cfpath)
+				cfg, err := configparse.Parse(tc.cfpath)
 				if err != nil {
 					t.Fatal(err)
 				}

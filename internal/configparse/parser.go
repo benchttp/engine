@@ -1,4 +1,4 @@
-package configfile
+package configparse
 
 import (
 	"bytes"

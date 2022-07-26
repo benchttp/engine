@@ -2,43 +2,48 @@ package requester
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/benchttp/runner/ansi"
+	"github.com/benchttp/engine/ansi"
 )
 
-// state represents the progression of a benchmark at a given time.
-type state struct {
-	done             bool
-	err              error
-	reqcur, reqmax   int
-	timeout, elapsed time.Duration
+// State represents the progression of a benchmark at a given time.
+type State struct {
+	Done                bool
+	Error               error
+	DoneCount, MaxCount int
+	Timeout, Elapsed    time.Duration
 }
 
-// state returns the current state of the benchmark.
-func (r *Requester) state() state {
+// State returns the current State of the benchmark.
+func (r *Requester) State() State {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	return state{
-		done:    r.done,
-		err:     r.runErr,
-		reqcur:  len(r.records),
-		reqmax:  r.config.Requests,
-		timeout: r.config.GlobalTimeout,
-		elapsed: time.Since(r.start),
+	return State{
+		Done:      r.done,
+		Error:     r.runErr,
+		DoneCount: len(r.records),
+		MaxCount:  r.config.Requests,
+		Timeout:   r.config.GlobalTimeout,
+		Elapsed:   time.Since(r.start),
 	}
+}
+
+func (s State) JSON() ([]byte, error) {
+	return json.Marshal(s)
 }
 
 // String returns a string representation of state for a fancy display
 // in a CLI:
 // 	RUNNING ◼︎◼︎◼︎◼︎◼︎◼︎◼︎◼︎◼︎◼︎ 50% | 50/100 requests | 27s timeout
-func (s state) String() string {
+func (s State) String() string {
 	var (
-		countdown = s.timeout - s.elapsed
-		reqmax    = strconv.Itoa(s.reqmax)
+		countdown = s.Timeout - s.Elapsed
+		reqmax    = strconv.Itoa(s.MaxCount)
 		pctdone   = s.percentDone()
 		timeline  = s.timeline(pctdone)
 	)
@@ -54,7 +59,7 @@ func (s state) String() string {
 		"%s%s %s %d%% | %d/%s requests | %.0fs timeout             \n",
 		ansi.Erase(1),                 // replace previous line
 		s.status(), timeline, pctdone, // progress
-		s.reqcur, reqmax, // requests
+		s.DoneCount, reqmax, // requests
 		countdown.Seconds(), // timeout
 	)
 }
@@ -68,7 +73,7 @@ var (
 
 // timeline returns a colored representation of the progress as a string:
 // 	◼︎◼︎◼︎◼︎◼︎◼︎◼︎◼︎◼︎◼︎
-func (s state) timeline(pctdone int) string {
+func (s State) timeline(pctdone int) string {
 	tl := strings.Repeat(tlBlockGrey, tlLen)
 	for i := 0; i < tlLen; i++ {
 		if pctdone >= (tlLen * i) {
@@ -80,11 +85,11 @@ func (s state) timeline(pctdone int) string {
 
 // status returns a string representing the status, depending on whether
 // the run is done or not and the value of the context error.
-func (s state) status() string {
-	if !s.done {
+func (s State) status() string {
+	if !s.Done {
 		return ansi.Yellow("RUNNING")
 	}
-	switch s.err {
+	switch s.Error {
 	case nil:
 		return ansi.Green("DONE")
 	case context.Canceled:
@@ -98,12 +103,12 @@ func (s state) status() string {
 // percentDone returns the progression of the run as a percentage.
 // It is based on the ratio requests done / max requests if it's finite
 // (not -1), else on the ratio elapsed time / global timeout.
-func (s state) percentDone() int {
+func (s State) percentDone() int {
 	var cur, max int
-	if s.reqmax == -1 {
-		cur, max = int(s.elapsed), int(s.timeout)
+	if s.MaxCount == -1 {
+		cur, max = int(s.Elapsed), int(s.Timeout)
 	} else {
-		cur, max = s.reqcur, s.reqmax
+		cur, max = s.DoneCount, s.MaxCount
 	}
 	return capInt((100*cur)/max, 100)
 }

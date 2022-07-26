@@ -3,7 +3,7 @@ package output
 import (
 	"testing"
 
-	"github.com/benchttp/runner/config"
+	"github.com/benchttp/engine/config"
 )
 
 type strategyTest struct {

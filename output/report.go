@@ -3,6 +3,7 @@ package output
 import (
 	"bytes"
 	"encoding/gob"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -13,10 +14,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/benchttp/runner/ansi"
-	"github.com/benchttp/runner/config"
-	"github.com/benchttp/runner/output/export"
-	"github.com/benchttp/runner/requester"
+	"github.com/benchttp/engine/ansi"
+	"github.com/benchttp/engine/config"
+	"github.com/benchttp/engine/output/export"
+	"github.com/benchttp/engine/requester"
 )
 
 // make export functions mockable
@@ -196,6 +197,10 @@ func (rep *Report) String() string {
 	b.WriteString(line("Mean response time", msString(mean)))
 	b.WriteString(line("Total duration", msString(bk.Duration)))
 	return b.String()
+}
+
+func (rep *Report) JSON() ([]byte, error) {
+	return json.Marshal(rep)
 }
 
 // HTTPRequest returns the *http.Request to be sent to Benchttp server.

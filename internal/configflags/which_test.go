@@ -5,8 +5,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/benchttp/runner/config"
-	"github.com/benchttp/runner/internal/configflags"
+	"github.com/benchttp/engine/config"
+	"github.com/benchttp/engine/internal/configflags"
 )
 
 func TestWhich(t *testing.T) {

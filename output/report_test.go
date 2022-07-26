@@ -13,9 +13,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/benchttp/runner/config"
-	"github.com/benchttp/runner/output"
-	"github.com/benchttp/runner/requester"
+	"github.com/benchttp/engine/config"
+	"github.com/benchttp/engine/output"
+	"github.com/benchttp/engine/requester"
 )
 
 func TestReport_String(t *testing.T) {

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/benchttp/runner/config"
+	"github.com/benchttp/engine/config"
 )
 
 func TestInvalidConfigError_Error(t *testing.T) {

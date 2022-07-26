@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/benchttp/runner/output/export"
+	"github.com/benchttp/engine/output/export"
 )
 
 func TestHTTPResponseError_Is(t *testing.T) {
