@@ -105,6 +105,5 @@ func requesterConfig(cfg config.Global) requester.Config {
 		Interval:       cfg.Runner.Interval,
 		RequestTimeout: cfg.Runner.RequestTimeout,
 		GlobalTimeout:  cfg.Runner.GlobalTimeout,
-		Silent:         cfg.Output.Silent,
 	}
 }

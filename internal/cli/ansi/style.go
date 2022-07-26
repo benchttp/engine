@@ -5,6 +5,8 @@ import (
 	"strings"
 )
 
+type StyleFunc func(in string) string
+
 type style string
 
 const (

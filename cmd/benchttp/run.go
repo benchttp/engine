@@ -4,9 +4,11 @@ import (
 	"context"
 	"errors"
 	"flag"
+	"fmt"
 	"os"
 
 	"github.com/benchttp/engine/config"
+	"github.com/benchttp/engine/internal/cli"
 	"github.com/benchttp/engine/internal/cli/configflags"
 	"github.com/benchttp/engine/internal/configparse"
 	"github.com/benchttp/engine/internal/signals"
@@ -136,7 +138,7 @@ func (*cmdRun) requesterConfig(cfg config.Global) requester.Config {
 		Interval:       cfg.Runner.Interval,
 		RequestTimeout: cfg.Runner.RequestTimeout,
 		GlobalTimeout:  cfg.Runner.GlobalTimeout,
-		Silent:         cfg.Output.Silent,
+		OnStateUpdate:  makeStateUpdateCallback(cfg.Output.Silent),
 	}
 }
 
@@ -150,4 +152,18 @@ func (*cmdRun) handleRunInterrupt() error {
 		return errors.New("benchmark interrupted without output")
 	}
 	return nil
+}
+
+func makeStateUpdateCallback(silent bool) func(requester.State) {
+	if silent {
+		return func(requester.State) {}
+	}
+
+	// hack: write a blank line as cli.WriteRequesterState always
+	// erases the previous line
+	fmt.Println()
+
+	return func(state requester.State) {
+		cli.WriteRequesterState(os.Stdout, state) //nolint: errcheck
+	}
 }

@@ -21,10 +21,11 @@ type Config struct {
 	Interval       time.Duration
 	RequestTimeout time.Duration
 	GlobalTimeout  time.Duration
-	Silent         bool
+	OnStateUpdate  func(State)
 }
 
 // Requester executes the benchmark. It wraps http.Client.
+// It must be initialized with New.
 type Requester struct {
 	records []Record
 	numErr  int
@@ -76,13 +77,7 @@ func (r *Requester) Run(ctx context.Context, req *http.Request) (Benchmark, erro
 	defer cancel()
 
 	r.start = time.Now()
-
-	if !r.config.Silent {
-		// state print always erase the previous line, so we print
-		// an empty line to be erased instead.
-		fmt.Println()
-		go r.refreshState()
-	}
+	go r.tickState()
 
 	err := dispatcher.New(numWorker).Do(ctx, maxIter, r.record(req, interval))
 	runDuration := time.Since(r.start)
@@ -157,7 +152,7 @@ func (r *Requester) record(req *http.Request, interval time.Duration) func() {
 			Events: events,
 		})
 
-		r.printState()
+		r.updateState()
 		time.Sleep(interval)
 	}
 }
@@ -171,7 +166,8 @@ func (r *Requester) appendRecord(rec Record) {
 	}
 }
 
-func (r *Requester) refreshState() {
+// tickState refreshes the state every second.
+func (r *Requester) tickState() {
 	ticker := time.NewTicker(time.Second)
 	tick := ticker.C
 	for {
@@ -179,9 +175,24 @@ func (r *Requester) refreshState() {
 			ticker.Stop()
 			break
 		}
-		r.printState()
+		r.updateState()
 		<-tick
 	}
+}
+
+// updateState calls r.OnStateUpdate with a new computed State
+func (r *Requester) updateState() {
+	r.safeOnStateUpdate()(r.State())
+}
+
+func (r *Requester) safeOnStateUpdate() func(State) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	onStateUpdate := r.config.OnStateUpdate
+	if onStateUpdate == nil {
+		return func(State) {}
+	}
+	return onStateUpdate
 }
 
 func (r *Requester) end(runErr error) {
@@ -189,11 +200,5 @@ func (r *Requester) end(runErr error) {
 	r.runErr = runErr
 	r.done = true
 	r.mu.Unlock()
-	r.printState()
-}
-
-func (r *Requester) printState() {
-	if !r.config.Silent {
-		fmt.Print(r.State())
-	}
+	r.updateState()
 }
