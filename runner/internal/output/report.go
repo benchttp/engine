@@ -11,9 +11,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/benchttp/engine/config"
 	"github.com/benchttp/engine/internal/cli/ansi"
-	"github.com/benchttp/engine/requester"
+	"github.com/benchttp/engine/runner/internal/config"
+	"github.com/benchttp/engine/runner/internal/requester"
 )
 
 type basicStats struct {

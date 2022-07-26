@@ -3,7 +3,7 @@ package configflags
 import (
 	"flag"
 
-	"github.com/benchttp/engine/config"
+	"github.com/benchttp/engine/runner"
 )
 
 // Which returns a slice of all config fields set via the CLI
@@ -11,7 +11,7 @@ import (
 func Which(flagset *flag.FlagSet) []string {
 	var fields []string
 	flagset.Visit(func(f *flag.Flag) {
-		if name := f.Name; config.IsField(name) {
+		if name := f.Name; runner.ConfigIsField(name) {
 			fields = append(fields, name)
 		}
 	})

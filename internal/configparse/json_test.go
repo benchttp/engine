@@ -7,8 +7,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/benchttp/engine/config"
 	"github.com/benchttp/engine/internal/configparse"
+	"github.com/benchttp/engine/runner"
 )
 
 func TestJSON(t *testing.T) {
@@ -21,7 +21,7 @@ func TestJSON(t *testing.T) {
 	testcases := []struct {
 		name      string
 		input     []byte
-		expConfig config.Global
+		expConfig runner.ConfigGlobal
 		expError  error
 	}{
 		{
@@ -29,7 +29,7 @@ func TestJSON(t *testing.T) {
 			input: baseInput.assign(object{
 				"badkey": "marcel-patulacci",
 			}).json(),
-			expConfig: config.Global{},
+			expConfig: runner.ConfigGlobal{},
 			expError:  errors.New(`invalid field ("badkey"): does not exist`),
 		},
 		{
@@ -39,7 +39,7 @@ func TestJSON(t *testing.T) {
 					"concurrency": "bad value", // want int
 				},
 			}).json(),
-			expConfig: config.Global{},
+			expConfig: runner.ConfigGlobal{},
 			expError:  errors.New(`wrong type for field runner.concurrency: want int, got string`),
 		},
 		{
@@ -47,12 +47,12 @@ func TestJSON(t *testing.T) {
 			input: baseInput.assign(object{
 				"runner": object{"concurrency": 3},
 			}).json(),
-			expConfig: config.Default().Override(
-				config.Global{
-					Request: config.Request{
+			expConfig: runner.ConfigDefault().Override(
+				runner.ConfigGlobal{
+					Request: runner.ConfigRequest{
 						URL: mustParseURL("https://example.com"),
 					},
-					Runner: config.Runner{
+					Runner: runner.ConfigRunner{
 						Concurrency: 3,
 					},
 				},

@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/benchttp/engine/config"
 	"github.com/benchttp/engine/internal/cli/configflags"
+	"github.com/benchttp/engine/runner"
 )
 
 func TestBind(t *testing.T) {
@@ -16,13 +16,13 @@ func TestBind(t *testing.T) {
 		flagset := flag.NewFlagSet("run", flag.ExitOnError)
 		args := []string{} // no args
 
-		cfg := config.Default()
+		cfg := runner.ConfigDefault()
 		configflags.Bind(flagset, &cfg)
 		if err := flagset.Parse(args); err != nil {
 			t.Fatal(err) // critical error, stop the test
 		}
 
-		if exp := config.Default(); !reflect.DeepEqual(cfg, exp) {
+		if exp := runner.ConfigDefault(); !reflect.DeepEqual(cfg, exp) {
 			t.Errorf("\nexp %#v\ngot %#v", exp, cfg)
 		}
 	})
@@ -43,26 +43,26 @@ func TestBind(t *testing.T) {
 			"-template", "{{ .Report.Length }}",
 		}
 
-		cfg := config.Global{}
+		cfg := runner.ConfigGlobal{}
 		configflags.Bind(flagset, &cfg)
 		if err := flagset.Parse(args); err != nil {
 			t.Fatal(err) // critical error, stop the test
 		}
 
-		exp := config.Global{
-			Request: config.Request{
+		exp := runner.ConfigGlobal{
+			Request: runner.ConfigRequest{
 				Method: "POST",
 				Header: http.Header{"Content-Type": {"application/json"}},
-				Body:   config.Body{Type: "raw", Content: []byte("hello")},
+				Body:   runner.ConfigBody{Type: "raw", Content: []byte("hello")},
 			}.WithURL("https://benchttp.app?cool=yes"),
-			Runner: config.Runner{
+			Runner: runner.ConfigRunner{
 				Requests:       1,
 				Concurrency:    2,
 				Interval:       3 * time.Second,
 				RequestTimeout: 4 * time.Second,
 				GlobalTimeout:  5 * time.Second,
 			},
-			Output: config.Output{
+			Output: runner.ConfigOutput{
 				Silent:   true,
 				Template: "{{ .Report.Length }}",
 			},

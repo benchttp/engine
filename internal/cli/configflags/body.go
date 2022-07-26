@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/benchttp/engine/config"
+	"github.com/benchttp/engine/runner"
 )
 
 // bodyValue implements flag.Value
 type bodyValue struct {
-	body *config.Body
+	body *runner.ConfigBody
 }
 
 // String returns a string representation of the referenced body.
@@ -40,7 +40,7 @@ func (v bodyValue) Set(raw string) error {
 
 	switch btype {
 	case "raw":
-		*v.body = config.NewBody(btype, bcontent)
+		*v.body = runner.ConfigNewBody(btype, bcontent)
 	// case "file":
 	// 	// TODO
 	default:

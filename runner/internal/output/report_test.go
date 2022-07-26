@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/benchttp/engine/config"
-	"github.com/benchttp/engine/output"
-	"github.com/benchttp/engine/requester"
+	"github.com/benchttp/engine/runner/internal/config"
+	"github.com/benchttp/engine/runner/internal/output"
+	"github.com/benchttp/engine/runner/internal/requester"
 )
 
 func TestReport_String(t *testing.T) {

@@ -4,8 +4,8 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/benchttp/engine/config"
 	"github.com/benchttp/engine/internal/configparse"
+	"github.com/benchttp/engine/runner"
 )
 
 func (s *server) handleRun(w http.ResponseWriter, r *http.Request) {
@@ -45,8 +45,8 @@ func (s *server) handleRun(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func silentConfig(cfg config.Global) config.Global {
-	cfg.Output = config.Output{
+func silentConfig(cfg runner.ConfigGlobal) runner.ConfigGlobal {
+	cfg.Output = runner.ConfigOutput{
 		Silent:   true,
 		Template: "",
 	}

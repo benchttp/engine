@@ -7,13 +7,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/benchttp/engine/config"
 	"github.com/benchttp/engine/internal/cli"
 	"github.com/benchttp/engine/internal/cli/configflags"
 	"github.com/benchttp/engine/internal/configparse"
 	"github.com/benchttp/engine/internal/signals"
-	"github.com/benchttp/engine/output"
-	"github.com/benchttp/engine/requester"
+	"github.com/benchttp/engine/runner"
 )
 
 // cmdRun handles subcommand "benchttp run [options]".
@@ -24,12 +22,12 @@ type cmdRun struct {
 	configFile string
 
 	// config is the runner config resulting from parsing CLI flags.
-	config config.Global
+	config runner.ConfigGlobal
 }
 
 // init initializes cmdRun with default values.
 func (cmd *cmdRun) init() {
-	cmd.config = config.Default()
+	cmd.config = runner.ConfigDefault()
 	cmd.configFile = configparse.Find([]string{
 		"./.benchttp.yml",
 		"./.benchttp.yaml",
@@ -63,13 +61,13 @@ func (cmd *cmdRun) execute(args []string) error {
 	go signals.ListenOSInterrupt(cancel)
 
 	// Run the benchmark
-	ben, err := requester.New(cmd.requesterConfig(cfg)).Run(ctx, req)
+	ben, err := runner.NewRequester(cmd.requesterConfig(cfg)).Run(ctx, req)
 	if err != nil {
 		return err
 	}
 
 	// Output results according to the config
-	if _, err := output.New(ben, cfg).Write(os.Stdout); err != nil {
+	if _, err := runner.NewOutput(ben, cfg).Write(os.Stdout); err != nil {
 		return err
 	}
 
@@ -101,10 +99,10 @@ func (cmd *cmdRun) parseArgs(args []string) []string {
 	return configflags.Which(cmd.flagset)
 }
 
-// makeConfig returns a config.Global initialized with config file
+// makeConfig returns a runner.ConfigGlobal initialized with config file
 // options if found, overridden with CLI options listed in fields
 // slice param.
-func (cmd *cmdRun) makeConfig(fields []string) (cfg config.Global, err error) {
+func (cmd *cmdRun) makeConfig(fields []string) (cfg runner.ConfigGlobal, err error) {
 	// configFile not set and default ones not found:
 	// skip the merge and return the cli config
 	if cmd.configFile == "" {
@@ -123,9 +121,9 @@ func (cmd *cmdRun) makeConfig(fields []string) (cfg config.Global, err error) {
 	return mergedConfig, mergedConfig.Validate()
 }
 
-// requesterConfig returns a requester.Config generated from cfg.
-func (*cmdRun) requesterConfig(cfg config.Global) requester.Config {
-	return requester.Config{
+// requesterConfig returns a runner.RequesterConfig generated from cfg.
+func (*cmdRun) requesterConfig(cfg runner.ConfigGlobal) runner.RequesterConfig {
+	return runner.RequesterConfig{
 		Requests:       cfg.Runner.Requests,
 		Concurrency:    cfg.Runner.Concurrency,
 		Interval:       cfg.Runner.Interval,
@@ -135,16 +133,16 @@ func (*cmdRun) requesterConfig(cfg config.Global) requester.Config {
 	}
 }
 
-func makeStateUpdateCallback(silent bool) func(requester.State) {
+func makeStateUpdateCallback(silent bool) func(runner.RequesterState) {
 	if silent {
-		return func(requester.State) {}
+		return func(runner.RequesterState) {}
 	}
 
 	// hack: write a blank line as cli.WriteRequesterState always
 	// erases the previous line
 	fmt.Println()
 
-	return func(state requester.State) {
+	return func(state runner.RequesterState) {
 		cli.WriteRequesterState(os.Stdout, state) //nolint: errcheck
 	}
 }

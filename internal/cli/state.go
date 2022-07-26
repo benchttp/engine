@@ -7,19 +7,19 @@ import (
 	"strings"
 
 	"github.com/benchttp/engine/internal/cli/ansi"
-	"github.com/benchttp/engine/requester"
+	"github.com/benchttp/engine/runner"
 )
 
 // WriteRequesterState renders a fancy representation of s as a string
 // and writes the result to w.
-func WriteRequesterState(w io.Writer, s requester.State) (int, error) {
+func WriteRequesterState(w io.Writer, s runner.RequesterState) (int, error) {
 	return fmt.Fprint(w, renderState(s))
 }
 
-// renderState returns a string representation of requester.State
+// renderState returns a string representation of runner.State
 // for a fancy display in a CLI:
 // 	RUNNING ◼︎◼︎◼︎◼︎◼︎◼︎◼︎◼︎◼︎◼︎ 50% | 50/100 requests | 27s timeout
-func renderState(s requester.State) string {
+func renderState(s runner.RequesterState) string {
 	var (
 		countdown = s.Timeout - s.Elapsed
 		reqmax    = strconv.Itoa(s.MaxCount)
@@ -65,20 +65,20 @@ func renderTimeline(pctdone int) string {
 // renderStatus returns a string representing the status,
 // depending on whether the run is done or not and the value
 // of its context error.
-func renderStatus(status requester.Status) string {
+func renderStatus(status runner.RequesterStatus) string {
 	color := statusStyle(status)
 	return color(string(status))
 }
 
-func statusStyle(status requester.Status) ansi.StyleFunc {
+func statusStyle(status runner.RequesterStatus) ansi.StyleFunc {
 	switch status {
-	case requester.StatusRunning:
+	case runner.StatusRunning:
 		return ansi.Yellow
-	case requester.StatusDone:
+	case runner.StatusDone:
 		return ansi.Green
-	case requester.StatusCanceled:
+	case runner.StatusCanceled:
 		return ansi.Red
-	case requester.StatusTimeout:
+	case runner.StatusTimeout:
 		return ansi.Cyan
 	}
 	return ansi.Grey // should not occur

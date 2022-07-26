@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/benchttp/engine/requester"
+	"github.com/benchttp/engine/runner/internal/requester"
 )
 
 func TestReport_applyTemplate(t *testing.T) {
