@@ -65,14 +65,7 @@ func (cmd *cmdRun) execute(args []string) error {
 	// Run the benchmark
 	ben, err := requester.New(cmd.requesterConfig(cfg)).Run(ctx, req)
 	if err != nil {
-		if errors.Is(err, requester.ErrCanceled) {
-			// context canceled: handle the case of os.Interrupt
-			if err := cmd.handleRunInterrupt(); err != nil {
-				return err
-			}
-		} else {
-			return err
-		}
+		return err
 	}
 
 	// Output results according to the config
@@ -140,18 +133,6 @@ func (*cmdRun) requesterConfig(cfg config.Global) requester.Config {
 		GlobalTimeout:  cfg.Runner.GlobalTimeout,
 		OnStateUpdate:  makeStateUpdateCallback(cfg.Output.Silent),
 	}
-}
-
-// handleRunInterrupt handles the case when the runner is interrupted.
-func (*cmdRun) handleRunInterrupt() error {
-	v, err := promptf("\nBenchmark interrupted, generate output anyway? (yes/no): ")
-	if err != nil {
-		return err
-	}
-	if v != "yes" {
-		return errors.New("benchmark interrupted without output")
-	}
-	return nil
 }
 
 func makeStateUpdateCallback(silent bool) func(requester.State) {
