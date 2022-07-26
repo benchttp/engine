@@ -72,13 +72,13 @@ func renderStatus(status runner.RequesterStatus) string {
 
 func statusStyle(status runner.RequesterStatus) ansi.StyleFunc {
 	switch status {
-	case runner.StatusRunning:
+	case runner.RequesterStatusRunning:
 		return ansi.Yellow
-	case runner.StatusDone:
+	case runner.RequesterStatusDone:
 		return ansi.Green
-	case runner.StatusCanceled:
+	case runner.RequesterStatusCanceled:
 		return ansi.Red
-	case runner.StatusTimeout:
+	case runner.RequesterStatusTimeout:
 		return ansi.Cyan
 	}
 	return ansi.Grey // should not occur
