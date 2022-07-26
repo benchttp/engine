@@ -10,7 +10,7 @@ import (
 	"github.com/benchttp/engine/requester"
 )
 
-// WriteRequesterState renderes a fancy representation of s as a string
+// WriteRequesterState renders a fancy representation of s as a string
 // and writes the result to w.
 func WriteRequesterState(w io.Writer, s requester.State) (int, error) {
 	return fmt.Fprint(w, renderState(s))

@@ -14,18 +14,26 @@ const (
 	defaultRecordsCap = 1000
 )
 
-// Config is the requester config that determines its behavior.
+// A Config determines the behavior of a Requester.
 type Config struct {
-	Requests       int
-	Concurrency    int
-	Interval       time.Duration
+	// Requests is the number of requests to send.
+	Requests int
+	// Concurrency is the maximum number of concurrent requests.
+	Concurrency int
+	// Interval is the minimum duration between two non-concurrent requests.
+	Interval time.Duration
+	// RequestTimeout is the timeout for each request sent.
 	RequestTimeout time.Duration
-	GlobalTimeout  time.Duration
-	OnStateUpdate  func(State)
+	// GlobalTimeout is the timeout for the whole run.
+	GlobalTimeout time.Duration
+	// OnStateUpdate is called each time the requester state is updated.
+	// The requester state is updated each time a requests is done,
+	// and every second concurrently.
+	OnStateUpdate func(State)
 }
 
-// Requester executes the benchmark. It wraps http.Client.
-// It must be initialized with New.
+// Requester sends requests and records the results via the method Run.
+// It must be initialized with New: it won't work otherwise.
 type Requester struct {
 	records []Record
 	numErr  int
@@ -39,9 +47,7 @@ type Requester struct {
 	mu sync.RWMutex
 }
 
-// New returns a Requester initialized with cfg. cfg is assumed valid:
-// it is the caller's responsibility to ensure cfg is valid using
-// cfg.Validate.
+// New returns a Requester initialized with the given Config.
 func New(cfg Config) *Requester {
 	recordsCap := cfg.Requests
 	if recordsCap < 1 {
@@ -57,8 +63,8 @@ func New(cfg Config) *Requester {
 	}
 }
 
-// Run starts the benchmark test and pipelines the results inside a Report.
-// Returns the Report when the test ended and all results have been collected.
+// Run clones and sends req n times, or until ctx is done or the global timeout
+// is reached. It gathers the collected results into a Benchmark.
 func (r *Requester) Run(ctx context.Context, req *http.Request) (Benchmark, error) {
 	if err := r.ping(req); err != nil {
 		return Benchmark{}, fmt.Errorf("%w: %s", ErrConnection, err)
