@@ -24,5 +24,19 @@
   "output": {
     "silent": true,
     "template": "{{ .Metrics.Avg }}"
-  }
+  },
+  "tests": [
+    {
+      "name": "minimum response time",
+      "metric": "MIN",
+      "predicate": "GT",
+      "value": "80ms"
+    },
+    {
+      "name": "maximum response time",
+      "metric": "MAX",
+      "predicate": "LTE",
+      "value": "120ms"
+    }
+  ]
 }

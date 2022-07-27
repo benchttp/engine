@@ -209,6 +209,20 @@ func newExpConfig() runner.Config {
 			Silent:   true,
 			Template: "{{ .Metrics.Avg }}",
 		},
+		Tests: []runner.TestConfig{
+			{
+				Name:      "minimum response time",
+				Metric:    "MIN",
+				Predicate: "GT",
+				Value:     80 * time.Millisecond,
+			},
+			{
+				Name:      "maximum response time",
+				Metric:    "MAX",
+				Predicate: "LTE",
+				Value:     120 * time.Millisecond,
+			},
+		},
 	}
 }
 
