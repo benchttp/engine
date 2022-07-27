@@ -1,44 +1,72 @@
 package server
 
 import (
-	"io"
-	"net/http"
+	"context"
+	"fmt"
+	"sync"
 
-	"github.com/benchttp/engine/internal/configparse"
+	"github.com/benchttp/engine/runner"
+	"github.com/gorilla/websocket"
 )
 
-func (s *server) handleRun(w http.ResponseWriter, r *http.Request) {
-	// Allow single run at a time
-	if s.isRequesterRunning() {
-		http.Error(w, "already running", http.StatusConflict)
-		return
-	}
-	defer s.flush()
+type run struct {
+	mu sync.RWMutex
 
-	// Read input config
-	readBody, err := io.ReadAll(r.Body)
+	runner *runner.Runner
+	output *runner.Report
+	err    error
+	cancel context.CancelFunc
+}
+
+func (r *run) run(ws *websocket.Conn) {
+	r.flush()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	r.cancel = cancel
+
+	r.runner = runner.New(
+		func(rp runner.RecordingProgress) {
+			// Protect from concurrent write to websocket connection.
+			r.mu.Lock()
+			defer r.mu.Unlock()
+			m := fmt.Sprintf("%s: %d/%d %d", rp.Status(), rp.DoneCount, rp.MaxCount, rp.Percent())
+			_ = writeMessage(ws, m)
+		},
+	)
+
+	out, err := r.runner.Run(ctx, config())
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		r.err = err
+		_ = writeMessage(ws, fmt.Sprintf("done with error: %s", err))
 		return
 	}
 
-	// Parse json config
-	cfg, err := configparse.JSON(readBody)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	r.output = out
+	_ = writeMessage(ws, "done without error")
+}
+
+func (r *run) stop() bool {
+	defer r.flush()
+	if r.runner == nil {
+		return false
+	}
+	r.cancel()
+	return true
+}
+
+func (r *run) pull(ws *websocket.Conn) {
+	if r.output == nil {
+		_ = writeMessage(ws, "not done yet")
 		return
 	}
 
-	// Start run
-	out, err := s.doRun(cfg)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	m := r.output.String()
+	_ = writeMessage(ws, m)
+}
 
-	// Respond with run output
-	if _, err := out.WriteJSON(w); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+func (r *run) flush() {
+	r.runner = nil
+	r.output = nil
+	r.err = nil
+	r.cancel = nil
 }

@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"net/http"
 
 	"github.com/benchttp/engine/server"
 )
@@ -9,13 +11,7 @@ import (
 const port = "8080"
 
 func main() {
-	if err := run(); err != nil {
-		fmt.Println(err)
-	}
-}
-
-func run() error {
 	addr := ":" + port
 	fmt.Println("http://localhost" + addr)
-	return server.ListenAndServe(addr)
+	log.Fatal(http.ListenAndServe(addr, &server.Handler{}))
 }
