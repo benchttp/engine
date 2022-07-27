@@ -13,7 +13,7 @@ import (
 	"github.com/benchttp/engine/runner/internal/metrics"
 )
 
-// Report represent a run result as exported by the runner.
+// Report represents a run result as exported by the runner.
 type Report struct {
 	Metrics  metrics.Aggregate
 	Metadata Metadata
