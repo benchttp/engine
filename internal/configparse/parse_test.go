@@ -77,7 +77,7 @@ func TestParse(t *testing.T) {
 					t.Errorf("\nexp %v\ngot %v", tc.expErr, gotErr)
 				}
 
-				if !reflect.DeepEqual(gotCfg, runner.ConfigGlobal{}) {
+				if !reflect.DeepEqual(gotCfg, runner.Config{}) {
 					t.Errorf("\nexp empty config\ngot %v", gotCfg)
 				}
 			})
@@ -186,28 +186,28 @@ func TestParse(t *testing.T) {
 
 // newExpConfig returns the expected runner.ConfigConfig result after parsing
 // one of the config files in testdataConfigPath.
-func newExpConfig() runner.ConfigGlobal {
+func newExpConfig() runner.Config {
 	u, _ := url.ParseRequestURI(testURL)
-	return runner.ConfigGlobal{
-		Request: runner.ConfigRequest{
+	return runner.Config{
+		Request: runner.RequestConfig{
 			Method: "POST",
 			URL:    u,
 			Header: http.Header{
 				"key0": []string{"val0", "val1"},
 				"key1": []string{"val0"},
 			},
-			Body: runner.ConfigNewBody("raw", `{"key0":"val0","key1":"val1"}`),
+			Body: runner.NewRequestBody("raw", `{"key0":"val0","key1":"val1"}`),
 		},
-		Runner: runner.ConfigRunner{
+		Runner: runner.RecorderConfig{
 			Requests:       100,
 			Concurrency:    1,
 			Interval:       50 * time.Millisecond,
 			RequestTimeout: 2 * time.Second,
 			GlobalTimeout:  60 * time.Second,
 		},
-		Output: runner.ConfigOutput{
+		Output: runner.OutputConfig{
 			Silent:   true,
-			Template: "{{ .Metrics.TotalCount }}",
+			Template: "{{ .Metrics.Avg }}",
 		},
 	}
 }

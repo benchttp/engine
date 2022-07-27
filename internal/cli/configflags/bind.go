@@ -12,7 +12,7 @@ import (
 // their value to the appropriate fields of given *config.Global.
 // The provided *flag.Flagset must not have been parsed yet, otherwise
 // bindings its values would fail.
-func Bind(flagset *flag.FlagSet, dst *runner.ConfigGlobal) {
+func Bind(flagset *flag.FlagSet, dst *runner.Config) {
 	// avoid nil pointer dereferences
 	if dst.Request.URL == nil {
 		dst.Request.URL = &url.URL{}

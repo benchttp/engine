@@ -11,7 +11,7 @@ import (
 func Which(flagset *flag.FlagSet) []string {
 	var fields []string
 	flagset.Visit(func(f *flag.Flag) {
-		if name := f.Name; runner.ConfigIsField(name) {
+		if name := f.Name; runner.IsConfigField(name) {
 			fields = append(fields, name)
 		}
 	})

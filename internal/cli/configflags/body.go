@@ -9,7 +9,7 @@ import (
 
 // bodyValue implements flag.Value
 type bodyValue struct {
-	body *runner.ConfigBody
+	body *runner.RequestBody
 }
 
 // String returns a string representation of the referenced body.
@@ -40,7 +40,7 @@ func (v bodyValue) Set(raw string) error {
 
 	switch btype {
 	case "raw":
-		*v.body = runner.ConfigNewBody(btype, bcontent)
+		*v.body = runner.NewRequestBody(btype, bcontent)
 	// case "file":
 	// 	// TODO
 	default:

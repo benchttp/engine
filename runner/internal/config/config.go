@@ -10,21 +10,21 @@ import (
 	"time"
 )
 
-// Body represents a request body associated with a type.
+// RequestBody represents a request body associated with a type.
 // The type affects the way the content is processed.
 // If Type == "file", Content is read as a filepath to be resolved.
 // If Type == "raw", Content is attached as-is.
 //
 // Note: only "raw" is supported at the moment.
-type Body struct {
+type RequestBody struct {
 	Type    string
 	Content []byte
 }
 
 // NewBody returns a Body initialized with the given type and content.
 // For now, the only valid value for type is "raw".
-func NewBody(typ, content string) Body {
-	return Body{Type: typ, Content: []byte(content)}
+func NewBody(typ, content string) RequestBody {
+	return RequestBody{Type: typ, Content: []byte(content)}
 }
 
 // Request contains the confing options relative to a single request.
@@ -32,7 +32,7 @@ type Request struct {
 	Method string
 	URL    *url.URL
 	Header http.Header
-	Body   Body
+	Body   RequestBody
 }
 
 // Value generates a *http.Request based on Request and returns it

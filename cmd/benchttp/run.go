@@ -22,12 +22,12 @@ type cmdRun struct {
 	configFile string
 
 	// config is the runner config resulting from parsing CLI flags.
-	config runner.ConfigGlobal
+	config runner.Config
 }
 
 // init initializes cmdRun with default values.
 func (cmd *cmdRun) init() {
-	cmd.config = runner.ConfigDefault()
+	cmd.config = runner.DefaultConfig()
 	cmd.configFile = configparse.Find([]string{
 		"./.benchttp.yml",
 		"./.benchttp.yaml",
@@ -98,7 +98,7 @@ func (cmd *cmdRun) parseArgs(args []string) []string {
 // makeConfig returns a runner.ConfigGlobal initialized with config file
 // options if found, overridden with CLI options listed in fields
 // slice param.
-func (cmd *cmdRun) makeConfig(fields []string) (cfg runner.ConfigGlobal, err error) {
+func (cmd *cmdRun) makeConfig(fields []string) (cfg runner.Config, err error) {
 	// configFile not set and default ones not found:
 	// skip the merge and return the cli config
 	if cmd.configFile == "" {
@@ -117,16 +117,16 @@ func (cmd *cmdRun) makeConfig(fields []string) (cfg runner.ConfigGlobal, err err
 	return mergedConfig, mergedConfig.Validate()
 }
 
-func onStateUpdate(silent bool) func(runner.RecorderProgress) {
+func onStateUpdate(silent bool) func(runner.RecordingProgress) {
 	if silent {
-		return func(runner.RecorderProgress) {}
+		return func(runner.RecordingProgress) {}
 	}
 
 	// hack: write a blank line as cli.WriteRequesterState always
 	// erases the previous line
 	fmt.Println()
 
-	return func(state runner.RecorderProgress) {
+	return func(state runner.RecordingProgress) {
 		cli.WriteRequesterState(os.Stdout, state) //nolint: errcheck
 	}
 }

@@ -16,13 +16,13 @@ func TestBind(t *testing.T) {
 		flagset := flag.NewFlagSet("run", flag.ExitOnError)
 		args := []string{} // no args
 
-		cfg := runner.ConfigDefault()
+		cfg := runner.DefaultConfig()
 		configflags.Bind(flagset, &cfg)
 		if err := flagset.Parse(args); err != nil {
 			t.Fatal(err) // critical error, stop the test
 		}
 
-		if exp := runner.ConfigDefault(); !reflect.DeepEqual(cfg, exp) {
+		if exp := runner.DefaultConfig(); !reflect.DeepEqual(cfg, exp) {
 			t.Errorf("\nexp %#v\ngot %#v", exp, cfg)
 		}
 	})
@@ -43,26 +43,26 @@ func TestBind(t *testing.T) {
 			"-template", "{{ .Report.Length }}",
 		}
 
-		cfg := runner.ConfigGlobal{}
+		cfg := runner.Config{}
 		configflags.Bind(flagset, &cfg)
 		if err := flagset.Parse(args); err != nil {
 			t.Fatal(err) // critical error, stop the test
 		}
 
-		exp := runner.ConfigGlobal{
-			Request: runner.ConfigRequest{
+		exp := runner.Config{
+			Request: runner.RequestConfig{
 				Method: "POST",
 				Header: http.Header{"Content-Type": {"application/json"}},
-				Body:   runner.ConfigBody{Type: "raw", Content: []byte("hello")},
+				Body:   runner.RequestBody{Type: "raw", Content: []byte("hello")},
 			}.WithURL("https://benchttp.app?cool=yes"),
-			Runner: runner.ConfigRunner{
+			Runner: runner.RecorderConfig{
 				Requests:       1,
 				Concurrency:    2,
 				Interval:       3 * time.Second,
 				RequestTimeout: 4 * time.Second,
 				GlobalTimeout:  5 * time.Second,
 			},
-			Output: runner.ConfigOutput{
+			Output: runner.OutputConfig{
 				Silent:   true,
 				Template: "{{ .Report.Length }}",
 			},

@@ -12,14 +12,14 @@ import (
 
 // WriteRequesterState renders a fancy representation of s as a string
 // and writes the result to w.
-func WriteRequesterState(w io.Writer, s runner.RecorderProgress) (int, error) {
+func WriteRequesterState(w io.Writer, s runner.RecordingProgress) (int, error) {
 	return fmt.Fprint(w, renderState(s))
 }
 
 // renderState returns a string representation of runner.State
 // for a fancy display in a CLI:
 // 	RUNNING ◼︎◼︎◼︎◼︎◼︎◼︎◼︎◼︎◼︎◼︎ 50% | 50/100 requests | 27s timeout
-func renderState(s runner.RecorderProgress) string {
+func renderState(s runner.RecordingProgress) string {
 	var (
 		countdown = s.Timeout - s.Elapsed
 		reqmax    = strconv.Itoa(s.MaxCount)
@@ -65,20 +65,20 @@ func renderTimeline(pctdone int) string {
 // renderStatus returns a string representing the status,
 // depending on whether the run is done or not and the value
 // of its context error.
-func renderStatus(status runner.RecorderStatus) string {
+func renderStatus(status runner.RecordingStatus) string {
 	color := statusStyle(status)
 	return color(string(status))
 }
 
-func statusStyle(status runner.RecorderStatus) ansi.StyleFunc {
+func statusStyle(status runner.RecordingStatus) ansi.StyleFunc {
 	switch status {
-	case runner.RecorderStatusRunning:
+	case runner.StatusRunning:
 		return ansi.Yellow
-	case runner.RecorderStatusDone:
+	case runner.StatusDone:
 		return ansi.Green
-	case runner.RecorderStatusCanceled:
+	case runner.StatusCanceled:
 		return ansi.Red
-	case runner.RecorderStatusTimeout:
+	case runner.StatusTimeout:
 		return ansi.Cyan
 	}
 	return ansi.Grey // should not occur

@@ -21,7 +21,7 @@ func TestJSON(t *testing.T) {
 	testcases := []struct {
 		name      string
 		input     []byte
-		expConfig runner.ConfigGlobal
+		expConfig runner.Config
 		expError  error
 	}{
 		{
@@ -29,7 +29,7 @@ func TestJSON(t *testing.T) {
 			input: baseInput.assign(object{
 				"badkey": "marcel-patulacci",
 			}).json(),
-			expConfig: runner.ConfigGlobal{},
+			expConfig: runner.Config{},
 			expError:  errors.New(`invalid field ("badkey"): does not exist`),
 		},
 		{
@@ -39,7 +39,7 @@ func TestJSON(t *testing.T) {
 					"concurrency": "bad value", // want int
 				},
 			}).json(),
-			expConfig: runner.ConfigGlobal{},
+			expConfig: runner.Config{},
 			expError:  errors.New(`wrong type for field runner.concurrency: want int, got string`),
 		},
 		{
@@ -47,12 +47,12 @@ func TestJSON(t *testing.T) {
 			input: baseInput.assign(object{
 				"runner": object{"concurrency": 3},
 			}).json(),
-			expConfig: runner.ConfigDefault().Override(
-				runner.ConfigGlobal{
-					Request: runner.ConfigRequest{
+			expConfig: runner.DefaultConfig().Override(
+				runner.Config{
+					Request: runner.RequestConfig{
 						URL: mustParseURL("https://example.com"),
 					},
-					Runner: runner.ConfigRunner{
+					Runner: runner.RecorderConfig{
 						Concurrency: 3,
 					},
 				},

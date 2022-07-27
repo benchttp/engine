@@ -37,7 +37,7 @@ func TestGlobal_Validate(t *testing.T) {
 	t.Run("return cumulated errors if config is invalid", func(t *testing.T) {
 		cfg := config.Global{
 			Request: config.Request{
-				Body: config.Body{},
+				Body: config.RequestBody{},
 			}.WithURL("abc"),
 			Runner: config.Runner{
 				Requests:       -5,
@@ -75,7 +75,7 @@ func TestGlobal_Override(t *testing.T) {
 		baseCfg := config.Global{}
 		newCfg := config.Global{
 			Request: config.Request{
-				Body: config.Body{},
+				Body: config.RequestBody{},
 			}.WithURL("http://a.b?p=2"),
 			Runner: config.Runner{
 				Requests:       1,
@@ -279,7 +279,7 @@ func TestRequest_Value(t *testing.T) {
 		in := config.Request{
 			Method: "POST",
 			Header: http.Header{"key": []string{"val"}},
-			Body:   config.Body{Content: []byte("abc")},
+			Body:   config.RequestBody{Content: []byte("abc")},
 		}.WithURL("http://a.b")
 
 		expReq, err := http.NewRequest(

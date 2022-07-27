@@ -11,23 +11,23 @@ import (
 )
 
 type (
-	ConfigBody    = config.Body
-	ConfigGlobal  = config.Global
-	ConfigRequest = config.Request
-	ConfigRunner  = config.Runner
-	ConfigOutput  = config.Output
+	Config         = config.Global
+	RequestConfig  = config.Request
+	RequestBody    = config.RequestBody
+	RecorderConfig = config.Runner
+	OutputConfig   = config.Output
 
-	RecorderProgress = recorder.Progress
-	RecorderStatus   = recorder.Status
+	RecordingProgress = recorder.Progress
+	RecordingStatus   = recorder.Status
 
 	Report = report.Report
 )
 
 const (
-	RecorderStatusRunning  = recorder.StatusRunning
-	RecorderStatusCanceled = recorder.StatusCanceled
-	RecorderStatusTimeout  = recorder.StatusTimeout
-	RecorderStatusDone     = recorder.StatusDone
+	StatusRunning  = recorder.StatusRunning
+	StatusCanceled = recorder.StatusCanceled
+	StatusTimeout  = recorder.StatusTimeout
+	StatusDone     = recorder.StatusDone
 
 	ConfigFieldMethod         = config.FieldMethod
 	ConfigFieldURL            = config.FieldURL
@@ -43,18 +43,18 @@ const (
 )
 
 var (
-	ConfigDefault     = config.Default
+	DefaultConfig     = config.Default
 	ConfigFieldsUsage = config.FieldsUsage
-	ConfigNewBody     = config.NewBody
-	ConfigIsField     = config.IsField
+	NewRequestBody    = config.NewBody
+	IsConfigField     = config.IsField
 )
 
 type Runner struct {
 	recorder      *recorder.Recorder
-	onStateUpdate func(RecorderProgress)
+	onStateUpdate func(RecordingProgress)
 }
 
-func New(onStateUpdate func(RecorderProgress)) *Runner {
+func New(onStateUpdate func(RecordingProgress)) *Runner {
 	return &Runner{onStateUpdate: onStateUpdate}
 }
 
@@ -91,9 +91,9 @@ func (r *Runner) Run(ctx context.Context, cfg config.Global) (*Report, error) {
 // Progress returns the current progress of the recording.
 // r.Run must have been called before, otherwise it returns
 // a zero RecorderProgress.
-func (r *Runner) Progress() RecorderProgress {
+func (r *Runner) Progress() RecordingProgress {
 	if r.recorder == nil {
-		return RecorderProgress{}
+		return RecordingProgress{}
 	}
 	return r.recorder.Progress()
 }

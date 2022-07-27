@@ -31,7 +31,7 @@ func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *server) doRun(cfg runner.ConfigGlobal) (*runner.Report, error) {
+func (s *server) doRun(cfg runner.Config) (*runner.Report, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	s.setCurrentRequester(runner.New(nil))
@@ -66,11 +66,11 @@ func (s *server) isRequesterRunning() bool {
 	return s.currentRunner != nil
 }
 
-func (s *server) requesterState() (state runner.RecorderProgress, ok bool) {
+func (s *server) requesterState() (state runner.RecordingProgress, ok bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	if s.currentRunner == nil {
-		return runner.RecorderProgress{}, false
+		return runner.RecordingProgress{}, false
 	}
 	return s.currentRunner.Progress(), true
 }
@@ -85,8 +85,8 @@ func (s *server) stopRequester() bool {
 	return true
 }
 
-func silentConfig(cfg runner.ConfigGlobal) runner.ConfigGlobal {
-	cfg.Output = runner.ConfigOutput{
+func silentConfig(cfg runner.Config) runner.Config {
+	cfg.Output = runner.OutputConfig{
 		Silent:   true,
 		Template: "",
 	}

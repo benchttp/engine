@@ -38,7 +38,7 @@ func TestWhich(t *testing.T) {
 	} {
 		flagset := flag.NewFlagSet("run", flag.ExitOnError)
 
-		configflags.Bind(flagset, &runner.ConfigGlobal{})
+		configflags.Bind(flagset, &runner.Config{})
 
 		if err := flagset.Parse(tc.args); err != nil {
 			t.Fatal(err) // critical error, stop the test
