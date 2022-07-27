@@ -1,9 +1,19 @@
 package output
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"text/template"
+)
+
+var (
+	// ErrTemplateFailTriggered a fail triggered by a user
+	// using the function {{ fail }} in an output template.
+	ErrTemplateFailTriggered = errors.New("test failed")
+
+	errTemplateEmpty  = errors.New("empty template")
+	errTemplateSyntax = errors.New("template syntax error")
 )
 
 // applyTemplate applies Report to a template using given pattern and returns

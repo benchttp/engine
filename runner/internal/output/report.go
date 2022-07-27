@@ -5,24 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
-	"os"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/benchttp/engine/internal/cli/ansi"
 	"github.com/benchttp/engine/runner/internal/config"
 	"github.com/benchttp/engine/runner/internal/metrics"
 )
-
-type basicStats struct {
-	Min, Max, Mean time.Duration
-}
-
-func (s basicStats) isZero() bool {
-	return s == basicStats{}
-}
 
 // Report represent a benchmark result as exported by the runner.
 type Report struct {
@@ -30,8 +19,6 @@ type Report struct {
 	Metadata Metadata
 
 	errTemplateFailTriggered error
-
-	log func(v ...interface{})
 }
 
 type Metadata struct {
@@ -43,7 +30,6 @@ type Metadata struct {
 // New returns a Report initialized with the input benchmark and the config
 // used to run it.
 func New(m metrics.Aggregate, cfg config.Global, d time.Duration) *Report {
-	outputLogger := newLogger(cfg.Output.Silent)
 	return &Report{
 		Metrics: m,
 		Metadata: Metadata{
@@ -51,17 +37,7 @@ func New(m metrics.Aggregate, cfg config.Global, d time.Duration) *Report {
 			FinishedAt:    time.Now(), // TODO: change, unreliable
 			TotalDuration: d,
 		},
-		log: outputLogger.Println,
 	}
-}
-
-// newLogger returns the logger to be used by Report.
-func newLogger(silent bool) *log.Logger {
-	var w io.Writer = os.Stdout
-	if silent {
-		w = nopWriter{}
-	}
-	return log.New(w, ansi.Bold("→ "), 0)
 }
 
 // String returns a default summary of the Report as a string.
@@ -83,8 +59,23 @@ func (rep *Report) String() string {
 		// template is empty, use default summary.
 	}
 
-	// generate default summary
+	rep.writeDefaultSummary(&b)
+	return b.String()
+}
 
+func (rep *Report) Write(w io.Writer) (int, error) {
+	return w.Write([]byte(rep.String()))
+}
+
+func (rep *Report) WriteJSON(w io.Writer) (int, error) {
+	b, err := json.Marshal(rep)
+	if err != nil {
+		return 0, err
+	}
+	return w.Write(b)
+}
+
+func (rep *Report) writeDefaultSummary(w io.StringWriter) {
 	line := func(name string, value interface{}) string {
 		const template = "%-18s %v\n"
 		return fmt.Sprintf(template, name, value)
@@ -107,28 +98,11 @@ func (rep *Report) String() string {
 		cfg = rep.Metadata.Config
 	)
 
-	b.WriteString(line("Endpoint", cfg.Request.URL))
-	b.WriteString(line("Requests", formatRequests(m.TotalCount, cfg.Runner.Requests)))
-	b.WriteString(line("Errors", m.FailureCount))
-	b.WriteString(line("Min response time", msString(m.Min)))
-	b.WriteString(line("Max response time", msString(m.Max)))
-	b.WriteString(line("Mean response time", msString(m.Avg)))
-	b.WriteString(line("Total duration", msString(rep.Metadata.TotalDuration)))
-	return b.String()
+	w.WriteString(line("Endpoint", cfg.Request.URL))
+	w.WriteString(line("Requests", formatRequests(m.TotalCount, cfg.Runner.Requests)))
+	w.WriteString(line("Errors", m.FailureCount))
+	w.WriteString(line("Min response time", msString(m.Min)))
+	w.WriteString(line("Max response time", msString(m.Max)))
+	w.WriteString(line("Mean response time", msString(m.Avg)))
+	w.WriteString(line("Total duration", msString(rep.Metadata.TotalDuration)))
 }
-
-func (rep *Report) Write(w io.Writer) (int, error) {
-	return w.Write([]byte(rep.String()))
-}
-
-func (rep *Report) WriteJSON(w io.Writer) (int, error) {
-	b, err := json.Marshal(rep)
-	if err != nil {
-		return 0, err
-	}
-	return w.Write(b)
-}
-
-type nopWriter struct{}
-
-func (nopWriter) Write(b []byte) (int, error) { return 0, nil }
