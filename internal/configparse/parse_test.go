@@ -27,8 +27,6 @@ var supportedExt = []string{
 
 // TestParse ensures the config file is open, read, and correctly parsed.
 func TestParse(t *testing.T) {
-	t.Error("Check names in errors prints")
-
 	t.Run("return file errors early", func(t *testing.T) {
 		testcases := []struct {
 			label  string
@@ -80,7 +78,7 @@ func TestParse(t *testing.T) {
 				}
 
 				if !reflect.DeepEqual(gotCfg, runner.ConfigGlobal{}) {
-					t.Errorf("\nexp runner.ConfigConfig{}\ngot %v", gotCfg)
+					t.Errorf("\nexp empty config\ngot %v", gotCfg)
 				}
 			})
 		}
