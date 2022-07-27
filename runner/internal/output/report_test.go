@@ -9,7 +9,7 @@ import (
 
 	"github.com/benchttp/engine/runner/internal/config"
 	"github.com/benchttp/engine/runner/internal/output"
-	"github.com/benchttp/engine/runner/internal/requester"
+	"github.com/benchttp/engine/runner/internal/recorder"
 )
 
 func TestReport_String(t *testing.T) {
@@ -53,13 +53,13 @@ func TestReport_String(t *testing.T) {
 
 // helpers
 
-func newBenchmark() requester.Benchmark {
-	return requester.Benchmark{
+func newBenchmark() recorder.Benchmark {
+	return recorder.Benchmark{
 		Fail:     1,
 		Success:  2,
 		Length:   3,
 		Duration: 4 * time.Second,
-		Records: []requester.Record{
+		Records: []recorder.Record{
 			{Time: 5 * time.Second},
 			{Time: 6 * time.Second},
 			{Time: 7 * time.Second},

@@ -5,7 +5,7 @@ import (
 
 	"github.com/benchttp/engine/runner/internal/config"
 	"github.com/benchttp/engine/runner/internal/output"
-	"github.com/benchttp/engine/runner/internal/requester"
+	"github.com/benchttp/engine/runner/internal/recorder"
 )
 
 type (
@@ -15,19 +15,17 @@ type (
 	ConfigRunner  = config.Runner
 	ConfigOutput  = config.Output
 
-	Requester       = requester.Requester
-	RequesterConfig = requester.Config
-	RequesterState  = requester.State
-	RequesterStatus = requester.Status
+	RecorderProgress = recorder.Progress
+	RecorderStatus   = recorder.Status
 
 	OutputReport = output.Report
 )
 
 const (
-	RequesterStatusRunning  = requester.StatusRunning
-	RequesterStatusCanceled = requester.StatusCanceled
-	RequesterStatusTimeout  = requester.StatusTimeout
-	RequesterStatusDone     = requester.StatusDone
+	RecorderStatusRunning  = recorder.StatusRunning
+	RecorderStatusCanceled = recorder.StatusCanceled
+	RecorderStatusTimeout  = recorder.StatusTimeout
+	RecorderStatusDone     = recorder.StatusDone
 
 	ConfigFieldMethod         = config.FieldMethod
 	ConfigFieldURL            = config.FieldURL
@@ -47,23 +45,15 @@ var (
 	ConfigFieldsUsage = config.FieldsUsage
 	ConfigNewBody     = config.NewBody
 	ConfigIsField     = config.IsField
-
-	NewRequester = requester.New
-
-	NewOutput = output.New
 )
 
 type Runner struct {
-	requester     *Requester
-	onStateUpdate func(RequesterState)
+	recorder      *recorder.Recorder
+	onStateUpdate func(RecorderProgress)
 }
 
-func New(onStateUpdate func(RequesterState)) *Runner {
+func New(onStateUpdate func(RecorderProgress)) *Runner {
 	return &Runner{onStateUpdate: onStateUpdate}
-}
-
-func (r *Runner) RequesterState() RequesterState {
-	return r.requester.State()
 }
 
 func (r *Runner) Run(
@@ -82,10 +72,10 @@ func (r *Runner) Run(
 	}
 
 	// Create and attach request recorder
-	r.requester = requester.New(requesterConfig(cfg, r.onStateUpdate))
+	r.recorder = recorder.New(recorderConfig(cfg, r.onStateUpdate))
 
 	// Run request recorder
-	bk, err := r.requester.Run(ctx, rq)
+	bk, err := r.recorder.Record(ctx, rq)
 	if err != nil {
 		return nil, err
 	}
@@ -95,9 +85,19 @@ func (r *Runner) Run(
 	return output.New(bk, cfg), nil
 }
 
-// requesterConfig returns a runner.RequesterConfig generated from cfg.
-func requesterConfig(cfg config.Global, onStateUpdate func(requester.State)) requester.Config {
-	return RequesterConfig{
+// Progress returns the current progress of the recording.
+// r.Run must have been called before, otherwise it returns
+// a zero RecorderProgress.
+func (r *Runner) Progress() RecorderProgress {
+	if r.recorder == nil {
+		return RecorderProgress{}
+	}
+	return r.recorder.Progress()
+}
+
+// recorderConfig returns a runner.RequesterConfig generated from cfg.
+func recorderConfig(cfg config.Global, onStateUpdate func(recorder.Progress)) recorder.Config {
+	return recorder.Config{
 		Requests:       cfg.Runner.Requests,
 		Concurrency:    cfg.Runner.Concurrency,
 		Interval:       cfg.Runner.Interval,

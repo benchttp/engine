@@ -1,4 +1,4 @@
-package requester
+package recorder
 
 import (
 	"context"
@@ -29,12 +29,12 @@ type Config struct {
 	// OnStateUpdate is called each time the requester state is updated.
 	// The requester state is updated each time a requests is done,
 	// and every second concurrently.
-	OnStateUpdate func(State)
+	OnStateUpdate func(Progress)
 }
 
-// Requester sends requests and records the results via the method Run.
+// Recorder sends requests and records the results via the method Run.
 // It must be initialized with New: it won't work otherwise.
-type Requester struct {
+type Recorder struct {
 	records []Record
 	numErr  int
 	runErr  error
@@ -48,13 +48,13 @@ type Requester struct {
 }
 
 // New returns a Requester initialized with the given Config.
-func New(cfg Config) *Requester {
+func New(cfg Config) *Recorder {
 	recordsCap := cfg.Requests
 	if recordsCap < 1 {
 		recordsCap = defaultRecordsCap
 	}
 
-	return &Requester{
+	return &Recorder{
 		records: make([]Record, 0, recordsCap),
 		config:  cfg,
 		newTransport: func() http.RoundTripper {
@@ -63,9 +63,11 @@ func New(cfg Config) *Requester {
 	}
 }
 
-// Run clones and sends req n times, or until ctx is done or the global timeout
-// is reached. It gathers the collected results into a Benchmark.
-func (r *Requester) Run(ctx context.Context, req *http.Request) (Benchmark, error) {
+// Record clones and sends req n times, or until ctx is done or the global
+// timeout  is reached. It gathers the collected results into a Benchmark.
+//
+// TODO: change the signature to return a Record[] instead of a Benchmark.
+func (r *Recorder) Record(ctx context.Context, req *http.Request) (Benchmark, error) {
 	if err := r.ping(req); err != nil {
 		return Benchmark{}, fmt.Errorf("%w: %s", ErrConnection, err)
 	}
@@ -85,7 +87,9 @@ func (r *Requester) Run(ctx context.Context, req *http.Request) (Benchmark, erro
 	r.start = time.Now()
 	go r.tickState()
 
-	err := dispatcher.New(numWorker).Do(ctx, maxIter, r.record(req, interval))
+	err := dispatcher.
+		New(numWorker).
+		Do(ctx, maxIter, r.recordSingle(req, interval))
 	runDuration := time.Since(r.start)
 
 	switch err {
@@ -98,10 +102,10 @@ func (r *Requester) Run(ctx context.Context, req *http.Request) (Benchmark, erro
 		return Benchmark{}, err
 	}
 
-	return newReport(r.records, r.numErr, runDuration), errRun
+	return newBenchmark(r.records, r.numErr, runDuration), errRun
 }
 
-func (r *Requester) ping(req *http.Request) error {
+func (r *Recorder) ping(req *http.Request) error {
 	client := newClient(r.newTransport(), r.config.RequestTimeout)
 	resp, err := client.Do(req)
 	if resp != nil {
@@ -123,7 +127,7 @@ type Record struct {
 	Events []Event       `json:"events"`
 }
 
-func (r *Requester) record(req *http.Request, interval time.Duration) func() {
+func (r *Recorder) recordSingle(req *http.Request, interval time.Duration) func() {
 	return func() {
 		// We need new client and request instances each call to this function
 		// to make it safe for concurrent use.
@@ -163,7 +167,7 @@ func (r *Requester) record(req *http.Request, interval time.Duration) func() {
 	}
 }
 
-func (r *Requester) appendRecord(rec Record) {
+func (r *Recorder) appendRecord(rec Record) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.records = append(r.records, rec)
@@ -173,7 +177,7 @@ func (r *Requester) appendRecord(rec Record) {
 }
 
 // tickState refreshes the state every second.
-func (r *Requester) tickState() {
+func (r *Recorder) tickState() {
 	ticker := time.NewTicker(time.Second)
 	tick := ticker.C
 	for {
@@ -187,21 +191,21 @@ func (r *Requester) tickState() {
 }
 
 // updateState calls r.OnStateUpdate with a new computed State
-func (r *Requester) updateState() {
-	r.safeOnStateUpdate()(r.State())
+func (r *Recorder) updateState() {
+	r.safeOnStateUpdate()(r.Progress())
 }
 
-func (r *Requester) safeOnStateUpdate() func(State) {
+func (r *Recorder) safeOnStateUpdate() func(Progress) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	onStateUpdate := r.config.OnStateUpdate
 	if onStateUpdate == nil {
-		return func(State) {}
+		return func(Progress) {}
 	}
 	return onStateUpdate
 }
 
-func (r *Requester) end(runErr error) {
+func (r *Recorder) end(runErr error) {
 	r.mu.Lock()
 	r.runErr = runErr
 	r.done = true

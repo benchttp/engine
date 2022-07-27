@@ -1,4 +1,4 @@
-package requester
+package recorder
 
 import (
 	"errors"
@@ -6,10 +6,10 @@ import (
 )
 
 var (
-	// ErrConnection is returned when the Requester fails to connect to
+	// ErrConnection is returned when the Recorder fails to connect to
 	// the requested URL.
 	ErrConnection = errors.New("connection error")
-	// ErrCanceled is returned when the Requester.Run context is canceled.
+	// ErrCanceled is returned when the Recorder.Run context is canceled.
 	ErrCanceled = errors.New("canceled")
 )
 

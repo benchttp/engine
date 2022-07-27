@@ -66,13 +66,13 @@ func (s *server) isRequesterRunning() bool {
 	return s.currentRunner != nil
 }
 
-func (s *server) requesterState() (state runner.RequesterState, ok bool) {
+func (s *server) requesterState() (state runner.RecorderProgress, ok bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	if s.currentRunner == nil {
-		return runner.RequesterState{}, false
+		return runner.RecorderProgress{}, false
 	}
-	return s.currentRunner.RequesterState(), true
+	return s.currentRunner.Progress(), true
 }
 
 func (s *server) stopRequester() bool {

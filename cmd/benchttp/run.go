@@ -117,16 +117,16 @@ func (cmd *cmdRun) makeConfig(fields []string) (cfg runner.ConfigGlobal, err err
 	return mergedConfig, mergedConfig.Validate()
 }
 
-func onStateUpdate(silent bool) func(runner.RequesterState) {
+func onStateUpdate(silent bool) func(runner.RecorderProgress) {
 	if silent {
-		return func(runner.RequesterState) {}
+		return func(runner.RecorderProgress) {}
 	}
 
 	// hack: write a blank line as cli.WriteRequesterState always
 	// erases the previous line
 	fmt.Println()
 
-	return func(state runner.RequesterState) {
+	return func(state runner.RecorderProgress) {
 		cli.WriteRequesterState(os.Stdout, state) //nolint: errcheck
 	}
 }

@@ -1,4 +1,4 @@
-package requester
+package recorder
 
 import (
 	"bytes"
@@ -18,7 +18,7 @@ var errTest = errors.New("test-generated error")
 func TestRun(t *testing.T) {
 	testcases := []struct {
 		label string
-		req   *Requester
+		req   *Recorder
 		exp   error
 	}{
 		{
@@ -47,7 +47,7 @@ func TestRun(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.label, func(t *testing.T) {
-			gotRep, gotErr := tc.req.Run(context.Background(), validRequest())
+			gotRep, gotErr := tc.req.Record(context.Background(), validRequest())
 
 			if !errors.Is(gotErr, tc.exp) {
 				t.Errorf("unexpected error value:\nexp %v\ngot %v", tc.exp, gotErr)
@@ -67,7 +67,7 @@ func TestRun(t *testing.T) {
 			GlobalTimeout:  3 * time.Second,
 		}))
 
-		rep, err := r.Run(context.Background(), validRequest())
+		rep, err := r.Record(context.Background(), validRequest())
 		if err != nil {
 			t.Errorf("exp nil error, got %v", err)
 		}
@@ -95,7 +95,7 @@ func TestRun(t *testing.T) {
 			GlobalTimeout:  3 * time.Second,
 		}))
 
-		rep, err := r.Run(
+		rep, err := r.Record(
 			context.Background(),
 			validRequestWithBody([]byte(`{"key0": "val0", "key1": "val1"}`)),
 		)
@@ -168,7 +168,7 @@ func TestRun(t *testing.T) {
 			gotTimes = append(gotTimes, elapsed)
 		})
 
-		if _, err := r.Run(context.Background(), validRequest()); err != nil {
+		if _, err := r.Record(context.Background(), validRequest()); err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
 
@@ -208,14 +208,14 @@ func (t callbackTransport) RoundTrip(*http.Request) (*http.Response, error) {
 	return &http.Response{}, nil
 }
 
-func withCallbackTransport(req *Requester, callback func()) *Requester {
+func withCallbackTransport(req *Recorder, callback func()) *Recorder {
 	req.newTransport = func() http.RoundTripper {
 		return callbackTransport{callback: callback}
 	}
 	return req
 }
 
-func withNoopTransport(req *Requester) *Requester {
+func withNoopTransport(req *Recorder) *Recorder {
 	return withCallbackTransport(req, func() {})
 }
 
@@ -225,7 +225,7 @@ func (errTransport) RoundTrip(*http.Request) (*http.Response, error) {
 	return &http.Response{Body: unreadableReadCloser{}}, nil
 }
 
-func withErrTransport(req *Requester) *Requester {
+func withErrTransport(req *Recorder) *Recorder {
 	req.newTransport = func() http.RoundTripper {
 		return errTransport{}
 	}

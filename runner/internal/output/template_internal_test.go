@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/benchttp/engine/runner/internal/requester"
+	"github.com/benchttp/engine/runner/internal/recorder"
 )
 
 func TestReport_applyTemplate(t *testing.T) {
@@ -80,9 +80,9 @@ func TestReport_templateFuncs(t *testing.T) {
 
 		v := retrieveTemplateFuncOrFatal(t, rep, "event")
 
-		f, ok := v.(func(requester.Record, string) time.Duration)
+		f, ok := v.(func(recorder.Record, string) time.Duration)
 		if !ok {
-			t.Fatalf("wrong type:\nexp func(requester.Record, string) time.Duration\ngot %T", v)
+			t.Fatalf("wrong type:\nexp func(recorder.Record, string) time.Duration\ngot %T", v)
 		}
 
 		t.Run("return matching event", func(t *testing.T) {
@@ -138,18 +138,18 @@ func retrieveTemplateFuncOrFatal(t *testing.T, r *Report, name string) interface
 // newFilledReport returns a new report with some values set.
 func newFilledReport() *Report {
 	return &Report{
-		Benchmark: requester.Benchmark{
-			Records: []requester.Record{
+		Benchmark: recorder.Benchmark{
+			Records: []recorder.Record{
 				{
 					Time: 1 * time.Second,
-					Events: []requester.Event{
+					Events: []recorder.Event{
 						{Name: "event0", Time: 400 * time.Millisecond},
 						{Name: "event1", Time: 600 * time.Millisecond},
 					},
 				},
 				{
 					Time: 3 * time.Second,
-					Events: []requester.Event{
+					Events: []recorder.Event{
 						{Name: "event0", Time: 2 * time.Second},
 						{Name: "event1", Time: 1 * time.Second},
 					},

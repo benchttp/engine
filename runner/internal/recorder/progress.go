@@ -1,4 +1,4 @@
-package requester
+package recorder
 
 import (
 	"context"
@@ -15,8 +15,8 @@ const (
 	StatusDone     Status = "DONE"
 )
 
-// State represents the progression of a benchmark at a given time.
-type State struct {
+// Progress represents the progression of a recording at a given time.
+type Progress struct {
 	ID                  int
 	Done                bool
 	Error               error
@@ -24,11 +24,11 @@ type State struct {
 	Timeout, Elapsed    time.Duration
 }
 
-// State returns the current State of the benchmark.
-func (r *Requester) State() State {
+// Progress returns the current Progress of the recording.
+func (r *Recorder) Progress() Progress {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	return State{
+	return Progress{
 		Done:      r.done,
 		Error:     r.runErr,
 		DoneCount: len(r.records),
@@ -38,13 +38,13 @@ func (r *Requester) State() State {
 	}
 }
 
-func (s State) JSON() ([]byte, error) {
+func (s Progress) JSON() ([]byte, error) {
 	return json.Marshal(s)
 }
 
 // status returns a string representing the status, depending on whether
 // the run is done or not and the value of the context error.
-func (s State) Status() Status {
+func (s Progress) Status() Status {
 	if !s.Done {
 		return StatusRunning
 	}
@@ -62,7 +62,7 @@ func (s State) Status() Status {
 // percentDone returns the progression of the run as a percentage.
 // It is based on the ratio requests done / max requests if it's finite
 // (not -1), else on the ratio elapsed time / global timeout.
-func (s State) PercentDone() int {
+func (s Progress) Percent() int {
 	var cur, max int
 	if s.MaxCount == -1 {
 		cur, max = int(s.Elapsed), int(s.Timeout)

@@ -1,7 +1,6 @@
-package requester
+package recorder
 
 import (
-	"encoding/json"
 	"time"
 )
 
@@ -12,12 +11,6 @@ type Benchmark struct {
 	Success  int           `json:"success"`
 	Fail     int           `json:"fail"`
 	Duration time.Duration `json:"duration"`
-}
-
-// String returns an indented JSON representation of the Benchmark.
-func (bk Benchmark) String() string {
-	b, _ := json.MarshalIndent(bk, "", "  ")
-	return string(b)
 }
 
 // Stats returns basic stats about the Benchmark's records:
@@ -44,8 +37,8 @@ func (bk Benchmark) Stats() (min, max, mean time.Duration) {
 	return min, max, sum / time.Duration(n)
 }
 
-// newReport generates and returns a Benchmark given a Run dataset.
-func newReport(records []Record, numErr int, d time.Duration) Benchmark {
+// newBenchmark generates and returns a Benchmark given a Run dataset.
+func newBenchmark(records []Record, numErr int, d time.Duration) Benchmark {
 	return Benchmark{
 		Records:  records,
 		Length:   len(records),

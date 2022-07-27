@@ -6,7 +6,7 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/benchttp/engine/runner/internal/requester"
+	"github.com/benchttp/engine/runner/internal/recorder"
 )
 
 // applyTemplate applies Report to a template using given pattern and returns
@@ -49,7 +49,7 @@ func (rep *Report) templateFuncs() template.FuncMap {
 
 		// event retrieves an event from the input record given a its name
 		// and returns its time.
-		"event": func(rec requester.Record, name string) time.Duration {
+		"event": func(rec recorder.Record, name string) time.Duration {
 			for _, e := range rec.Events {
 				if e.Name == name {
 					return e.Time

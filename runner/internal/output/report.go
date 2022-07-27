@@ -13,7 +13,7 @@ import (
 
 	"github.com/benchttp/engine/internal/cli/ansi"
 	"github.com/benchttp/engine/runner/internal/config"
-	"github.com/benchttp/engine/runner/internal/requester"
+	"github.com/benchttp/engine/runner/internal/recorder"
 )
 
 type basicStats struct {
@@ -26,7 +26,7 @@ func (s basicStats) isZero() bool {
 
 // Report represent a benchmark result as exported by the runner.
 type Report struct {
-	Benchmark requester.Benchmark
+	Benchmark recorder.Benchmark
 	Metadata  struct {
 		Config     config.Global
 		FinishedAt time.Time
@@ -41,7 +41,7 @@ type Report struct {
 
 // New returns a Report initialized with the input benchmark and the config
 // used to run it.
-func New(bk requester.Benchmark, cfg config.Global) *Report {
+func New(bk recorder.Benchmark, cfg config.Global) *Report {
 	outputLogger := newLogger(cfg.Output.Silent)
 	return &Report{
 		Benchmark: bk,
