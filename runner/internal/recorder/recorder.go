@@ -27,7 +27,7 @@ type Config struct {
 	// GlobalTimeout is the timeout for the whole run.
 	GlobalTimeout time.Duration
 	// OnProgress is called each time the requester Progress is updated.
-	// The requester Progress is updated each time a requests is done,
+	// The requester Progress is updated each time a request is done,
 	// and every second concurrently.
 	OnProgress func(Progress)
 }
@@ -35,10 +35,11 @@ type Config struct {
 // Recorder sends requests and records the results via the method Run.
 // It must be initialized with New: it won't work otherwise.
 type Recorder struct {
-	records []Record
-	runErr  error
-	start   time.Time
-	done    bool
+	records    []Record
+	runErr     error
+	start      time.Time
+	done       bool
+	onProgress func(Progress)
 
 	config       Config
 	newTransport func() http.RoundTripper
@@ -53,9 +54,15 @@ func New(cfg Config) *Recorder {
 		recordsCap = defaultRecordsCap
 	}
 
+	onProgress := cfg.OnProgress
+	if onProgress == nil {
+		onProgress = func(Progress) {}
+	}
+
 	return &Recorder{
-		records: make([]Record, 0, recordsCap),
-		config:  cfg,
+		records:    make([]Record, 0, recordsCap),
+		config:     cfg,
+		onProgress: onProgress,
 		newTransport: func() http.RoundTripper {
 			return newTracer()
 		},
@@ -183,19 +190,9 @@ func (r *Recorder) tickProgress() {
 	}
 }
 
-// updateProgress calls r.config.OnProgress with a new computed Progress
+// updateProgress calls r.onProgress with a new computed Progress
 func (r *Recorder) updateProgress() {
-	r.safeOnUpdateProgress()(r.Progress())
-}
-
-func (r *Recorder) safeOnUpdateProgress() func(Progress) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	onProgress := r.config.OnProgress
-	if onProgress == nil {
-		return func(Progress) {}
-	}
-	return onProgress
+	r.onProgress(r.Progress())
 }
 
 func (r *Recorder) end(runErr error) {
