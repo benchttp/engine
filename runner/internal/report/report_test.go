@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/benchttp/engine/internal/cli/ansi"
 	"github.com/benchttp/engine/runner/internal/config"
 	"github.com/benchttp/engine/runner/internal/metrics"
 	"github.com/benchttp/engine/runner/internal/report"
@@ -79,7 +80,7 @@ func newConfigWithTemplate(tpl string) config.Global {
 func checkSummary(t *testing.T, summary string) {
 	t.Helper()
 
-	expSummary := `
+	expSummary := ansi.Bold("→ Summary") + `
 Endpoint           https://a.b.com
 Requests           3/∞
 Errors             1
@@ -87,7 +88,7 @@ Min response time  4000ms
 Max response time  6000ms
 Mean response time 5000ms
 Total duration     15000ms
-`[1:]
+`
 
 	if summary != expSummary {
 		t.Errorf("\nexp summary:\n%q\ngot summary:\n%q", expSummary, summary)
