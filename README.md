@@ -90,10 +90,10 @@ Note: the expected format for durations is `<int><unit>`, with `unit` being any 
 
 #### Output options
 
-| CLI flag    | File option       | Description                     | Usage example                         |
-| ----------- | ----------------- | ------------------------------- | ------------------------------------- |
-| `-silent`   | `output.silent`   | Remove convenience prints       | `-silent` / `-silent=false`           |
-| `-template` | `output.template` | Custom output when using stdout | `-template '{{ .Benchmark.Length }}'` |
+| CLI flag    | File option       | Description                     | Usage example                    |
+| ----------- | ----------------- | ------------------------------- | -------------------------------- |
+| `-silent`   | `output.silent`   | Remove convenience prints       | `-silent` / `-silent=false`      |
+| `-template` | `output.template` | Custom output when using stdout | `-template '{{ .Metrics.Avg }}'` |
 
 Note: the template uses Go's powerful templating engine.
 To take full advantage of it, see our [templating docs](./examples/output/templating.md)

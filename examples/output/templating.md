@@ -6,58 +6,9 @@ See Go's [text/template package documentation](https://pkg.go.dev/text/template)
 
 ## Report structure reference for usage in templates
 
-```go
-{
-    Benchmark {
-        Length  int
-        Success int
-        Fail    int
-        Duration time.Duration
-        Records []{
-            Time   time.Duration
-            Code   int
-            Bytes  int
-            Error  string
-            Events []{
-                Name string
-                Time time.Duration
-            }
-        }
-    }
-
-    Metadata {
-        Config {
-            Request {
-                Method string
-                URL    *url.URL
-                Header http.Header
-                Body   Body
-            }
-            Runner {
-                Requests       int
-                Concurrency    int
-                Interval       time.Duration
-                RequestTimeout time.Duration
-                GlobalTimeout  time.Duration
-            }
-            Output {
-                Silent   bool
-                Template string
-            }
-        }
-
-        FinishedAt time.Time
-    }
-}
-```
+See [IO Structures](https://github.com/benchttp/engine/wiki/IO-Structures#go-1) in our wiki.
 
 ### Additionnal template functions
-
-- `stats`:
-
-  - `{{ stats.Min }}`: Minimum recorded request time
-  - `{{ stats.Max }}`: Maximum recorded request time
-  - `{{ stats.Mean }}`: Mean request time
 
 - `fail`:
 
@@ -70,9 +21,9 @@ See Go's [text/template package documentation](https://pkg.go.dev/text/template)
 
   ```yml
   template: |
-    {{ .Benchmark.Length }}/{{ .Metadata.Config.Runner.Requests }} requests
-    {{ .Benchmark.Fail }} errors
-    ✔︎ Done in {{ .Benchmark.Duration.Milliseconds }}ms.
+    {{ .Metrics.TotalCount }}/{{ .Metadata.Config.Runner.Requests }} requests
+    {{ .Metrics.FailureCount }} errors
+    ✔︎ Done in {{ .Metadata.TotalDuration.Milliseconds }}ms.
   ```
 
   ```txt
@@ -84,7 +35,7 @@ See Go's [text/template package documentation](https://pkg.go.dev/text/template)
 - Display only the average request time
 
   ```yml
-  template: "{{ stats.Mean }}"
+  template: "{{ .Metrics.Avg }}"
   ```
 
   ```txt

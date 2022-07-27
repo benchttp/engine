@@ -8,25 +8,27 @@ import (
 	"time"
 
 	"github.com/benchttp/engine/runner/internal/config"
+	"github.com/benchttp/engine/runner/internal/metrics"
 	"github.com/benchttp/engine/runner/internal/output"
-	"github.com/benchttp/engine/runner/internal/recorder"
 )
 
 func TestReport_String(t *testing.T) {
+	const d = 15 * time.Second
+
 	t.Run("return default summary if template is empty", func(t *testing.T) {
 		const tpl = ""
 
-		rep := output.New(newBenchmark(), newConfigWithTemplate(tpl))
+		rep := output.New(newMetrics(), newConfigWithTemplate(tpl), d)
 		checkSummary(t, rep.String())
 	})
 
 	t.Run("return executed template if valid", func(t *testing.T) {
-		const tpl = "{{ .Benchmark.Length }}"
+		const tpl = "{{ .Metrics.TotalCount }}"
 
-		bk := newBenchmark()
-		rep := output.New(bk, newConfigWithTemplate(tpl))
+		m := newMetrics()
+		rep := output.New(m, newConfigWithTemplate(tpl), d)
 
-		if got, exp := rep.String(), strconv.Itoa(bk.Length); got != exp {
+		if got, exp := rep.String(), strconv.Itoa(m.TotalCount); got != exp {
 			t.Errorf("\nunexpected output\nexp %s\ngot %s", exp, got)
 		}
 	})
@@ -34,7 +36,7 @@ func TestReport_String(t *testing.T) {
 	t.Run("fallback to default summary if template is invalid", func(t *testing.T) {
 		const tpl = "{{ .Marcel.Patulacci }}"
 
-		rep := output.New(newBenchmark(), newConfigWithTemplate(tpl))
+		rep := output.New(newMetrics(), newConfigWithTemplate(tpl), d)
 		got := rep.String()
 		split := strings.Split(got, "Falling back to default summary:\n")
 
@@ -53,17 +55,14 @@ func TestReport_String(t *testing.T) {
 
 // helpers
 
-func newBenchmark() recorder.Benchmark {
-	return recorder.Benchmark{
-		Fail:     1,
-		Success:  2,
-		Length:   3,
-		Duration: 4 * time.Second,
-		Records: []recorder.Record{
-			{Time: 5 * time.Second},
-			{Time: 6 * time.Second},
-			{Time: 7 * time.Second},
-		},
+func newMetrics() metrics.Aggregate {
+	return metrics.Aggregate{
+		FailureCount: 1,
+		SuccessCount: 2,
+		TotalCount:   3,
+		Min:          4 * time.Second,
+		Max:          6 * time.Second,
+		Avg:          5 * time.Second,
 	}
 }
 
@@ -83,10 +82,10 @@ func checkSummary(t *testing.T, summary string) {
 Endpoint           https://a.b.com
 Requests           3/∞
 Errors             1
-Min response time  5000ms
-Max response time  7000ms
-Mean response time 6000ms
-Total duration     4000ms
+Min response time  4000ms
+Max response time  6000ms
+Mean response time 5000ms
+Total duration     15000ms
 `[1:]
 
 	if summary != expSummary {

@@ -36,7 +36,6 @@ type Config struct {
 // It must be initialized with New: it won't work otherwise.
 type Recorder struct {
 	records []Record
-	numErr  int
 	runErr  error
 	start   time.Time
 	done    bool
@@ -65,11 +64,9 @@ func New(cfg Config) *Recorder {
 
 // Record clones and sends req n times, or until ctx is done or the global
 // timeout  is reached. It gathers the collected results into a Benchmark.
-//
-// TODO: change the signature to return a Record[] instead of a Benchmark.
-func (r *Recorder) Record(ctx context.Context, req *http.Request) (Benchmark, error) {
+func (r *Recorder) Record(ctx context.Context, req *http.Request) ([]Record, error) {
 	if err := r.ping(req); err != nil {
-		return Benchmark{}, fmt.Errorf("%w: %s", ErrConnection, err)
+		return nil, fmt.Errorf("%w: %s", ErrConnection, err)
 	}
 
 	var (
@@ -90,7 +87,6 @@ func (r *Recorder) Record(ctx context.Context, req *http.Request) (Benchmark, er
 	err := dispatcher.
 		New(numWorker).
 		Do(ctx, maxIter, r.recordSingle(req, interval))
-	runDuration := time.Since(r.start)
 
 	switch err {
 	case nil, context.DeadlineExceeded:
@@ -99,10 +95,10 @@ func (r *Recorder) Record(ctx context.Context, req *http.Request) (Benchmark, er
 		r.end(err)
 		errRun = ErrCanceled
 	default:
-		return Benchmark{}, err
+		return nil, err
 	}
 
-	return newBenchmark(r.records, r.numErr, runDuration), errRun
+	return r.records, errRun
 }
 
 func (r *Recorder) ping(req *http.Request) error {
@@ -171,9 +167,6 @@ func (r *Recorder) appendRecord(rec Record) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.records = append(r.records, rec)
-	if rec.Error != "" {
-		r.numErr++
-	}
 }
 
 // tickState refreshes the state every second.

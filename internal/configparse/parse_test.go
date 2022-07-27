@@ -209,7 +209,7 @@ func newExpConfig() runner.ConfigGlobal {
 		},
 		Output: runner.ConfigOutput{
 			Silent:   true,
-			Template: "{{ .Benchmark.Length }}",
+			Template: "{{ .Metrics.TotalCount }}",
 		},
 	}
 }

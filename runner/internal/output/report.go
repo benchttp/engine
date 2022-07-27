@@ -13,7 +13,7 @@ import (
 
 	"github.com/benchttp/engine/internal/cli/ansi"
 	"github.com/benchttp/engine/runner/internal/config"
-	"github.com/benchttp/engine/runner/internal/recorder"
+	"github.com/benchttp/engine/runner/internal/metrics"
 )
 
 type basicStats struct {
@@ -26,31 +26,30 @@ func (s basicStats) isZero() bool {
 
 // Report represent a benchmark result as exported by the runner.
 type Report struct {
-	Benchmark recorder.Benchmark
-	Metadata  struct {
-		Config     config.Global
-		FinishedAt time.Time
-	}
-
-	stats basicStats
+	Metrics  metrics.Aggregate
+	Metadata Metadata
 
 	errTemplateFailTriggered error
 
 	log func(v ...interface{})
 }
 
+type Metadata struct {
+	Config        config.Global
+	FinishedAt    time.Time
+	TotalDuration time.Duration
+}
+
 // New returns a Report initialized with the input benchmark and the config
 // used to run it.
-func New(bk recorder.Benchmark, cfg config.Global) *Report {
+func New(m metrics.Aggregate, cfg config.Global, d time.Duration) *Report {
 	outputLogger := newLogger(cfg.Output.Silent)
 	return &Report{
-		Benchmark: bk,
-		Metadata: struct {
-			Config     config.Global
-			FinishedAt time.Time
-		}{
-			Config:     cfg,
-			FinishedAt: time.Now(),
+		Metrics: m,
+		Metadata: Metadata{
+			Config:        cfg,
+			FinishedAt:    time.Now(), // TODO: change, unreliable
+			TotalDuration: d,
 		},
 		log: outputLogger.Println,
 	}
@@ -104,18 +103,17 @@ func (rep *Report) String() string {
 	}
 
 	var (
-		bk             = rep.Benchmark
-		cfg            = rep.Metadata.Config
-		min, max, mean = bk.Stats()
+		m   = rep.Metrics
+		cfg = rep.Metadata.Config
 	)
 
 	b.WriteString(line("Endpoint", cfg.Request.URL))
-	b.WriteString(line("Requests", formatRequests(bk.Length, cfg.Runner.Requests)))
-	b.WriteString(line("Errors", bk.Fail))
-	b.WriteString(line("Min response time", msString(min)))
-	b.WriteString(line("Max response time", msString(max)))
-	b.WriteString(line("Mean response time", msString(mean)))
-	b.WriteString(line("Total duration", msString(bk.Duration)))
+	b.WriteString(line("Requests", formatRequests(m.TotalCount, cfg.Runner.Requests)))
+	b.WriteString(line("Errors", m.FailureCount))
+	b.WriteString(line("Min response time", msString(m.Min)))
+	b.WriteString(line("Max response time", msString(m.Max)))
+	b.WriteString(line("Mean response time", msString(m.Avg)))
+	b.WriteString(line("Total duration", msString(rep.Metadata.TotalDuration)))
 	return b.String()
 }
 

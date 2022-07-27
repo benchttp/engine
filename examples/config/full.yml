@@ -20,4 +20,4 @@ runner:
 
 output:
   silent: true
-  template: "{{ .Benchmark.Length }}"
+  template: "{{ .Metrics.Avg }}"

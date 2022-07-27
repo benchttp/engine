@@ -2,8 +2,10 @@ package runner
 
 import (
 	"context"
+	"time"
 
 	"github.com/benchttp/engine/runner/internal/config"
+	"github.com/benchttp/engine/runner/internal/metrics"
 	"github.com/benchttp/engine/runner/internal/output"
 	"github.com/benchttp/engine/runner/internal/recorder"
 )
@@ -74,15 +76,19 @@ func (r *Runner) Run(
 	// Create and attach request recorder
 	r.recorder = recorder.New(recorderConfig(cfg, r.onStateUpdate))
 
+	startTime := time.Now()
+
 	// Run request recorder
-	bk, err := r.recorder.Record(ctx, rq)
+	records, err := r.recorder.Record(ctx, rq)
 	if err != nil {
 		return nil, err
 	}
 
-	// TODO: compute stats
+	agg := metrics.Compute(records)
 
-	return output.New(bk, cfg), nil
+	duration := time.Since(startTime)
+
+	return output.New(agg, cfg, duration), nil
 }
 
 // Progress returns the current progress of the recording.

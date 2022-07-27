@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"reflect"
 	"sync"
 	"testing"
 	"time"
@@ -15,7 +14,7 @@ import (
 
 var errTest = errors.New("test-generated error")
 
-func TestRun(t *testing.T) {
+func TestRecorder_Run(t *testing.T) {
 	testcases := []struct {
 		label string
 		req   *Recorder
@@ -47,14 +46,14 @@ func TestRun(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.label, func(t *testing.T) {
-			gotRep, gotErr := tc.req.Record(context.Background(), validRequest())
+			gotRec, gotErr := tc.req.Record(context.Background(), validRequest())
 
 			if !errors.Is(gotErr, tc.exp) {
-				t.Errorf("unexpected error value:\nexp %v\ngot %v", tc.exp, gotErr)
+				t.Errorf("unexpected error:\nexp %v\ngot %v", tc.exp, gotErr)
 			}
 
-			if !reflect.ValueOf(gotRep).IsZero() {
-				t.Errorf("report value:\nexp %v\ngot %v", Benchmark{}, gotRep)
+			if gotRec != nil {
+				t.Errorf("output value:\nexp %v\ngot %v", nil, gotRec)
 			}
 		})
 	}
@@ -67,24 +66,16 @@ func TestRun(t *testing.T) {
 			GlobalTimeout:  3 * time.Second,
 		}))
 
-		rep, err := r.Record(context.Background(), validRequest())
+		recs, err := r.Record(context.Background(), validRequest())
 		if err != nil {
-			t.Errorf("exp nil error, got %v", err)
+			t.Errorf("unexpected error: %v", err)
 		}
 
-		if rep.Length != 1 {
-			t.Errorf("unexpected Report.Length: exp 1, got %d", rep.Length)
+		if len(recs) != 1 {
+			t.Errorf("unexpected records length: exp 1, got %d", len(recs))
 		}
 
-		if rep.Success != 0 {
-			t.Errorf("unexpected Report.Success: exp 0, got %d", rep.Success)
-		}
-
-		if rep.Fail != 1 {
-			t.Errorf("unexpected Report.Fail: exp 1, got %d", rep.Fail)
-		}
-
-		t.Log(rep)
+		t.Log(recs)
 	})
 
 	t.Run("happy path", func(t *testing.T) {
@@ -95,27 +86,19 @@ func TestRun(t *testing.T) {
 			GlobalTimeout:  3 * time.Second,
 		}))
 
-		rep, err := r.Record(
+		recs, err := r.Record(
 			context.Background(),
 			validRequestWithBody([]byte(`{"key0": "val0", "key1": "val1"}`)),
 		)
 		if err != nil {
-			t.Errorf("exp nil error, got %v", err)
+			t.Errorf("unexpected error: %v", err)
 		}
 
-		if rep.Length != 1 {
-			t.Errorf("unexpected Report.Length: exp 1, got %d", rep.Length)
+		if len(recs) != 1 {
+			t.Errorf("unexpected Report.Length: exp 1, got %d", len(recs))
 		}
 
-		if rep.Success != 1 {
-			t.Errorf("unexpected Report.Success: exp 1, got %d", rep.Success)
-		}
-
-		if rep.Fail != 0 {
-			t.Errorf("unexpected Report.Fail: exp 0, got %d", rep.Fail)
-		}
-
-		t.Log(rep)
+		t.Log(recs)
 	})
 
 	t.Run("use interval", func(t *testing.T) {
