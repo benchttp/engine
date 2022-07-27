@@ -1,6 +1,6 @@
 request:
   method: GET
-  url: '' # empty
+  url: "" # empty
 
 runner:
   requests: 100
@@ -10,5 +10,4 @@ runner:
   globalTimeout: 30s
 
 output:
-  out: [stdout]
   silent: false

@@ -4,55 +4,41 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/benchttp/engine/config"
 	"github.com/benchttp/engine/internal/configparse"
 )
 
 func (s *server) handleRun(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/run" {
-		http.NotFound(w, r)
-		return
-	}
-
-	// Allow single run at a tinme
+	// Allow single run at a time
 	if s.isRequesterRunning() {
 		http.Error(w, "already running", http.StatusConflict)
 		return
 	}
 	defer s.flush()
 
+	// Read input config
 	readBody, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
+	// Parse json config
 	cfg, err := configparse.JSON(readBody)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	report, err := s.doRun(silentConfig(cfg))
+	// Start run
+	out, err := s.doRun(cfg)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	jsonReport, err := report.JSON()
-	if err != nil {
+	// Respond with run output
+	if _, err := out.WriteJSON(w); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	w.Write(jsonReport)
-}
-
-func silentConfig(cfg config.Global) config.Global {
-	cfg.Output = config.Output{
-		Silent:   true,
-		Out:      []config.OutputStrategy{},
-		Template: "",
-	}
-	return cfg
 }

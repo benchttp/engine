@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/benchttp/engine/config"
 	"github.com/benchttp/engine/internal/configparse"
+	"github.com/benchttp/engine/runner"
 )
 
 const (
@@ -77,8 +77,8 @@ func TestParse(t *testing.T) {
 					t.Errorf("\nexp %v\ngot %v", tc.expErr, gotErr)
 				}
 
-				if !reflect.DeepEqual(gotCfg, config.Global{}) {
-					t.Errorf("\nexp config.Config{}\ngot %v", gotCfg)
+				if !reflect.DeepEqual(gotCfg, runner.Config{}) {
+					t.Errorf("\nexp empty config\ngot %v", gotCfg)
 				}
 			})
 		}
@@ -184,31 +184,30 @@ func TestParse(t *testing.T) {
 
 // helpers
 
-// newExpConfig returns the expected config.Config result after parsing
+// newExpConfig returns the expected runner.ConfigConfig result after parsing
 // one of the config files in testdataConfigPath.
-func newExpConfig() config.Global {
+func newExpConfig() runner.Config {
 	u, _ := url.ParseRequestURI(testURL)
-	return config.Global{
-		Request: config.Request{
+	return runner.Config{
+		Request: runner.RequestConfig{
 			Method: "POST",
 			URL:    u,
 			Header: http.Header{
 				"key0": []string{"val0", "val1"},
 				"key1": []string{"val0"},
 			},
-			Body: config.NewBody("raw", `{"key0":"val0","key1":"val1"}`),
+			Body: runner.NewRequestBody("raw", `{"key0":"val0","key1":"val1"}`),
 		},
-		Runner: config.Runner{
+		Runner: runner.RecorderConfig{
 			Requests:       100,
 			Concurrency:    1,
 			Interval:       50 * time.Millisecond,
 			RequestTimeout: 2 * time.Second,
 			GlobalTimeout:  60 * time.Second,
 		},
-		Output: config.Output{
-			Out:      []config.OutputStrategy{"benchttp", "json", "stdout"},
+		Output: runner.OutputConfig{
 			Silent:   true,
-			Template: "{{ .Benchmark.Length }}",
+			Template: "{{ .Metrics.Avg }}",
 		},
 	}
 }

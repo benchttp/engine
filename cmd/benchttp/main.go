@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"errors"
 	"flag"
 	"fmt"
@@ -32,8 +31,6 @@ func run() error {
 	switch sub := args[0]; sub {
 	case "run":
 		cmd = &cmdRun{flagset: flag.NewFlagSet("run", flag.ExitOnError)}
-	case "auth":
-		cmd = &cmdAuth{flagset: flag.NewFlagSet("auth", flag.ExitOnError)}
 	case "version":
 		cmd = &cmdVersion{}
 	default:
@@ -46,14 +43,4 @@ func run() error {
 // command is the interface that all benchttp subcommands must implement.
 type command interface {
 	execute(args []string) error
-}
-
-func promptf(message string, v ...interface{}) (string, error) {
-	fmt.Printf(message, v...)
-	reader := bufio.NewReader(os.Stdin)
-	line, _, err := reader.ReadLine()
-	if err != nil {
-		return "", err
-	}
-	return string(line), nil
 }
