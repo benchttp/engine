@@ -32,6 +32,7 @@ type SuiteResult struct {
 }
 
 type SingleResult struct {
+	Name    string
 	Pass    bool
 	Explain string
 }
@@ -42,6 +43,7 @@ func Run(agg metrics.Aggregate, inputs []Input) SuiteResult {
 	for i, input := range inputs {
 		currentResult := runSingle(agg, input)
 		results[i] = currentResult
+		results[i].Name = input.Name
 		if !currentResult.Pass {
 			allpass = false
 		}

@@ -2,7 +2,6 @@ package runner
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/benchttp/engine/runner/internal/config"
@@ -95,9 +94,7 @@ func (r *Runner) Run(ctx context.Context, cfg config.Global) (*Report, error) {
 
 	testResults := tests.Run(agg, testConfig(cfg.Tests))
 
-	fmt.Println(testResults)
-
-	return report.New(agg, cfg, duration), nil
+	return report.New(agg, cfg, duration, testResults), nil
 }
 
 // Progress returns the current progress of the recording.

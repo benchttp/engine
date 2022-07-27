@@ -10,6 +10,7 @@ import (
 	"github.com/benchttp/engine/runner/internal/config"
 	"github.com/benchttp/engine/runner/internal/metrics"
 	"github.com/benchttp/engine/runner/internal/report"
+	"github.com/benchttp/engine/runner/internal/tests"
 )
 
 func TestReport_String(t *testing.T) {
@@ -18,7 +19,7 @@ func TestReport_String(t *testing.T) {
 	t.Run("return default summary if template is empty", func(t *testing.T) {
 		const tpl = ""
 
-		rep := report.New(newMetrics(), newConfigWithTemplate(tpl), d)
+		rep := report.New(newMetrics(), newConfigWithTemplate(tpl), d, tests.SuiteResult{})
 		checkSummary(t, rep.String())
 	})
 
@@ -26,7 +27,7 @@ func TestReport_String(t *testing.T) {
 		const tpl = "{{ .Metrics.TotalCount }}"
 
 		m := newMetrics()
-		rep := report.New(m, newConfigWithTemplate(tpl), d)
+		rep := report.New(m, newConfigWithTemplate(tpl), d, tests.SuiteResult{})
 
 		if got, exp := rep.String(), strconv.Itoa(m.TotalCount); got != exp {
 			t.Errorf("\nunexpected output\nexp %s\ngot %s", exp, got)
@@ -36,7 +37,7 @@ func TestReport_String(t *testing.T) {
 	t.Run("fallback to default summary if template is invalid", func(t *testing.T) {
 		const tpl = "{{ .Marcel.Patulacci }}"
 
-		rep := report.New(newMetrics(), newConfigWithTemplate(tpl), d)
+		rep := report.New(newMetrics(), newConfigWithTemplate(tpl), d, tests.SuiteResult{})
 		got := rep.String()
 		split := strings.Split(got, "Falling back to default summary:\n")
 
