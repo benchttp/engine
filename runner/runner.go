@@ -2,6 +2,7 @@ package runner
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/benchttp/engine/runner/internal/config"
@@ -92,6 +93,10 @@ func (r *Runner) Run(ctx context.Context, cfg config.Global) (*Report, error) {
 
 	duration := time.Since(startTime)
 
+	testResults := tests.Run(agg, testConfig(cfg.Tests))
+
+	fmt.Println(testResults)
+
 	return report.New(agg, cfg, duration), nil
 }
 
@@ -117,5 +122,37 @@ func recorderConfig(
 		RequestTimeout: cfg.Runner.RequestTimeout,
 		GlobalTimeout:  cfg.Runner.GlobalTimeout,
 		OnProgress:     onRecordingProgress,
+	}
+}
+
+func testConfig(in []config.Test) []tests.Input {
+	suite := make([]tests.Input, len(in))
+	for i, t := range in {
+		suite[i] = tests.Input{
+			Name:      t.Name,
+			Metric:    metricGetter(t.Metric),
+			Predicate: t.Predicate,
+			Value:     t.Value,
+		}
+	}
+	return suite
+}
+
+func metricGetter(m tests.Metric) func(agg metrics.Aggregate) tests.Value {
+	switch m {
+	case tests.MetricMin:
+		return func(agg metrics.Aggregate) tests.Value {
+			return tests.Value(agg.Min)
+		}
+	case tests.MetricMax:
+		return func(agg metrics.Aggregate) tests.Value {
+			return tests.Value(agg.Max)
+		}
+	case tests.MetricAvg:
+		return func(agg metrics.Aggregate) tests.Value {
+			return tests.Value(agg.Avg)
+		}
+	default:
+		panic("unimplemented")
 	}
 }
