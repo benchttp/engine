@@ -6,8 +6,8 @@ import (
 
 	"github.com/benchttp/engine/runner/internal/config"
 	"github.com/benchttp/engine/runner/internal/metrics"
-	"github.com/benchttp/engine/runner/internal/output"
 	"github.com/benchttp/engine/runner/internal/recorder"
+	"github.com/benchttp/engine/runner/internal/report"
 )
 
 type (
@@ -20,7 +20,7 @@ type (
 	RecorderProgress = recorder.Progress
 	RecorderStatus   = recorder.Status
 
-	OutputReport = output.Report
+	Report = report.Report
 )
 
 const (
@@ -58,10 +58,7 @@ func New(onStateUpdate func(RecorderProgress)) *Runner {
 	return &Runner{onStateUpdate: onStateUpdate}
 }
 
-func (r *Runner) Run(
-	ctx context.Context,
-	cfg config.Global,
-) (*OutputReport, error) {
+func (r *Runner) Run(ctx context.Context, cfg config.Global) (*Report, error) {
 	// Validate input config
 	if err := cfg.Validate(); err != nil {
 		return nil, err
@@ -88,7 +85,7 @@ func (r *Runner) Run(
 
 	duration := time.Since(startTime)
 
-	return output.New(agg, cfg, duration), nil
+	return report.New(agg, cfg, duration), nil
 }
 
 // Progress returns the current progress of the recording.

@@ -31,7 +31,7 @@ func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *server) doRun(cfg runner.ConfigGlobal) (*runner.OutputReport, error) {
+func (s *server) doRun(cfg runner.ConfigGlobal) (*runner.Report, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	s.setCurrentRequester(runner.New(nil))
