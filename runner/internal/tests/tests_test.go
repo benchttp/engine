@@ -10,7 +10,7 @@ import (
 )
 
 func TestRun(t *testing.T) {
-	t.Run("happy path", func(t *testing.T) {
+	t.Run("happy path", func(_ *testing.T) {
 		agg := metricsStub()
 		queries := []tests.Input{
 			{

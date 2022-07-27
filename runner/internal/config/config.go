@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/benchttp/engine/runner/internal/tests"
 )
 
 // RequestBody represents a request body associated with a type.
@@ -82,12 +84,20 @@ type Output struct {
 	Template string
 }
 
+type Test struct {
+	Name      string
+	Metric    tests.Metric
+	Predicate tests.Predicate
+	Value     tests.Value
+}
+
 // Global represents the global configuration of the runner.
 // It must be validated using Global.Validate before usage.
 type Global struct {
 	Request Request
 	Runner  Runner
 	Output  Output
+	Tests   []Test
 }
 
 // String returns an indented JSON representation of Config
@@ -125,6 +135,8 @@ func (cfg Global) Override(c Global, fields ...string) Global {
 			cfg.Output.Silent = c.Output.Silent
 		case FieldTemplate:
 			cfg.Output.Template = c.Output.Template
+		case FieldTests:
+			cfg.Tests = c.Tests
 		}
 	}
 	return cfg

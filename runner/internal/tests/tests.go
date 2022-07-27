@@ -1,10 +1,23 @@
 package tests
 
 import (
+	"time"
+
 	"github.com/benchttp/engine/runner/internal/metrics"
 )
 
-type Value = int
+type Value = time.Duration
+
+type Metric string
+
+const (
+	MetricAvg          Metric = "AVG"
+	MetricMin          Metric = "MIN"
+	MetricMax          Metric = "MAX"
+	MetricFailureCount Metric = "FAILURE_COUNT"
+	MetricSuccessCount Metric = "SUCCESS_COUNT"
+	MetricTotalCount   Metric = "TOTAL_COUNT"
+)
 
 type Input struct {
 	Name      string

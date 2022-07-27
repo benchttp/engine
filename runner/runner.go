@@ -8,6 +8,7 @@ import (
 	"github.com/benchttp/engine/runner/internal/metrics"
 	"github.com/benchttp/engine/runner/internal/recorder"
 	"github.com/benchttp/engine/runner/internal/report"
+	"github.com/benchttp/engine/runner/internal/tests"
 )
 
 type (
@@ -16,11 +17,16 @@ type (
 	RequestBody    = config.RequestBody
 	RecorderConfig = config.Runner
 	OutputConfig   = config.Output
+	TestConfig     = config.Test
 
 	RecordingProgress = recorder.Progress
 	RecordingStatus   = recorder.Status
 
 	Report = report.Report
+
+	TestMetric    = tests.Metric
+	TestPredicate = tests.Predicate
+	TestValue     = tests.Value
 )
 
 const (
@@ -40,6 +46,7 @@ const (
 	ConfigFieldGlobalTimeout  = config.FieldGlobalTimeout
 	ConfigFieldSilent         = config.FieldSilent
 	ConfigFieldTemplate       = config.FieldTemplate
+	ConfigFieldTests          = config.FieldTests
 )
 
 var (

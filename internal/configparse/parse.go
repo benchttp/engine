@@ -41,6 +41,13 @@ type UnmarshaledConfig struct {
 		Silent   *bool   `yaml:"silent" json:"silent"`
 		Template *string `yaml:"template" json:"template"`
 	} `yaml:"output" json:"output"`
+
+	Tests []struct {
+		Name      *string `yaml:"name" json:"name"`
+		Metric    *string `yaml:"metric" json:"metric"`
+		Predicate *string `yaml:"predicate" json:"predicate"`
+		Value     *string `yaml:"value" json:"value"`
+	} `yaml:"tests" json:"tests"`
 }
 
 // Parse parses a benchttp runner config file into a runner.ConfigGlobal
@@ -165,7 +172,7 @@ func (pconf *parsedConfig) add(field string) {
 // newParsedConfig parses an input raw config as a runner.ConfigGlobal and returns
 // a parsedConfig or the first non-nil error occurring in the process.
 func newParsedConfig(uconf UnmarshaledConfig) (parsedConfig, error) { //nolint:gocognit // acceptable complexity for a parsing func
-	const numField = 12 // should match the number of config Fields (not critical)
+	const numField = 13 // should match the number of config Fields (not critical)
 
 	pconf := parsedConfig{
 		fields: make([]string, 0, numField),
@@ -248,6 +255,22 @@ func newParsedConfig(uconf UnmarshaledConfig) (parsedConfig, error) { //nolint:g
 	if template := uconf.Output.Template; template != nil {
 		cfg.Output.Template = *template
 		pconf.add(runner.ConfigFieldTemplate)
+	}
+
+	// TODO: handle nil values (assumed non nil for now)
+	if tests := uconf.Tests; len(tests) > 0 {
+		adaptedTests := make([]runner.TestConfig, len(tests))
+		for i, t := range tests {
+			d, _ := parseOptionalDuration(*t.Value)
+			adaptedTests[i] = runner.TestConfig{
+				Name:      *t.Name,
+				Metric:    runner.TestMetric(*t.Metric),
+				Predicate: runner.TestPredicate(*t.Predicate),
+				Value:     runner.TestValue(d),
+			}
+		}
+		cfg.Tests = adaptedTests
+		pconf.add(runner.ConfigFieldTests)
 	}
 
 	return pconf, nil
