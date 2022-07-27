@@ -45,17 +45,17 @@ const (
 var (
 	DefaultConfig     = config.Default
 	ConfigFieldsUsage = config.FieldsUsage
-	NewRequestBody    = config.NewBody
+	NewRequestBody    = config.NewRequestBody
 	IsConfigField     = config.IsField
 )
 
 type Runner struct {
-	recorder      *recorder.Recorder
-	onStateUpdate func(RecordingProgress)
+	recorder            *recorder.Recorder
+	onRecordingProgress func(RecordingProgress)
 }
 
-func New(onStateUpdate func(RecordingProgress)) *Runner {
-	return &Runner{onStateUpdate: onStateUpdate}
+func New(onRecordingProgress func(RecordingProgress)) *Runner {
+	return &Runner{onRecordingProgress: onRecordingProgress}
 }
 
 func (r *Runner) Run(ctx context.Context, cfg config.Global) (*Report, error) {
@@ -71,7 +71,7 @@ func (r *Runner) Run(ctx context.Context, cfg config.Global) (*Report, error) {
 	}
 
 	// Create and attach request recorder
-	r.recorder = recorder.New(recorderConfig(cfg, r.onStateUpdate))
+	r.recorder = recorder.New(recorderConfig(cfg, r.onRecordingProgress))
 
 	startTime := time.Now()
 
@@ -99,13 +99,16 @@ func (r *Runner) Progress() RecordingProgress {
 }
 
 // recorderConfig returns a runner.RequesterConfig generated from cfg.
-func recorderConfig(cfg config.Global, onStateUpdate func(recorder.Progress)) recorder.Config {
+func recorderConfig(
+	cfg config.Global,
+	onRecordingProgress func(recorder.Progress),
+) recorder.Config {
 	return recorder.Config{
 		Requests:       cfg.Runner.Requests,
 		Concurrency:    cfg.Runner.Concurrency,
 		Interval:       cfg.Runner.Interval,
 		RequestTimeout: cfg.Runner.RequestTimeout,
 		GlobalTimeout:  cfg.Runner.GlobalTimeout,
-		OnStateUpdate:  onStateUpdate,
+		OnProgress:     onRecordingProgress,
 	}
 }

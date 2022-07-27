@@ -13,7 +13,7 @@ import (
 	"github.com/benchttp/engine/runner/internal/config"
 )
 
-var validBody = config.NewBody("raw", `{"key0": "val0", "key1": "val1"}`)
+var validBody = config.NewRequestBody("raw", `{"key0": "val0", "key1": "val1"}`)
 
 func TestGlobal_Validate(t *testing.T) {
 	t.Run("return nil if config is valid", func(t *testing.T) {

@@ -21,9 +21,9 @@ type RequestBody struct {
 	Content []byte
 }
 
-// NewBody returns a Body initialized with the given type and content.
+// NewRequestBody returns a Body initialized with the given type and content.
 // For now, the only valid value for type is "raw".
-func NewBody(typ, content string) RequestBody {
+func NewRequestBody(typ, content string) RequestBody {
 	return RequestBody{Type: typ, Content: []byte(content)}
 }
 

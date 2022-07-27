@@ -26,10 +26,10 @@ type Config struct {
 	RequestTimeout time.Duration
 	// GlobalTimeout is the timeout for the whole run.
 	GlobalTimeout time.Duration
-	// OnStateUpdate is called each time the requester state is updated.
-	// The requester state is updated each time a requests is done,
+	// OnProgress is called each time the requester Progress is updated.
+	// The requester Progress is updated each time a requests is done,
 	// and every second concurrently.
-	OnStateUpdate func(Progress)
+	OnProgress func(Progress)
 }
 
 // Recorder sends requests and records the results via the method Run.
@@ -82,7 +82,7 @@ func (r *Recorder) Record(ctx context.Context, req *http.Request) ([]Record, err
 	defer cancel()
 
 	r.start = time.Now()
-	go r.tickState()
+	go r.tickProgress()
 
 	err := dispatcher.
 		New(numWorker).
@@ -158,7 +158,7 @@ func (r *Recorder) recordSingle(req *http.Request, interval time.Duration) func(
 			Events: events,
 		})
 
-		r.updateState()
+		r.updateProgress()
 		time.Sleep(interval)
 	}
 }
@@ -169,8 +169,8 @@ func (r *Recorder) appendRecord(rec Record) {
 	r.records = append(r.records, rec)
 }
 
-// tickState refreshes the state every second.
-func (r *Recorder) tickState() {
+// tickProgress refreshes the Progress every second.
+func (r *Recorder) tickProgress() {
 	ticker := time.NewTicker(time.Second)
 	tick := ticker.C
 	for {
@@ -178,24 +178,24 @@ func (r *Recorder) tickState() {
 			ticker.Stop()
 			break
 		}
-		r.updateState()
+		r.updateProgress()
 		<-tick
 	}
 }
 
-// updateState calls r.OnStateUpdate with a new computed State
-func (r *Recorder) updateState() {
-	r.safeOnStateUpdate()(r.Progress())
+// updateProgress calls r.config.OnProgress with a new computed Progress
+func (r *Recorder) updateProgress() {
+	r.safeOnUpdateProgress()(r.Progress())
 }
 
-func (r *Recorder) safeOnStateUpdate() func(Progress) {
+func (r *Recorder) safeOnUpdateProgress() func(Progress) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	onStateUpdate := r.config.OnStateUpdate
-	if onStateUpdate == nil {
+	onProgress := r.config.OnProgress
+	if onProgress == nil {
 		return func(Progress) {}
 	}
-	return onStateUpdate
+	return onProgress
 }
 
 func (r *Recorder) end(runErr error) {
@@ -203,5 +203,5 @@ func (r *Recorder) end(runErr error) {
 	r.runErr = runErr
 	r.done = true
 	r.mu.Unlock()
-	r.updateState()
+	r.updateProgress()
 }

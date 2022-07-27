@@ -56,13 +56,13 @@ func (cmd *cmdRun) execute(args []string) error {
 
 	// Run the benchmark
 	out, err := runner.
-		New(onStateUpdate(cfg.Output.Silent)).
+		New(onRecordingProgress(cfg.Output.Silent)).
 		Run(ctx, cfg)
 	if err != nil {
 		return err
 	}
 
-	// Output results according to the config
+	// Write results to stdout
 	if _, err := out.Write(os.Stdout); err != nil {
 		return err
 	}
@@ -117,16 +117,16 @@ func (cmd *cmdRun) makeConfig(fields []string) (cfg runner.Config, err error) {
 	return mergedConfig, mergedConfig.Validate()
 }
 
-func onStateUpdate(silent bool) func(runner.RecordingProgress) {
+func onRecordingProgress(silent bool) func(runner.RecordingProgress) {
 	if silent {
 		return func(runner.RecordingProgress) {}
 	}
 
-	// hack: write a blank line as cli.WriteRequesterState always
+	// hack: write a blank line as cli.WriteRecordingProgress always
 	// erases the previous line
 	fmt.Println()
 
-	return func(state runner.RecordingProgress) {
-		cli.WriteRequesterState(os.Stdout, state) //nolint: errcheck
+	return func(progress runner.RecordingProgress) {
+		cli.WriteRecordingProgress(os.Stdout, progress) //nolint: errcheck
 	}
 }

@@ -13,7 +13,7 @@ import (
 	"github.com/benchttp/engine/runner/internal/metrics"
 )
 
-// Report represent a benchmark result as exported by the runner.
+// Report represent a run result as exported by the runner.
 type Report struct {
 	Metrics  metrics.Aggregate
 	Metadata Metadata
@@ -21,14 +21,14 @@ type Report struct {
 	errTemplateFailTriggered error
 }
 
+// Metadata contains contextual information about a run.
 type Metadata struct {
 	Config        config.Global
 	FinishedAt    time.Time
 	TotalDuration time.Duration
 }
 
-// New returns a Report initialized with the input benchmark and the config
-// used to run it.
+// New returns an initialized *Report.
 func New(m metrics.Aggregate, cfg config.Global, d time.Duration) *Report {
 	return &Report{
 		Metrics: m,

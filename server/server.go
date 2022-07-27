@@ -13,17 +13,17 @@ func ListenAndServe(addr string) error {
 }
 
 type server struct {
-	mu            sync.RWMutex
-	currentRunner *runner.Runner
-	stopRun       context.CancelFunc
+	mu      sync.RWMutex
+	runner  *runner.Runner
+	stopRun context.CancelFunc
 }
 
 func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch r.URL.Path {
 	case "/run":
 		s.handleRun(w, r)
-	case "/state":
-		s.handleState(w, r)
+	case "/progress":
+		s.handleProgress(w, r)
 	case "/stop":
 		s.handleStop(w, r)
 	default:
@@ -34,17 +34,17 @@ func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (s *server) doRun(cfg runner.Config) (*runner.Report, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 
-	s.setCurrentRequester(runner.New(nil))
+	s.setRunner(runner.New(nil))
 	s.setStopRun(cancel)
 
 	// Run benchmark
-	return s.currentRunner.Run(ctx, silentConfig(cfg))
+	return s.runner.Run(ctx, silentConfig(cfg))
 }
 
-func (s *server) setCurrentRequester(r *runner.Runner) {
+func (s *server) setRunner(r *runner.Runner) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.currentRunner = r
+	s.runner = r
 }
 
 func (s *server) setStopRun(cancelFunc context.CancelFunc) {
@@ -56,29 +56,29 @@ func (s *server) setStopRun(cancelFunc context.CancelFunc) {
 func (s *server) flush() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.currentRunner = nil
+	s.runner = nil
 	s.stopRun = nil
 }
 
 func (s *server) isRequesterRunning() bool {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	return s.currentRunner != nil
+	return s.runner != nil
 }
 
-func (s *server) requesterState() (state runner.RecordingProgress, ok bool) {
+func (s *server) recordingProgress() (progress runner.RecordingProgress, ok bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	if s.currentRunner == nil {
+	if s.runner == nil {
 		return runner.RecordingProgress{}, false
 	}
-	return s.currentRunner.Progress(), true
+	return s.runner.Progress(), true
 }
 
 func (s *server) stopRequester() bool {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if s.currentRunner == nil {
+	if s.runner == nil {
 		return false
 	}
 	s.stopRun()

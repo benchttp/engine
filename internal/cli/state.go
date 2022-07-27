@@ -10,16 +10,16 @@ import (
 	"github.com/benchttp/engine/runner"
 )
 
-// WriteRequesterState renders a fancy representation of s as a string
+// WriteRecordingProgress renders a fancy representation of s as a string
 // and writes the result to w.
-func WriteRequesterState(w io.Writer, s runner.RecordingProgress) (int, error) {
-	return fmt.Fprint(w, renderState(s))
+func WriteRecordingProgress(w io.Writer, s runner.RecordingProgress) (int, error) {
+	return fmt.Fprint(w, renderProgress(s))
 }
 
-// renderState returns a string representation of runner.State
+// renderProgress returns a string representation of runner.RecordingProgress
 // for a fancy display in a CLI:
 // 	RUNNING ◼︎◼︎◼︎◼︎◼︎◼︎◼︎◼︎◼︎◼︎ 50% | 50/100 requests | 27s timeout
-func renderState(s runner.RecordingProgress) string {
+func renderProgress(s runner.RecordingProgress) string {
 	var (
 		countdown = s.Timeout - s.Elapsed
 		reqmax    = strconv.Itoa(s.MaxCount)
@@ -50,7 +50,7 @@ var (
 	tlLen        = 10
 )
 
-// timeline returns a colored representation of the progress as a string:
+// renderTimeline returns a colored representation of the progress as a string:
 // 	◼︎◼︎◼︎◼︎◼︎◼︎◼︎◼︎◼︎◼︎
 func renderTimeline(pctdone int) string {
 	tl := strings.Repeat(tlBlockGrey, tlLen)
