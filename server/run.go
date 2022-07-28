@@ -23,7 +23,7 @@ type run struct {
 // start starts the run. Any previous state is immediately flushed.
 // Once the run is done, the state is updated. start uses w to notify
 // that the run has started and the done status upon completion.
-func (r *run) start(w socketio.Writer) {
+func (r *run) start(w socketio.Writer, cfg runner.Config) {
 	r.flush()
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -31,16 +31,16 @@ func (r *run) start(w socketio.Writer) {
 
 	r.runner = runner.New(r.sendRecordingProgess(w))
 
-	out, err := r.runner.Run(ctx, config())
+	out, err := r.runner.Run(ctx, cfg)
 	if err != nil {
 		r.err = err
-		_ = w.WriteJSON(message{Event: "done"})
+		_ = w.WriteJSON(outgoingMessage{Event: "done"})
 		return
 	}
 
 	r.output = out
 
-	_ = w.WriteJSON(message{Event: "done"})
+	_ = w.WriteJSON(outgoingMessage{Event: "done"})
 }
 
 // stop stops the run if it is running. The state is always flushed.
@@ -59,7 +59,7 @@ func (r *run) sendRecordingProgess(w socketio.Writer) func(runner.RecordingProgr
 		r.mu.Lock()
 		defer r.mu.Unlock()
 
-		m := message{
+		m := outgoingMessage{
 			Event: "progress",
 			Data:  fmt.Sprintf("%s: %d/%d %d", rp.Status(), rp.DoneCount, rp.MaxCount, rp.Percent()),
 		}
@@ -67,7 +67,7 @@ func (r *run) sendRecordingProgess(w socketio.Writer) func(runner.RecordingProgr
 	}
 }
 
-// sendOutput sends the output of the run via w or an error message
+// sendOutput sends the output of the run via w or an error outgoingMessage
 // if there is no output available.
 func (r *run) sendOutput(w socketio.Writer) {
 	r.mu.RLock()
@@ -78,7 +78,7 @@ func (r *run) sendOutput(w socketio.Writer) {
 		return
 	}
 
-	m := message{Event: "output"}
+	m := outgoingMessage{Event: "output"}
 
 	if r.err != nil {
 		m.Data = r.err

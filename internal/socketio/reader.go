@@ -9,7 +9,7 @@ import (
 
 type Reader interface {
 	ReadTextMessage() (string, error)
-	ReadJSON() error
+	ReadJSON(v interface{}) error
 }
 
 type reader struct {
@@ -42,6 +42,15 @@ func (r *reader) ReadTextMessage() (string, error) {
 	return m, nil
 }
 
-func (r *reader) ReadJSON() error {
-	return fmt.Errorf("not implemented")
+func (r *reader) ReadJSON(v interface{}) error {
+	err := r.ws.ReadJSON(v)
+	if err != nil {
+		return fmt.Errorf("cannot read message: %s", err)
+	}
+
+	if !r.silent {
+		log.Printf("<- %v", v)
+	}
+
+	return nil
 }

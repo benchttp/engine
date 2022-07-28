@@ -1,10 +1,12 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 
+	"github.com/benchttp/engine/internal/configparse"
 	"github.com/benchttp/engine/internal/socketio"
 )
 
@@ -41,17 +43,29 @@ func (h *Handler) handle(w http.ResponseWriter, r *http.Request) {
 	defer run.flush()
 
 	for {
-		p, err := reader.ReadTextMessage()
+		inc := incomingMessage{}
+		err := reader.ReadJSON(&inc)
 		if err != nil {
 			log.Println(err)
 			break // Connection is dead.
 		}
-		m := string(p)
 
-		switch m {
+		// TODO Update package configparse for this purpose.
+		p, err := json.Marshal(inc.Data)
+		if err != nil {
+			log.Println(err)
+			break // Connection is dead.
+		}
+		cfg, err := configparse.JSON(p)
+		if err != nil {
+			log.Println(err)
+			break // Connection is dead.
+		}
+
+		switch inc.Event {
 		case "run":
-			go run.start(writer)
-			_ = writer.WriteJSON(message{Event: "running"})
+			go run.start(writer, cfg)
+			_ = writer.WriteJSON(outgoingMessage{Event: "running"})
 
 		case "stop":
 			ok := run.stop()
@@ -65,7 +79,7 @@ func (h *Handler) handle(w http.ResponseWriter, r *http.Request) {
 			run.sendOutput(writer)
 
 		default:
-			_ = writer.WriteTextMessage(fmt.Sprintf("unknown command: %s", m))
+			_ = writer.WriteTextMessage(fmt.Sprintf("unknown incoming event: %s", inc.Event))
 		}
 	}
 }

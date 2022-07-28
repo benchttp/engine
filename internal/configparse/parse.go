@@ -11,11 +11,11 @@ import (
 	"github.com/benchttp/engine/runner"
 )
 
-// unmarshaledConfig is a raw data model for runner config files.
+// UnmarshaledConfig is a raw data model for runner config files.
 // It serves as a receiver for unmarshaling processes and for that reason
 // its types are kept simple (certain types are incompatible with certain
 // unmarshalers).
-type unmarshaledConfig struct {
+type UnmarshaledConfig struct {
 	Extends *string `yaml:"extends" json:"extends"`
 
 	Request struct {
@@ -47,7 +47,7 @@ type unmarshaledConfig struct {
 // and returns it or the first non-nil error occurring in the process,
 // which can be any of the values declared in the package.
 func Parse(filename string) (cfg runner.Config, err error) {
-	uconfs, err := parseFileRecursive(filename, []unmarshaledConfig{}, set{})
+	uconfs, err := parseFileRecursive(filename, []UnmarshaledConfig{}, set{})
 	if err != nil {
 		return
 	}
@@ -73,9 +73,9 @@ func (s set) add(v string) error {
 // occurring in the process.
 func parseFileRecursive(
 	filename string,
-	uconfs []unmarshaledConfig,
+	uconfs []UnmarshaledConfig,
 	seen set,
-) ([]unmarshaledConfig, error) {
+) ([]UnmarshaledConfig, error) {
 	// avoid infinite recursion caused by circular reference
 	if err := seen.add(filename); err != nil {
 		return uconfs, ErrCircularExtends
@@ -100,7 +100,7 @@ func parseFileRecursive(
 
 // parseFile parses a single config file and returns the result as an
 // unmarshaledConfig and an appropriate error predeclared in the package.
-func parseFile(filename string) (uconf unmarshaledConfig, err error) {
+func parseFile(filename string) (uconf UnmarshaledConfig, err error) {
 	b, err := os.ReadFile(filename)
 	switch {
 	case err == nil:
@@ -127,7 +127,7 @@ func parseFile(filename string) (uconf unmarshaledConfig, err error) {
 // as runner.ConfigGlobal and merging them into a single one.
 // It returns the merged result or the first non-nil error occurring in the
 // process.
-func parseAndMergeConfigs(uconfs []unmarshaledConfig) (cfg runner.Config, err error) {
+func parseAndMergeConfigs(uconfs []UnmarshaledConfig) (cfg runner.Config, err error) {
 	if len(uconfs) == 0 { // supposedly catched upstream, should not occur
 		return cfg, errors.New(
 			"an unacceptable error occurred parsing the config file, " +
@@ -164,7 +164,7 @@ func (pconf *parsedConfig) add(field string) {
 
 // newParsedConfig parses an input raw config as a runner.ConfigGlobal and returns
 // a parsedConfig or the first non-nil error occurring in the process.
-func newParsedConfig(uconf unmarshaledConfig) (parsedConfig, error) { //nolint:gocognit // acceptable complexity for a parsing func
+func newParsedConfig(uconf UnmarshaledConfig) (parsedConfig, error) { //nolint:gocognit // acceptable complexity for a parsing func
 	const numField = 12 // should match the number of config Fields (not critical)
 
 	pconf := parsedConfig{
