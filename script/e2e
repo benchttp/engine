@@ -1,0 +1,20 @@
+#!/bin/bash
+
+test_binary="./test/e2e/bin/e2e.test"
+
+timeout=60s
+
+buildExecutables() {
+    ./script/build-server
+    ./script/build-e2e
+}
+
+runTests() {
+    eval "${test_binary}" -test.timeout "${timeout}" -test.v
+}
+
+main() {
+    buildExecutables &&
+        runTests
+}
+main

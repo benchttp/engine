@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# TODO: build test executable for cli e2e
+
+cmddir="./test/e2e"
+bindir="./test/e2e/bin"
+output="${bindir:?}/e2e.test"
+
+buildExecutable() {
+    go test -c -o "${output}" "${cmddir}"
+}
+
+printCompletionMessage() {
+    echo -e "\033[1;32m✔︎\033[0m Build complete: ${output}"
+}
+
+main() {
+    buildExecutable &&
+        printCompletionMessage
+}
+main
