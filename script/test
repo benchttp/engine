@@ -1,0 +1,11 @@
+#!/bin/bash
+
+excluded_dir="/test/e2e/"
+package_list=$(go list ./... | grep -vE "$excluded_dir")
+
+timeout="10s"
+
+main() {
+    go test -race -timeout "${timeout}" "${@:1}" $package_list
+}
+main "${@}"
