@@ -35,7 +35,7 @@ test:
 
 .PHONY: test-cov
 test-cov:
-	@go-acc ./...
+	@go-acc ./... --ignore /test/e2e
 
 # Build
 .PHONY: build
