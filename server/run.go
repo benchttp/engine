@@ -43,13 +43,10 @@ func (r *run) start(w socketio.Writer) {
 }
 
 // stop stops the run if it is running. The state is always flushed.
-func (r *run) stop() bool {
-	defer r.flush()
-	if r.runner == nil {
-		return false
-	}
-	r.cancel()
-	return true
+func (r *run) stop() (ok bool) {
+	ok = r.runner != nil
+	r.flush()
+	return
 }
 
 // sendRecordingProgess sends the current runner.RecordingProgress via w.
@@ -69,6 +66,9 @@ func (r *run) sendRecordingProgess(w socketio.Writer) func(runner.RecordingProgr
 // sendOutput sends the output of the run via w or an error message
 // if there is no output available.
 func (r *run) sendOutput(w socketio.Writer) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
 	if r.output == nil {
 		_ = w.WriteTextMessage("not done yet")
 		return
@@ -77,8 +77,11 @@ func (r *run) sendOutput(w socketio.Writer) {
 	_ = w.WriteTextMessage(r.output.String())
 }
 
-// flush clears the state.
+// flush clears the state. Calling run.flush locks the run for writing.
 func (r *run) flush() {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
 	if r.cancel != nil {
 		r.cancel()
 	}
