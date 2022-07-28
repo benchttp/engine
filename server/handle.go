@@ -51,7 +51,7 @@ func (h *Handler) handle(w http.ResponseWriter, r *http.Request) {
 		switch m {
 		case "run":
 			go run.start(writer)
-			_ = writer.WriteTextMessage("starting run")
+			_ = writer.WriteJSON(message{Event: "running"})
 
 		case "stop":
 			ok := run.stop()

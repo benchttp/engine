@@ -9,7 +9,7 @@ import (
 
 type Writer interface {
 	WriteTextMessage(m string) error
-	WriteJSON() error
+	WriteJSON(v interface{}) error
 }
 
 type writer struct {
@@ -36,6 +36,15 @@ func (w *writer) WriteTextMessage(m string) error {
 	return nil
 }
 
-func (w *writer) WriteJSON() error {
-	return fmt.Errorf("not implemented")
+func (w *writer) WriteJSON(v interface{}) error {
+	err := w.ws.WriteJSON(v)
+	if err != nil {
+		return fmt.Errorf("cannot write message: %s", err)
+	}
+
+	if !w.silent {
+		log.Printf("-> %v", v)
+	}
+
+	return nil
 }

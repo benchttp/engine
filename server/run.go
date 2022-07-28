@@ -34,12 +34,13 @@ func (r *run) start(w socketio.Writer) {
 	out, err := r.runner.Run(ctx, config())
 	if err != nil {
 		r.err = err
-		_ = w.WriteTextMessage(fmt.Sprintf("done with error: %s", err))
+		_ = w.WriteJSON(message{Event: "done"})
 		return
 	}
 
 	r.output = out
-	_ = w.WriteTextMessage("done without error")
+
+	_ = w.WriteJSON(message{Event: "done"})
 }
 
 // stop stops the run if it is running. The state is always flushed.
@@ -58,8 +59,11 @@ func (r *run) sendRecordingProgess(w socketio.Writer) func(runner.RecordingProgr
 		r.mu.Lock()
 		defer r.mu.Unlock()
 
-		m := fmt.Sprintf("%s: %d/%d %d", rp.Status(), rp.DoneCount, rp.MaxCount, rp.Percent())
-		_ = w.WriteTextMessage(m)
+		m := message{
+			Event: "progress",
+			Data:  fmt.Sprintf("%s: %d/%d %d", rp.Status(), rp.DoneCount, rp.MaxCount, rp.Percent()),
+		}
+		_ = w.WriteJSON(m)
 	}
 }
 
@@ -74,7 +78,15 @@ func (r *run) sendOutput(w socketio.Writer) {
 		return
 	}
 
-	_ = w.WriteTextMessage(r.output.String())
+	m := message{Event: "output"}
+
+	if r.err != nil {
+		m.Data = r.err
+	} else {
+		m.Data = r.output
+	}
+
+	_ = w.WriteJSON(m)
 }
 
 // flush clears the state. Calling run.flush locks the run for writing.
