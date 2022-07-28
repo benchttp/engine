@@ -2,7 +2,7 @@
 
 goos=$(go env GOOS)
 goarch=$(go env GOARCH)
-benchttp="./bin/benchttp_${goos}_${goarch}"
+benchttp="./bin/benchttp/benchttp_${goos}_${goarch}"
 
 expVersion="benchttp $(git describe --tags --abbrev=0)"
 gotVersion=$(eval $benchttp version)
