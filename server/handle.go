@@ -6,6 +6,8 @@ import (
 	"net/http"
 )
 
+// Handler has as single method, Handler.ServeHTTP.
+// It serves a websocket server.
 type Handler struct{}
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -29,6 +31,7 @@ func handle(w http.ResponseWriter, r *http.Request) {
 	log.Println("websocket connected with client")
 
 	run := run{}
+	defer run.flush()
 
 	for {
 		m, err := readMessage(ws)
@@ -39,7 +42,7 @@ func handle(w http.ResponseWriter, r *http.Request) {
 
 		switch m {
 		case "run":
-			go run.run(ws)
+			go run.start(ws)
 			_ = writeMessage(ws, "starting run")
 
 		case "stop":
@@ -51,16 +54,10 @@ func handle(w http.ResponseWriter, r *http.Request) {
 			}
 
 		case "pull":
-			run.pull(ws)
+			run.sendOutput(ws)
 
 		default:
 			_ = writeMessage(ws, fmt.Sprintf("unknown command: %s", m))
 		}
 	}
-
-	// Clean up
-	if run.cancel != nil {
-		run.cancel()
-	}
-	run.flush()
 }
