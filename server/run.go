@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/benchttp/engine/internal/socketio"
 	"github.com/benchttp/engine/runner"
-	"github.com/gorilla/websocket"
 )
 
 // run is a stateful representation of the current run
@@ -21,25 +21,25 @@ type run struct {
 }
 
 // start starts the run. Any previous state is immediately flushed.
-// Once the run is done, the state is updated. start sends message
-// through the websocket connection, notifying the client.
-func (r *run) start(ws *websocket.Conn) {
+// Once the run is done, the state is updated. start uses w to notify
+// that the run has started and the done status upon completion.
+func (r *run) start(w socketio.Writer) {
 	r.flush()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	r.cancel = cancel
 
-	r.runner = runner.New(r.sendProgess(ws))
+	r.runner = runner.New(r.sendProgess(w))
 
 	out, err := r.runner.Run(ctx, config())
 	if err != nil {
 		r.err = err
-		_ = writeMessage(ws, fmt.Sprintf("done with error: %s", err))
+		_ = w.WriteTextMessage(fmt.Sprintf("done with error: %s", err))
 		return
 	}
 
 	r.output = out
-	_ = writeMessage(ws, "done without error")
+	_ = w.WriteTextMessage("done without error")
 }
 
 // stop stops the run if it is running. The state is always flushed.
@@ -52,30 +52,29 @@ func (r *run) stop() bool {
 	return true
 }
 
-// sendProgress sends the current runner.RecordingProgress through
-// the websocket connection. As multiple goroutines may invoke sendProgess
-// simultaneously as a callback via runner.onRecordingProgress, writing to
-// the websocket connection is protected by a lock.
-func (r *run) sendProgess(ws *websocket.Conn) func(runner.RecordingProgress) {
+// sendProgress sends the current runner.RecordingProgress via w.
+// As multiple goroutines may invoke sendProgess simultaneously
+// as a callback from runner.onRecordingProgress, writing to w
+// is protected by a lock.
+func (r *run) sendProgess(w socketio.Writer) func(runner.RecordingProgress) {
 	return func(rp runner.RecordingProgress) {
 		r.mu.Lock()
 		defer r.mu.Unlock()
 
 		m := fmt.Sprintf("%s: %d/%d %d", rp.Status(), rp.DoneCount, rp.MaxCount, rp.Percent())
-		_ = writeMessage(ws, m)
+		_ = w.WriteTextMessage(m)
 	}
 }
 
-// sendOutput sends the output of the run through the websocket connection
-// or a error message if there is no output available.
-func (r *run) sendOutput(ws *websocket.Conn) {
+// sendOutput sends the output of the run via w or an error message
+// if there is no output available.
+func (r *run) sendOutput(w socketio.Writer) {
 	if r.output == nil {
-		_ = writeMessage(ws, "not done yet")
+		_ = w.WriteTextMessage("not done yet")
 		return
 	}
 
-	m := r.output.String()
-	_ = writeMessage(ws, m)
+	_ = w.WriteTextMessage(r.output.String())
 }
 
 // flush clears the state.

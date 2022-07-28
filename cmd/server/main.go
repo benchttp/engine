@@ -13,5 +13,10 @@ const port = "8080"
 func main() {
 	addr := ":" + port
 	fmt.Println("http://localhost" + addr)
-	log.Fatal(http.ListenAndServe(addr, &server.Handler{}))
+
+	handler := &server.Handler{
+		Silent: false,
+	}
+
+	log.Fatal(http.ListenAndServe(addr, handler))
 }

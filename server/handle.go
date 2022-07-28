@@ -4,22 +4,26 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+
+	"github.com/benchttp/engine/internal/socketio"
 )
 
 // Handler has as single method, Handler.ServeHTTP.
 // It serves a websocket server.
-type Handler struct{}
+type Handler struct {
+	Silent bool
+}
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch r.URL.Path {
 	case "/run":
-		handle(w, r)
+		h.handle(w, r)
 	default:
 		http.NotFound(w, r)
 	}
 }
 
-func handle(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) handle(w http.ResponseWriter, r *http.Request) {
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
@@ -28,36 +32,40 @@ func handle(w http.ResponseWriter, r *http.Request) {
 
 	defer ws.Close()
 
+	reader := socketio.NewReader(ws, h.Silent)
+	writer := socketio.NewWriter(ws, h.Silent)
+
 	log.Println("websocket connected with client")
 
 	run := run{}
 	defer run.flush()
 
 	for {
-		m, err := readMessage(ws)
+		p, err := reader.ReadTextMessage()
 		if err != nil {
 			log.Println(err)
 			break // Connection is dead.
 		}
+		m := string(p)
 
 		switch m {
 		case "run":
-			go run.start(ws)
-			_ = writeMessage(ws, "starting run")
+			go run.start(writer)
+			_ = writer.WriteTextMessage("starting run")
 
 		case "stop":
 			ok := run.stop()
 			if ok {
-				_ = writeMessage(ws, "stopped")
+				_ = writer.WriteTextMessage("stopped")
 			} else {
-				_ = writeMessage(ws, "not running")
+				_ = writer.WriteTextMessage("not running")
 			}
 
 		case "pull":
-			run.sendOutput(ws)
+			run.sendOutput(writer)
 
 		default:
-			_ = writeMessage(ws, fmt.Sprintf("unknown command: %s", m))
+			_ = writer.WriteTextMessage(fmt.Sprintf("unknown command: %s", m))
 		}
 	}
 }
