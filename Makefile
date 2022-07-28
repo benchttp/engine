@@ -40,7 +40,7 @@ test-cov:
 # Build
 .PHONY: build
 build:
-	@./script/build
+	@./script/build benchttp
 	@./script/build-healthcheck
 
 .PHONY: clear

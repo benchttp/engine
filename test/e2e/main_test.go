@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	serverBuildScript  = "./script/build-server"
+	serverBuildScript  = "./script/build"
 	serverBuildTarget  = "./bin/server/server"
 	serverBuildTimeout = 5 * time.Second
 	serverTestsTimeout = 30 * time.Second
@@ -39,7 +39,7 @@ func buildServer() error {
 	ctx, cancel := context.WithTimeout(context.Background(), serverBuildTimeout)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, serverBuildScript)
+	cmd := exec.CommandContext(ctx, serverBuildScript, "server")
 	return cmd.Run()
 }
 

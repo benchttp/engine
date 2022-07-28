@@ -5,8 +5,8 @@ test_binary="./test/e2e/bin/e2e.test"
 timeout=60s
 
 buildExecutables() {
-    ./script/build-server
-    ./script/build-e2e
+    ./script/build server
+    ./script/build e2e
 }
 
 runTests() {

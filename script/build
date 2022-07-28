@@ -1,35 +1,76 @@
 #!/bin/bash
 
-platforms="darwin/amd64 darwin/arm64 linux/386 linux/amd64 windows/386 windows/amd64"
+build_benchttp() {
+    platforms="darwin/amd64 darwin/arm64 linux/386 linux/amd64 windows/386 windows/amd64"
 
-version=$(git describe --tags --abbrev=0)
-ldflags="-X main.benchttpVersion=$version"
-tags="prod"
+    version=$(git describe --tags --abbrev=0)
+    ldflags="-X main.benchttpVersion=$version"
+    tags="prod"
 
-cmddir="./cmd/benchttp"
-bindir="./bin/benchttp"
+    cmddir="./cmd/benchttp"
+    bindir="./bin/benchttp"
 
-# clear bin directory
-rm -rf "${bindir:?}/*"
+    # clear bin directory
+    rm -rf "${bindir:?}/*"
 
-i=0
-for platform in ${platforms}; do
-    ((i++))
+    i=0
+    for platform in ${platforms}; do
+        ((i++))
 
-    split=(${platform//// }) # split platform by sep "/"
-    goos="${split[0]}"
-    goarch="${split[1]}"
-    output="benchttp_${goos}_${goarch}" # e.g. benchttp_darwin_amd64
+        split=(${platform//// }) # split platform by sep "/"
+        goos="${split[0]}"
+        goarch="${split[1]}"
+        output="benchttp_${goos}_${goarch}" # e.g. benchttp_darwin_amd64
 
-    # add .exe to windows binaries
-    [[ "$goos" == "windows" ]] && output="$output.exe"
+        # add .exe to windows binaries
+        [[ "$goos" == "windows" ]] && output="$output.exe"
 
-    output="$bindir/$output"
+        output="$bindir/$output"
 
-    # build binary
-    GOOS="$goos" GOARCH="$goarch" go build -tags "$tags" -ldflags "$ldflags" -o "$output" "$cmddir"
+        # build binary
+        GOOS="$goos" GOARCH="$goarch" go build -tags "$tags" -ldflags "$ldflags" -o "$output" "$cmddir" &&
+            printBuildCompletion "[$i/6] $output"
+    done
+}
 
-    echo "[$i/6] $output"
-done
+build_server() {
+    cmddir="./cmd/server"
+    bindir="./bin/server"
+    output="${bindir:?}/server"
 
-echo -e "\033[1;32m✔︎\033[0m Build complete!"
+    go build -o "${output}" "${cmddir}" &&
+        printBuildCompletion $output
+}
+
+build_e2e() {
+    cmddir="./test/e2e"
+    bindir="./test/e2e/bin"
+    output="${bindir:?}/e2e.test"
+
+    go test -c -o "${output}" "${cmddir}" &&
+        printBuildCompletion $output
+}
+
+printBuildCompletion() {
+    echo -e "\033[1;32m✔︎\033[0m Build complete: $1"
+}
+
+main() {
+    app="$1"
+
+    case $app in
+    benchttp)
+        build_benchttp
+        ;;
+    server)
+        build_server
+        ;;
+    e2e)
+        build_e2e
+        ;;
+    *)
+        echo "Usage: ./script/build <benchttp|server|e2e>"
+        ;;
+    esac
+}
+main "$1"
