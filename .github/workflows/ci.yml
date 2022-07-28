@@ -34,6 +34,10 @@ jobs:
       - name: Build
         run: make build
 
+      # Check #4: End-to-end tests
+      - name: E2E
+        run: ./script/e2e
+
       - name: Upload coverage report
         uses: codecov/codecov-action@v1.0.2
         with:
