@@ -75,9 +75,6 @@ func (h *Handler) handle(w http.ResponseWriter, r *http.Request) {
 				_ = writer.WriteTextMessage("not running")
 			}
 
-		case "pull":
-			run.sendOutput(writer)
-
 		default:
 			_ = writer.WriteTextMessage(fmt.Sprintf("unknown incoming event: %s", inc.Event))
 		}

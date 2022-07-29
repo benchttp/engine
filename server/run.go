@@ -15,8 +15,6 @@ type run struct {
 	mu sync.RWMutex
 
 	runner *runner.Runner
-	output *runner.Report
-	err    error
 	cancel context.CancelFunc
 }
 
@@ -33,14 +31,11 @@ func (r *run) start(w socketio.Writer, cfg runner.Config) {
 
 	out, err := r.runner.Run(ctx, cfg)
 	if err != nil {
-		r.err = err
-		_ = w.WriteJSON(outgoingMessage{Event: "done"})
+		_ = w.WriteJSON(outgoingMessage{Event: "done", Data: err})
 		return
 	}
 
-	r.output = out
-
-	_ = w.WriteJSON(outgoingMessage{Event: "done"})
+	_ = w.WriteJSON(outgoingMessage{Event: "done", Data: out})
 }
 
 // stop stops the run if it is running. The state is always flushed.
@@ -67,28 +62,6 @@ func (r *run) sendRecordingProgess(w socketio.Writer) func(runner.RecordingProgr
 	}
 }
 
-// sendOutput sends the output of the run via w or an error outgoingMessage
-// if there is no output available.
-func (r *run) sendOutput(w socketio.Writer) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-
-	if r.output == nil {
-		_ = w.WriteTextMessage("not done yet")
-		return
-	}
-
-	m := outgoingMessage{Event: "output"}
-
-	if r.err != nil {
-		m.Data = r.err
-	} else {
-		m.Data = r.output
-	}
-
-	_ = w.WriteJSON(m)
-}
-
 // flush clears the state. Calling run.flush locks the run for writing.
 func (r *run) flush() {
 	r.mu.Lock()
@@ -98,7 +71,5 @@ func (r *run) flush() {
 		r.cancel()
 	}
 	r.runner = nil
-	r.output = nil
-	r.err = nil
 	r.cancel = nil
 }
