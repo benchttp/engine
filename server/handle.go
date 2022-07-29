@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -29,54 +30,51 @@ func (h *Handler) handle(w http.ResponseWriter, r *http.Request) {
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
-		return // Connection is dead.
+		return
 	}
 
 	defer ws.Close()
 
+	log.Println("websocket connected with client")
+
 	reader := socketio.NewReader(ws, h.Silent)
 	writer := socketio.NewWriter(ws, h.Silent)
-
-	log.Println("websocket connected with client")
 
 	run := run{}
 	defer run.flush()
 
 	for {
-		inc := incomingMessage{}
+		inc := messageProcedure{}
 		err := reader.ReadJSON(&inc)
 		if err != nil {
 			log.Println(err)
-			break // Connection is dead.
+			break
 		}
 
-		// TODO Update package configparse for this purpose.
-		p, err := json.Marshal(inc.Data)
-		if err != nil {
-			log.Println(err)
-			break // Connection is dead.
-		}
-		cfg, err := configparse.JSON(p)
-		if err != nil {
-			log.Println(err)
-			break // Connection is dead.
-		}
-
-		switch inc.Event {
+		switch inc.Procedure {
 		case "run":
+			// TODO Update package configparse for this purpose.
+			p, err := json.Marshal(inc.Data)
+			if err != nil {
+				log.Println(err)
+				break
+			}
+			cfg, err := configparse.JSON(p)
+			if err != nil {
+				log.Println(err)
+				break
+			}
+
 			go run.start(writer, cfg)
-			_ = writer.WriteJSON(outgoingMessage{Event: "running"})
 
 		case "stop":
 			ok := run.stop()
-			if ok {
-				_ = writer.WriteTextMessage("stopped")
-			} else {
-				_ = writer.WriteTextMessage("not running")
+			if !ok {
+				_ = writer.WriteJSON(messageError{Event: "error", Error: errors.New("not running")})
 			}
 
 		default:
-			_ = writer.WriteTextMessage(fmt.Sprintf("unknown incoming event: %s", inc.Event))
+			_ = writer.WriteTextMessage(fmt.Sprintf("unknown procedure: %s", inc.Procedure))
 		}
 	}
 }

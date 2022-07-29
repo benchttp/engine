@@ -31,11 +31,11 @@ func (r *run) start(w socketio.Writer, cfg runner.Config) {
 
 	out, err := r.runner.Run(ctx, cfg)
 	if err != nil {
-		_ = w.WriteJSON(outgoingMessage{Event: "done", Data: err})
+		_ = w.WriteJSON(messageError{Event: "done", Error: err})
 		return
 	}
 
-	_ = w.WriteJSON(outgoingMessage{Event: "done", Data: out})
+	_ = w.WriteJSON(messageDone{Event: "done", Data: *out})
 }
 
 // stop stops the run if it is running. The state is always flushed.
@@ -54,7 +54,7 @@ func (r *run) sendRecordingProgess(w socketio.Writer) func(runner.RecordingProgr
 		r.mu.Lock()
 		defer r.mu.Unlock()
 
-		m := outgoingMessage{
+		m := messageProgress{
 			Event: "progress",
 			Data:  fmt.Sprintf("%s: %d/%d %d", rp.Status(), rp.DoneCount, rp.MaxCount, rp.Percent()),
 		}
