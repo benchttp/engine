@@ -13,12 +13,10 @@ func JSON(in []byte) (runner.Config, error) {
 		return runner.Config{}, err
 	}
 
-	pconf, err := newParsedConfig(uconf)
+	cfg, err := newParsedConfig(uconf)
 	if err != nil {
 		return runner.Config{}, err
 	}
 
-	return runner.
-		DefaultConfig().
-		Override(pconf.config.WithFields(pconf.fields...)), nil
+	return runner.DefaultConfig().Override(cfg), nil
 }

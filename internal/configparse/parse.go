@@ -127,7 +127,9 @@ func parseFile(filename string) (uconf unmarshaledConfig, err error) {
 // as runner.ConfigGlobal and merging them into a single one.
 // It returns the merged result or the first non-nil error occurring in the
 // process.
-func parseAndMergeConfigs(uconfs []unmarshaledConfig) (cfg runner.Config, err error) {
+func parseAndMergeConfigs(uconfs []unmarshaledConfig) (runner.Config, error) {
+	cfg := runner.Config{}
+
 	if len(uconfs) == 0 { // supposedly catched upstream, should not occur
 		return cfg, errors.New(
 			"an unacceptable error occurred parsing the config file, " +
@@ -136,54 +138,40 @@ func parseAndMergeConfigs(uconfs []unmarshaledConfig) (cfg runner.Config, err er
 		)
 	}
 
-	cfg = runner.DefaultConfig()
-
 	for i := len(uconfs) - 1; i >= 0; i-- {
 		uconf := uconfs[i]
-		pconf, err := newParsedConfig(uconf)
+		currentCfg, err := newParsedConfig(uconf)
 		if err != nil {
 			return cfg, errWithDetails(ErrParse, err)
 		}
-		cfg = cfg.Override(pconf.config.WithFields(pconf.fields...))
+		cfg = cfg.Override(currentCfg)
 	}
 
 	return cfg, nil
 }
 
-// parsedConfig embeds a parsed runner.ConfigGlobal and the list of its set fields.
-type parsedConfig struct {
-	// TODO: do not embed, use field config
-	config runner.Config
-	fields []string
-}
-
-// addField adds a field to the list of set fields.
-func (pconf *parsedConfig) add(field string) {
-	pconf.fields = append(pconf.fields, field)
-}
-
 // newParsedConfig parses an input raw config as a runner.ConfigGlobal and returns
 // a parsedConfig or the first non-nil error occurring in the process.
-func newParsedConfig(uconf unmarshaledConfig) (parsedConfig, error) { //nolint:gocognit // acceptable complexity for a parsing func
-	const numField = 12 // should match the number of config Fields (not critical)
+func newParsedConfig(uconf unmarshaledConfig) (runner.Config, error) { //nolint:gocognit // acceptable complexity for a parsing func
+	empty, cfg := runner.Config{}, runner.Config{}
+	fieldsSet := []string{}
 
-	pconf := parsedConfig{
-		fields: make([]string, 0, numField),
+	markField := func(field string) {
+		fieldsSet = append(fieldsSet, field)
 	}
-	cfg := &pconf.config
 
 	if method := uconf.Request.Method; method != nil {
 		cfg.Request.Method = *method
-		pconf.add(runner.ConfigFieldMethod)
+		markField(runner.ConfigFieldMethod)
 	}
 
 	if rawURL := uconf.Request.URL; rawURL != nil {
 		parsedURL, err := parseAndBuildURL(*uconf.Request.URL, uconf.Request.QueryParams)
 		if err != nil {
-			return parsedConfig{}, err
+			return empty, err
 		}
 		cfg.Request.URL = parsedURL
-		pconf.add(runner.ConfigFieldURL)
+		markField(runner.ConfigFieldURL)
 	}
 
 	if header := uconf.Request.Header; header != nil {
@@ -192,7 +180,7 @@ func newParsedConfig(uconf unmarshaledConfig) (parsedConfig, error) { //nolint:g
 			httpHeader[key] = val
 		}
 		cfg.Request.Header = httpHeader
-		pconf.add(runner.ConfigFieldHeader)
+		markField(runner.ConfigFieldHeader)
 	}
 
 	if body := uconf.Request.Body; body != nil {
@@ -200,57 +188,57 @@ func newParsedConfig(uconf unmarshaledConfig) (parsedConfig, error) { //nolint:g
 			Type:    body.Type,
 			Content: []byte(body.Content),
 		}
-		pconf.add(runner.ConfigFieldBody)
+		markField(runner.ConfigFieldBody)
 	}
 
 	if requests := uconf.Runner.Requests; requests != nil {
 		cfg.Runner.Requests = *requests
-		pconf.add(runner.ConfigFieldRequests)
+		markField(runner.ConfigFieldRequests)
 	}
 
 	if concurrency := uconf.Runner.Concurrency; concurrency != nil {
 		cfg.Runner.Concurrency = *concurrency
-		pconf.add(runner.ConfigFieldConcurrency)
+		markField(runner.ConfigFieldConcurrency)
 	}
 
 	if interval := uconf.Runner.Interval; interval != nil {
 		parsedInterval, err := parseOptionalDuration(*interval)
 		if err != nil {
-			return parsedConfig{}, err
+			return empty, err
 		}
 		cfg.Runner.Interval = parsedInterval
-		pconf.add(runner.ConfigFieldInterval)
+		markField(runner.ConfigFieldInterval)
 	}
 
 	if requestTimeout := uconf.Runner.RequestTimeout; requestTimeout != nil {
 		parsedTimeout, err := parseOptionalDuration(*requestTimeout)
 		if err != nil {
-			return parsedConfig{}, err
+			return empty, err
 		}
 		cfg.Runner.RequestTimeout = parsedTimeout
-		pconf.add(runner.ConfigFieldRequestTimeout)
+		markField(runner.ConfigFieldRequestTimeout)
 	}
 
 	if globalTimeout := uconf.Runner.GlobalTimeout; globalTimeout != nil {
 		parsedGlobalTimeout, err := parseOptionalDuration(*globalTimeout)
 		if err != nil {
-			return parsedConfig{}, err
+			return empty, err
 		}
 		cfg.Runner.GlobalTimeout = parsedGlobalTimeout
-		pconf.add(runner.ConfigFieldGlobalTimeout)
+		markField(runner.ConfigFieldGlobalTimeout)
 	}
 
 	if silent := uconf.Output.Silent; silent != nil {
 		cfg.Output.Silent = *silent
-		pconf.add(runner.ConfigFieldSilent)
+		markField(runner.ConfigFieldSilent)
 	}
 
 	if template := uconf.Output.Template; template != nil {
 		cfg.Output.Template = *template
-		pconf.add(runner.ConfigFieldTemplate)
+		markField(runner.ConfigFieldTemplate)
 	}
 
-	return pconf, nil
+	return cfg.WithFields(fieldsSet...), nil
 }
 
 // helpers
