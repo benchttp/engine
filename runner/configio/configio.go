@@ -55,7 +55,7 @@ func parseMany(raws []Interface, baseConfig runner.Config) (runner.Config, error
 		if err != nil {
 			return merged, err
 		}
-		merged = merged.Override(currentConfig)
+		merged = currentConfig.Override(merged)
 	}
 
 	return merged, nil

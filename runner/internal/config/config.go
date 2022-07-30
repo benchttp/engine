@@ -118,36 +118,36 @@ func (cfg Global) Equal(c Global) bool {
 // Only fields specified in options are replaced. Accepted options are limited
 // to existing Fields, other values are silently ignored.
 func (cfg Global) Override(c Global) Global {
-	if len(c.fieldsSet) == 0 {
-		return cfg
+	if len(cfg.fieldsSet) == 0 {
+		return c
 	}
-	for field := range c.fieldsSet {
+	for field := range cfg.fieldsSet {
 		switch field {
 		case FieldMethod:
-			cfg.Request.Method = c.Request.Method
+			c.Request.Method = cfg.Request.Method
 		case FieldURL:
-			cfg.Request.URL = c.Request.URL
+			c.Request.URL = cfg.Request.URL
 		case FieldHeader:
-			cfg.overrideHeader(c.Request.Header)
+			c.overrideHeader(cfg.Request.Header)
 		case FieldBody:
-			cfg.Request.Body = c.Request.Body
+			c.Request.Body = cfg.Request.Body
 		case FieldRequests:
-			cfg.Runner.Requests = c.Runner.Requests
+			c.Runner.Requests = cfg.Runner.Requests
 		case FieldConcurrency:
-			cfg.Runner.Concurrency = c.Runner.Concurrency
+			c.Runner.Concurrency = cfg.Runner.Concurrency
 		case FieldInterval:
-			cfg.Runner.Interval = c.Runner.Interval
+			c.Runner.Interval = cfg.Runner.Interval
 		case FieldRequestTimeout:
-			cfg.Runner.RequestTimeout = c.Runner.RequestTimeout
+			c.Runner.RequestTimeout = cfg.Runner.RequestTimeout
 		case FieldGlobalTimeout:
-			cfg.Runner.GlobalTimeout = c.Runner.GlobalTimeout
+			c.Runner.GlobalTimeout = cfg.Runner.GlobalTimeout
 		case FieldSilent:
-			cfg.Output.Silent = c.Output.Silent
+			c.Output.Silent = cfg.Output.Silent
 		case FieldTemplate:
-			cfg.Output.Template = c.Output.Template
+			c.Output.Template = cfg.Output.Template
 		}
 	}
-	return cfg
+	return c
 }
 
 // overrideHeader overrides cfg's Request.Header with the values from newHeader.
