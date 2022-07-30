@@ -1,4 +1,4 @@
-package report_test
+package runner
 
 import (
 	"net/url"
@@ -7,9 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/benchttp/engine/runner/internal/config"
 	"github.com/benchttp/engine/runner/internal/metrics"
-	"github.com/benchttp/engine/runner/internal/report"
 )
 
 func TestReport_String(t *testing.T) {
@@ -18,7 +16,7 @@ func TestReport_String(t *testing.T) {
 	t.Run("return default summary if template is empty", func(t *testing.T) {
 		const tpl = ""
 
-		rep := report.New(newMetrics(), newConfigWithTemplate(tpl), d)
+		rep := newReport(newMetrics(), newConfigWithTemplate(tpl), d)
 		checkSummary(t, rep.String())
 	})
 
@@ -26,7 +24,7 @@ func TestReport_String(t *testing.T) {
 		const tpl = "{{ .Metrics.TotalCount }}"
 
 		m := newMetrics()
-		rep := report.New(m, newConfigWithTemplate(tpl), d)
+		rep := newReport(m, newConfigWithTemplate(tpl), d)
 
 		if got, exp := rep.String(), strconv.Itoa(m.TotalCount); got != exp {
 			t.Errorf("\nunexpected output\nexp %s\ngot %s", exp, got)
@@ -36,7 +34,7 @@ func TestReport_String(t *testing.T) {
 	t.Run("fallback to default summary if template is invalid", func(t *testing.T) {
 		const tpl = "{{ .Marcel.Patulacci }}"
 
-		rep := report.New(newMetrics(), newConfigWithTemplate(tpl), d)
+		rep := newReport(newMetrics(), newConfigWithTemplate(tpl), d)
 		got := rep.String()
 		split := strings.Split(got, "Falling back to default summary:\n")
 
@@ -66,12 +64,12 @@ func newMetrics() metrics.Aggregate {
 	}
 }
 
-func newConfigWithTemplate(tpl string) config.Global {
+func newConfigWithTemplate(tpl string) Config {
 	urlURL, _ := url.ParseRequestURI("https://a.b.com")
-	return config.Global{
-		Request: config.Request{URL: urlURL},
-		Runner:  config.Runner{Requests: -1},
-		Output:  config.Output{Template: tpl},
+	return Config{
+		Request: RequestConfig{URL: urlURL},
+		Runner:  RecorderConfig{Requests: -1},
+		Output:  OutputConfig{Template: tpl},
 	}
 }
 

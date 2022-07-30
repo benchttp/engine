@@ -1,4 +1,4 @@
-package report
+package runner
 
 import (
 	"errors"

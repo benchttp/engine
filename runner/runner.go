@@ -4,23 +4,13 @@ import (
 	"context"
 	"time"
 
-	"github.com/benchttp/engine/runner/internal/config"
 	"github.com/benchttp/engine/runner/internal/metrics"
 	"github.com/benchttp/engine/runner/internal/recorder"
-	"github.com/benchttp/engine/runner/internal/report"
 )
 
 type (
-	Config         = config.Global
-	RequestConfig  = config.Request
-	RequestBody    = config.RequestBody
-	RecorderConfig = config.Runner
-	OutputConfig   = config.Output
-
 	RecordingProgress = recorder.Progress
 	RecordingStatus   = recorder.Status
-
-	Report = report.Report
 )
 
 const (
@@ -28,25 +18,6 @@ const (
 	StatusCanceled = recorder.StatusCanceled
 	StatusTimeout  = recorder.StatusTimeout
 	StatusDone     = recorder.StatusDone
-
-	ConfigFieldMethod         = config.FieldMethod
-	ConfigFieldURL            = config.FieldURL
-	ConfigFieldHeader         = config.FieldHeader
-	ConfigFieldBody           = config.FieldBody
-	ConfigFieldRequests       = config.FieldRequests
-	ConfigFieldConcurrency    = config.FieldConcurrency
-	ConfigFieldInterval       = config.FieldInterval
-	ConfigFieldRequestTimeout = config.FieldRequestTimeout
-	ConfigFieldGlobalTimeout  = config.FieldGlobalTimeout
-	ConfigFieldSilent         = config.FieldSilent
-	ConfigFieldTemplate       = config.FieldTemplate
-)
-
-var (
-	DefaultConfig     = config.Default
-	ConfigFieldsUsage = config.FieldsUsage
-	NewRequestBody    = config.NewRequestBody
-	IsConfigField     = config.IsField
 )
 
 type Runner struct {
@@ -58,7 +29,7 @@ func New(onRecordingProgress func(RecordingProgress)) *Runner {
 	return &Runner{onRecordingProgress: onRecordingProgress}
 }
 
-func (r *Runner) Run(ctx context.Context, cfg config.Global) (*Report, error) {
+func (r *Runner) Run(ctx context.Context, cfg Config) (*Report, error) {
 	// Validate input config
 	if err := cfg.Validate(); err != nil {
 		return nil, err
@@ -85,7 +56,7 @@ func (r *Runner) Run(ctx context.Context, cfg config.Global) (*Report, error) {
 
 	duration := time.Since(startTime)
 
-	return report.New(agg, cfg, duration), nil
+	return newReport(agg, cfg, duration), nil
 }
 
 // Progress returns the current progress of the recording.
@@ -100,7 +71,7 @@ func (r *Runner) Progress() RecordingProgress {
 
 // recorderConfig returns a runner.RequesterConfig generated from cfg.
 func recorderConfig(
-	cfg config.Global,
+	cfg Config,
 	onRecordingProgress func(recorder.Progress),
 ) recorder.Config {
 	return recorder.Config{

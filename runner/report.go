@@ -1,4 +1,4 @@
-package report
+package runner
 
 import (
 	"encoding/json"
@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/benchttp/engine/runner/internal/config"
 	"github.com/benchttp/engine/runner/internal/metrics"
 )
 
@@ -23,13 +22,13 @@ type Report struct {
 
 // Metadata contains contextual information about a run.
 type Metadata struct {
-	Config        config.Global
+	Config        Config
 	FinishedAt    time.Time
 	TotalDuration time.Duration
 }
 
-// New returns an initialized *Report.
-func New(m metrics.Aggregate, cfg config.Global, d time.Duration) *Report {
+// newReport returns an initialized *Report.
+func newReport(m metrics.Aggregate, cfg Config, d time.Duration) *Report {
 	return &Report{
 		Metrics: m,
 		Metadata: Metadata{

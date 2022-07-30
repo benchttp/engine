@@ -1,4 +1,4 @@
-package config_test
+package runner_test
 
 import (
 	"bytes"
@@ -10,18 +10,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/benchttp/engine/runner/internal/config"
+	"github.com/benchttp/engine/runner"
 )
 
-var validBody = config.NewRequestBody("raw", `{"key0": "val0", "key1": "val1"}`)
+var validBody = runner.NewRequestBody("raw", `{"key0": "val0", "key1": "val1"}`)
 
 func TestGlobal_Validate(t *testing.T) {
 	t.Run("return nil if config is valid", func(t *testing.T) {
-		cfg := config.Global{
-			Request: config.Request{
+		cfg := runner.Config{
+			Request: runner.RequestConfig{
 				Body: validBody,
 			}.WithURL("https://github.com/benchttp/"),
-			Runner: config.Runner{
+			Runner: runner.RecorderConfig{
 				Requests:       5,
 				Concurrency:    5,
 				Interval:       5,
@@ -35,11 +35,11 @@ func TestGlobal_Validate(t *testing.T) {
 	})
 
 	t.Run("return cumulated errors if config is invalid", func(t *testing.T) {
-		cfg := config.Global{
-			Request: config.Request{
-				Body: config.RequestBody{},
+		cfg := runner.Config{
+			Request: runner.RequestConfig{
+				Body: runner.RequestBody{},
 			}.WithURL("abc"),
-			Runner: config.Runner{
+			Runner: runner.RecorderConfig{
 				Requests:       -5,
 				Concurrency:    -5,
 				Interval:       -5,
@@ -53,7 +53,7 @@ func TestGlobal_Validate(t *testing.T) {
 			t.Fatal("invalid configuration considered valid")
 		}
 
-		var errInvalid *config.InvalidConfigError
+		var errInvalid *runner.InvalidConfigError
 		if !errors.As(err, &errInvalid) {
 			t.Fatalf("unexpected error type: %T", err)
 		}
@@ -72,18 +72,18 @@ func TestGlobal_Validate(t *testing.T) {
 
 func TestGlobal_Override(t *testing.T) {
 	t.Run("do not override unspecified fields", func(t *testing.T) {
-		baseCfg := config.Global{}
-		nextCfg := config.Global{
-			Request: config.Request{
-				Body: config.RequestBody{},
+		baseCfg := runner.Config{}
+		nextCfg := runner.Config{
+			Request: runner.RequestConfig{
+				Body: runner.RequestBody{},
 			}.WithURL("http://a.b?p=2"),
-			Runner: config.Runner{
+			Runner: runner.RecorderConfig{
 				Requests:       1,
 				Concurrency:    2,
 				RequestTimeout: 3 * time.Second,
 				GlobalTimeout:  4 * time.Second,
 			},
-			Output: config.Output{
+			Output: runner.OutputConfig{
 				Silent: true,
 			},
 		}
@@ -95,27 +95,27 @@ func TestGlobal_Override(t *testing.T) {
 
 	t.Run("override specified fields", func(t *testing.T) {
 		fields := []string{
-			config.FieldMethod,
-			config.FieldURL,
-			config.FieldRequests,
-			config.FieldConcurrency,
-			config.FieldRequestTimeout,
-			config.FieldGlobalTimeout,
-			config.FieldBody,
-			config.FieldSilent,
+			runner.ConfigFieldMethod,
+			runner.ConfigFieldURL,
+			runner.ConfigFieldRequests,
+			runner.ConfigFieldConcurrency,
+			runner.ConfigFieldRequestTimeout,
+			runner.ConfigFieldGlobalTimeout,
+			runner.ConfigFieldBody,
+			runner.ConfigFieldSilent,
 		}
-		baseCfg := config.Global{}
-		nextCfg := config.Global{
-			Request: config.Request{
+		baseCfg := runner.Config{}
+		nextCfg := runner.Config{
+			Request: runner.RequestConfig{
 				Body: validBody,
 			}.WithURL("http://a.b?p=2"),
-			Runner: config.Runner{
+			Runner: runner.RecorderConfig{
 				Requests:       1,
 				Concurrency:    2,
 				RequestTimeout: 3 * time.Second,
 				GlobalTimeout:  4 * time.Second,
 			},
-			Output: config.Output{
+			Output: runner.OutputConfig{
 				Silent: true,
 			},
 		}.WithFields(fields...)
@@ -192,17 +192,17 @@ func TestGlobal_Override(t *testing.T) {
 
 		for _, tc := range testcases {
 			t.Run(tc.label, func(t *testing.T) {
-				baseCfg := config.Global{
-					Request: config.Request{
+				baseCfg := runner.Config{
+					Request: runner.RequestConfig{
 						Header: tc.oldHeader,
 					},
 				}
 
-				nextCfg := config.Global{
-					Request: config.Request{
+				nextCfg := runner.Config{
+					Request: runner.RequestConfig{
 						Header: tc.newHeader,
 					},
-				}.WithFields(config.FieldHeader)
+				}.WithFields(runner.ConfigFieldHeader)
 
 				gotCfg := nextCfg.Override(baseCfg)
 
@@ -216,7 +216,7 @@ func TestGlobal_Override(t *testing.T) {
 
 func TestRequest_WithURL(t *testing.T) {
 	t.Run("set empty url if invalid", func(t *testing.T) {
-		cfg := config.Global{Request: config.Request{}.WithURL("abc")}
+		cfg := runner.Config{Request: runner.RequestConfig{}.WithURL("abc")}
 		if got := cfg.Request.URL; !reflect.DeepEqual(got, &url.URL{}) {
 			t.Errorf("exp empty *url.URL, got %v", got)
 		}
@@ -226,7 +226,7 @@ func TestRequest_WithURL(t *testing.T) {
 		var (
 			rawURL    = "http://benchttp.app?cool=true"
 			expURL, _ = url.ParseRequestURI(rawURL)
-			gotURL    = config.Request{}.WithURL(rawURL).URL
+			gotURL    = runner.RequestConfig{}.WithURL(rawURL).URL
 		)
 
 		if !reflect.DeepEqual(gotURL, expURL) {
@@ -238,22 +238,22 @@ func TestRequest_WithURL(t *testing.T) {
 func TestRequest_Value(t *testing.T) {
 	testcases := []struct {
 		label  string
-		in     config.Request
+		in     runner.RequestConfig
 		expMsg string
 	}{
 		{
 			label:  "return error if url is empty",
-			in:     config.Request{},
+			in:     runner.RequestConfig{},
 			expMsg: "empty url",
 		},
 		{
 			label:  "return error if url is invalid",
-			in:     config.Request{URL: &url.URL{Scheme: ""}},
+			in:     runner.RequestConfig{URL: &url.URL{Scheme: ""}},
 			expMsg: "bad url",
 		},
 		{
 			label:  "return error if NewRequest fails",
-			in:     config.Request{Method: "é", URL: &url.URL{Scheme: "http"}},
+			in:     runner.RequestConfig{Method: "é", URL: &url.URL{Scheme: "http"}},
 			expMsg: `net/http: invalid method "é"`,
 		},
 	}
@@ -276,10 +276,10 @@ func TestRequest_Value(t *testing.T) {
 	}
 
 	t.Run("return request with added headers", func(t *testing.T) {
-		in := config.Request{
+		in := runner.RequestConfig{
 			Method: "POST",
 			Header: http.Header{"key": []string{"val"}},
-			Body:   config.RequestBody{Content: []byte("abc")},
+			Body:   runner.RequestBody{Content: []byte("abc")},
 		}.WithURL("http://a.b")
 
 		expReq, err := http.NewRequest(
@@ -305,7 +305,7 @@ func TestRequest_Value(t *testing.T) {
 
 func TestGlobal_Equal(t *testing.T) {
 	t.Run("returns false for different configs", func(t *testing.T) {
-		base := config.Default()
+		base := runner.DefaultConfig()
 		diff := base
 		diff.Runner.Requests = base.Runner.Requests + 1
 
@@ -315,8 +315,8 @@ func TestGlobal_Equal(t *testing.T) {
 	})
 
 	t.Run("ignores set fields", func(t *testing.T) {
-		base := config.Default()
-		same := base.WithFields(config.FieldRequests)
+		base := runner.DefaultConfig()
+		same := base.WithFields(runner.ConfigFieldRequests)
 
 		if !base.Equal(same) {
 			t.Error("exp equal configs")
@@ -324,10 +324,10 @@ func TestGlobal_Equal(t *testing.T) {
 	})
 
 	t.Run("does not alter configs", func(t *testing.T) {
-		baseA := config.Default().WithFields(config.FieldRequests)
-		copyA := config.Default().WithFields(config.FieldRequests)
-		baseB := config.Default().WithFields(config.FieldURL)
-		copyB := config.Default().WithFields(config.FieldURL)
+		baseA := runner.DefaultConfig().WithFields(runner.ConfigFieldRequests)
+		copyA := runner.DefaultConfig().WithFields(runner.ConfigFieldRequests)
+		baseB := runner.DefaultConfig().WithFields(runner.ConfigFieldURL)
+		copyB := runner.DefaultConfig().WithFields(runner.ConfigFieldURL)
 
 		baseA.Equal(baseB)
 

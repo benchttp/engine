@@ -1,4 +1,4 @@
-package config
+package runner
 
 import (
 	"bytes"
@@ -27,8 +27,8 @@ func NewRequestBody(typ, content string) RequestBody {
 	return RequestBody{Type: typ, Content: []byte(content)}
 }
 
-// Request contains the confing options relative to a single request.
-type Request struct {
+// RequestConfig contains the confing options relative to a single request.
+type RequestConfig struct {
 	Method string
 	URL    *url.URL
 	Header http.Header
@@ -37,7 +37,7 @@ type Request struct {
 
 // Value generates a *http.Request based on Request and returns it
 // or any non-nil error that occurred.
-func (r Request) Value() (*http.Request, error) {
+func (r RequestConfig) Value() (*http.Request, error) {
 	if r.URL == nil {
 		return nil, errors.New("empty url")
 	}
@@ -57,7 +57,7 @@ func (r Request) Value() (*http.Request, error) {
 // WithURL sets the current Request with the parsed *url.URL from rawURL
 // and returns it. Any errors is discarded as a Config can be invalid
 // until Config.Validate is called. The url is always non-nil.
-func (r Request) WithURL(rawURL string) Request {
+func (r RequestConfig) WithURL(rawURL string) RequestConfig {
 	// ignore err: a Config can be invalid at this point
 	urlURL, _ := url.ParseRequestURI(rawURL)
 	if urlURL == nil {
@@ -67,8 +67,8 @@ func (r Request) WithURL(rawURL string) Request {
 	return r
 }
 
-// Runner contains options relative to the runner.
-type Runner struct {
+// RecorderConfig contains options relative to the runner.
+type RecorderConfig struct {
 	Requests       int
 	Concurrency    int
 	Interval       time.Duration
@@ -76,26 +76,26 @@ type Runner struct {
 	GlobalTimeout  time.Duration
 }
 
-// Output contains options relative to the output.
-type Output struct {
+// OutputConfig contains options relative to the output.
+type OutputConfig struct {
 	Silent   bool
 	Template string
 }
 
 type set map[string]struct{}
 
-// Global represents the global configuration of the runner.
-// It must be validated using Global.Validate before usage.
-type Global struct {
-	Request Request
-	Runner  Runner
-	Output  Output
+// Config represents the global configuration of the runner.
+// It must be validated using Config.Validate before usage.
+type Config struct {
+	Request RequestConfig
+	Runner  RecorderConfig
+	Output  OutputConfig
 
 	fieldsSet set
 }
 
 // WithField returns a new Global with the input fields marked as set.
-func (cfg Global) WithFields(fields ...string) Global {
+func (cfg Config) WithFields(fields ...string) Config {
 	fieldsSet := cfg.fieldsSet
 	if fieldsSet == nil {
 		fieldsSet = set{}
@@ -108,7 +108,7 @@ func (cfg Global) WithFields(fields ...string) Global {
 }
 
 // Equal returns true if cfg and c are equal configurations.
-func (cfg Global) Equal(c Global) bool {
+func (cfg Config) Equal(c Config) bool {
 	cfg.fieldsSet = nil
 	c.fieldsSet = nil
 	return reflect.DeepEqual(cfg, c)
@@ -117,33 +117,33 @@ func (cfg Global) Equal(c Global) bool {
 // Override returns a new Config based on cfg with overridden values from c.
 // Only fields specified in options are replaced. Accepted options are limited
 // to existing Fields, other values are silently ignored.
-func (cfg Global) Override(c Global) Global {
+func (cfg Config) Override(c Config) Config {
 	if len(cfg.fieldsSet) == 0 {
 		return c
 	}
 	for field := range cfg.fieldsSet {
 		switch field {
-		case FieldMethod:
+		case ConfigFieldMethod:
 			c.Request.Method = cfg.Request.Method
-		case FieldURL:
+		case ConfigFieldURL:
 			c.Request.URL = cfg.Request.URL
-		case FieldHeader:
+		case ConfigFieldHeader:
 			c.overrideHeader(cfg.Request.Header)
-		case FieldBody:
+		case ConfigFieldBody:
 			c.Request.Body = cfg.Request.Body
-		case FieldRequests:
+		case ConfigFieldRequests:
 			c.Runner.Requests = cfg.Runner.Requests
-		case FieldConcurrency:
+		case ConfigFieldConcurrency:
 			c.Runner.Concurrency = cfg.Runner.Concurrency
-		case FieldInterval:
+		case ConfigFieldInterval:
 			c.Runner.Interval = cfg.Runner.Interval
-		case FieldRequestTimeout:
+		case ConfigFieldRequestTimeout:
 			c.Runner.RequestTimeout = cfg.Runner.RequestTimeout
-		case FieldGlobalTimeout:
+		case ConfigFieldGlobalTimeout:
 			c.Runner.GlobalTimeout = cfg.Runner.GlobalTimeout
-		case FieldSilent:
+		case ConfigFieldSilent:
 			c.Output.Silent = cfg.Output.Silent
-		case FieldTemplate:
+		case ConfigFieldTemplate:
 			c.Output.Template = cfg.Output.Template
 		}
 	}
@@ -158,7 +158,7 @@ func (cfg Global) Override(c Global) Global {
 // - If it's already present in cfg.Request.Header, the value is replaced.
 //
 // - All other keys in cfg.Request.Header are left untouched.
-func (cfg *Global) overrideHeader(newHeader http.Header) {
+func (cfg *Config) overrideHeader(newHeader http.Header) {
 	if newHeader == nil {
 		return
 	}
@@ -172,7 +172,7 @@ func (cfg *Global) overrideHeader(newHeader http.Header) {
 
 // Validate returns a non-nil InvalidConfigError if any of its fields
 // does not meet the requirements.
-func (cfg Global) Validate() error { //nolint:gocognit
+func (cfg Config) Validate() error { //nolint:gocognit
 	errs := []error{}
 	appendError := func(err error) {
 		errs = append(errs, err)
@@ -212,4 +212,29 @@ func (cfg Global) Validate() error { //nolint:gocognit
 	}
 
 	return nil
+}
+
+var defaultConfig = Config{
+	Request: RequestConfig{
+		Method: "GET",
+		URL:    &url.URL{},
+		Header: http.Header{},
+		Body:   RequestBody{},
+	},
+	Runner: RecorderConfig{
+		Concurrency:    10,
+		Requests:       100,
+		Interval:       0 * time.Second,
+		RequestTimeout: 5 * time.Second,
+		GlobalTimeout:  30 * time.Second,
+	},
+	Output: OutputConfig{
+		Silent:   false,
+		Template: "",
+	},
+}
+
+// Default returns a default config that is safe to use.
+func DefaultConfig() Config {
+	return defaultConfig
 }
