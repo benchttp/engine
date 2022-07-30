@@ -64,7 +64,7 @@ func TestYAMLParser(t *testing.T) {
 			t.Run(tc.label, func(t *testing.T) {
 				var (
 					parser  yamlParser
-					rawcfg  unmarshaledConfig
+					rawcfg  DTO
 					yamlErr *yaml.TypeError
 				)
 
@@ -122,7 +122,7 @@ func TestJSONParser(t *testing.T) {
 			t.Run(tc.label, func(t *testing.T) {
 				var (
 					parser jsonParser
-					rawcfg unmarshaledConfig
+					rawcfg DTO
 				)
 
 				gotErr := parser.parse(tc.in, &rawcfg)

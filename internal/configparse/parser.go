@@ -22,7 +22,7 @@ const (
 type configParser interface {
 	// parse parses a raw bytes input as a raw config and stores
 	// the resulting value into dst.
-	parse(in []byte, dst *unmarshaledConfig) error
+	parse(in []byte, dst *DTO) error
 }
 
 // newParser returns an appropriate parser according to ext, or a non-nil
@@ -43,7 +43,7 @@ type yamlParser struct{}
 
 // parse decodes a raw yaml input in strict mode (unknown fields disallowed)
 // and stores the resulting value into dst.
-func (p yamlParser) parse(in []byte, dst *unmarshaledConfig) error {
+func (p yamlParser) parse(in []byte, dst *DTO) error {
 	decoder := yaml.NewDecoder(bytes.NewReader(in))
 	decoder.KnownFields(true)
 	return p.handleError(decoder.Decode(dst))
@@ -130,7 +130,7 @@ type jsonParser struct{}
 
 // parse decodes a raw JSON input in strict mode (unknown fields disallowed)
 // and stores the resulting value into dst.
-func (p jsonParser) parse(in []byte, dst *unmarshaledConfig) error {
+func (p jsonParser) parse(in []byte, dst *DTO) error {
 	decoder := json.NewDecoder(bytes.NewReader(in))
 	decoder.DisallowUnknownFields()
 	return p.handleError(decoder.Decode(dst))
