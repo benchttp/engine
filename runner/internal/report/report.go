@@ -138,12 +138,12 @@ func (rep *Report) writeTestsResult(w io.StringWriter) {
 		writeIndent(w, 1)
 		writeResultString(w, tr.Pass)
 		w.WriteString(": ")
-		w.WriteString(tr.Name)
+		w.WriteString(tr.Input.Name)
 
 		if !tr.Pass {
 			w.WriteString("\n")
 			writeIndent(w, 2)
-			w.WriteString(tr.Explain)
+			w.WriteString(tr.Summary)
 		}
 
 		w.WriteString("\n")

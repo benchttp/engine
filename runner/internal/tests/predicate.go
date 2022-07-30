@@ -1,6 +1,8 @@
 package tests
 
-import "fmt"
+import (
+	"github.com/benchttp/engine/runner/internal/metrics"
+)
 
 type Predicate string
 
@@ -13,54 +15,41 @@ const (
 	LTE Predicate = "LTE"
 )
 
-func (p Predicate) Apply(left, right Value) SingleResult {
-	pass := p.passFunc()(left, right)
-	return SingleResult{
-		Pass:    pass,
-		Explain: p.explain(left, right, pass),
-	}
-}
+func (p Predicate) match(comparisonResult metrics.ComparisonResult) bool {
+	sup := comparisonResult == metrics.SUP
+	inf := comparisonResult == metrics.INF
 
-func (p Predicate) passFunc() func(left, right Value) bool {
-	return func(left, right Value) bool {
-		switch p {
-		case EQ:
-			return left == right
-		case NEQ:
-			return left != right
-		case GT:
-			return left > right
-		case GTE:
-			return left >= right
-		case LT:
-			return left < right
-		case LTE:
-			return left <= right
-		default:
-			panic(fmt.Sprintf("%s: unknown predicate", p))
-		}
-	}
-}
-
-func (p Predicate) explain(metric, compared Value, pass bool) string {
-	return fmt.Sprintf("want %s %d, got %d", p.Symbol(), compared, metric)
-}
-
-func (p Predicate) Symbol() string {
 	switch p {
 	case EQ:
-		return "=="
+		return !sup && !inf
 	case NEQ:
-		return "!="
+		return sup || inf
 	case GT:
-		return ">"
+		return sup
 	case GTE:
-		return ">="
+		return !inf
 	case LT:
-		return "<"
+		return inf
 	case LTE:
-		return "<="
+		return !sup
 	default:
-		return "[unknown predicate]"
+		panic("tests: unknown predicate: " + string(p))
 	}
+}
+
+var predicateSymbols = map[Predicate]string{
+	EQ:  "==",
+	NEQ: "!=",
+	GT:  ">",
+	GTE: ">=",
+	LT:  "<",
+	LTE: "<=",
+}
+
+func (p Predicate) symbol() string {
+	s, ok := predicateSymbols[p]
+	if !ok {
+		return "unknown predicate"
+	}
+	return s
 }

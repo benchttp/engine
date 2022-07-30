@@ -44,9 +44,9 @@ type UnmarshaledConfig struct {
 
 	Tests []struct {
 		Name      *string `yaml:"name" json:"name"`
-		Metric    *string `yaml:"metric" json:"metric"`
+		Source    *string `yaml:"source" json:"source"`
 		Predicate *string `yaml:"predicate" json:"predicate"`
-		Value     *string `yaml:"value" json:"value"`
+		Target    *string `yaml:"target" json:"target"`
 	} `yaml:"tests" json:"tests"`
 }
 
@@ -259,17 +259,17 @@ func newParsedConfig(uconf UnmarshaledConfig) (parsedConfig, error) { //nolint:g
 
 	// TODO: handle nil values (assumed non nil for now)
 	if tests := uconf.Tests; len(tests) > 0 {
-		adaptedTests := make([]runner.TestConfig, len(tests))
+		cases := make([]runner.TestCase, len(tests))
 		for i, t := range tests {
-			d, _ := parseOptionalDuration(*t.Value)
-			adaptedTests[i] = runner.TestConfig{
+			d, _ := parseOptionalDuration(*t.Target)
+			cases[i] = runner.TestCase{
 				Name:      *t.Name,
-				Metric:    runner.TestMetric(*t.Metric),
+				Source:    runner.MetricsSource(*t.Source),
 				Predicate: runner.TestPredicate(*t.Predicate),
-				Value:     runner.TestValue(d),
+				Target:    runner.MetricsValue(d),
 			}
 		}
-		cfg.Tests = adaptedTests
+		cfg.Tests = cases
 		pconf.add(runner.ConfigFieldTests)
 	}
 

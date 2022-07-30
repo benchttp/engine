@@ -1,49 +1,35 @@
 package tests
 
 import (
-	"time"
+	"fmt"
 
 	"github.com/benchttp/engine/runner/internal/metrics"
 )
 
-type Value = time.Duration
-
-type Metric string
-
-const (
-	MetricAvg          Metric = "AVG"
-	MetricMin          Metric = "MIN"
-	MetricMax          Metric = "MAX"
-	MetricFailureCount Metric = "FAILURE_COUNT"
-	MetricSuccessCount Metric = "SUCCESS_COUNT"
-	MetricTotalCount   Metric = "TOTAL_COUNT"
-)
-
-type Input struct {
+type Case struct {
 	Name      string
-	Metric    func(metrics.Aggregate) Value
+	Source    metrics.Source
 	Predicate Predicate
-	Value     Value
+	Target    metrics.Value
 }
 
 type SuiteResult struct {
 	Pass    bool
-	Results []SingleResult
+	Results []CaseResult
 }
 
-type SingleResult struct {
-	Name    string
+type CaseResult struct {
+	Input   Case
 	Pass    bool
-	Explain string
+	Summary string
 }
 
-func Run(agg metrics.Aggregate, inputs []Input) SuiteResult {
+func Run(agg metrics.Aggregate, cases []Case) SuiteResult {
 	allpass := true
-	results := make([]SingleResult, len(inputs))
-	for i, input := range inputs {
-		currentResult := runSingle(agg, input)
+	results := make([]CaseResult, len(cases))
+	for i, input := range cases {
+		currentResult := runTestCase(agg, input)
 		results[i] = currentResult
-		results[i].Name = input.Name
 		if !currentResult.Pass {
 			allpass = false
 		}
@@ -54,9 +40,17 @@ func Run(agg metrics.Aggregate, inputs []Input) SuiteResult {
 	}
 }
 
-func runSingle(agg metrics.Aggregate, input Input) SingleResult {
-	gotMetric := input.Metric(agg)
-	comparedValue := input.Value
+func runTestCase(agg metrics.Aggregate, c Case) CaseResult {
+	gotMetric := agg.MetricOf(c.Source)
+	tarMetric := metrics.Metric{Source: c.Source, Value: c.Target}
+	comparisonResult := gotMetric.Compare(tarMetric)
 
-	return input.Predicate.Apply(gotMetric, comparedValue)
+	return CaseResult{
+		Input: c,
+		Pass:  c.Predicate.match(comparisonResult),
+		Summary: fmt.Sprintf(
+			"want %s %s %v, got %d",
+			c.Source, c.Predicate.symbol(), c.Target, gotMetric.Value,
+		),
+	}
 }

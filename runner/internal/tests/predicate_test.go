@@ -3,6 +3,7 @@ package tests_test
 import (
 	"testing"
 
+	"github.com/benchttp/engine/runner/internal/metrics"
 	"github.com/benchttp/engine/runner/internal/tests"
 )
 
@@ -15,38 +16,38 @@ func TestPredicate(t *testing.T) {
 
 	testcases := []struct {
 		Predicate  tests.Predicate
-		PassValues []tests.Value
-		FailValues []tests.Value
+		PassValues []int
+		FailValues []int
 	}{
 		{
 			Predicate:  tests.EQ,
-			PassValues: []tests.Value{metric},
-			FailValues: []tests.Value{metricDec, metricInc},
+			PassValues: []int{metric},
+			FailValues: []int{metricDec, metricInc},
 		},
 		{
 			Predicate:  tests.NEQ,
-			PassValues: []tests.Value{metricInc, metricDec},
-			FailValues: []tests.Value{metric},
+			PassValues: []int{metricInc, metricDec},
+			FailValues: []int{metric},
 		},
 		{
 			Predicate:  tests.LT,
-			PassValues: []tests.Value{metricDec},
-			FailValues: []tests.Value{metric, metricInc},
+			PassValues: []int{metricDec},
+			FailValues: []int{metric, metricInc},
 		},
 		{
 			Predicate:  tests.LTE,
-			PassValues: []tests.Value{metricDec, metric},
-			FailValues: []tests.Value{metricInc},
+			PassValues: []int{metricDec, metric},
+			FailValues: []int{metricInc},
 		},
 		{
 			Predicate:  tests.GT,
-			PassValues: []tests.Value{metricInc},
-			FailValues: []tests.Value{metric, metricDec},
+			PassValues: []int{metricInc},
+			FailValues: []int{metric, metricDec},
 		},
 		{
 			Predicate:  tests.GTE,
-			PassValues: []tests.Value{metricInc, metric},
-			FailValues: []tests.Value{metricDec},
+			PassValues: []int{metricInc, metric},
+			FailValues: []int{metricDec},
 		},
 	}
 
@@ -67,30 +68,45 @@ func TestPredicate(t *testing.T) {
 func expectPredicatePass(
 	t *testing.T,
 	p tests.Predicate,
-	l, r tests.Value,
+	src, tar int,
 ) {
 	t.Helper()
-	expectPredicateResult(t, p, l, r, true)
+	expectPredicateResult(t, p, src, tar, true)
 }
 
 func expectPredicateFail(
 	t *testing.T,
 	p tests.Predicate,
-	l, r tests.Value,
+	src, tar int,
 ) {
 	t.Helper()
-	expectPredicateResult(t, p, l, r, false)
+	expectPredicateResult(t, p, src, tar, false)
 }
 
 func expectPredicateResult(
 	t *testing.T,
 	p tests.Predicate,
-	l, r tests.Value,
+	src, tar int,
 	expPass bool,
 ) {
 	t.Helper()
 
-	if pass := p.Apply(r, l).Pass; pass != expPass {
-		t.Errorf("exp %v %d %d -> %v, got %v", p, l, r, expPass, pass)
+	agg := metrics.Aggregate{
+		TotalCount: src,
+	}
+
+	cases := []tests.Case{{
+		Predicate: p,
+		Source:    metrics.RequestCount,
+		Target:    metrics.Value(tar),
+	}}
+
+	result := tests.Run(agg, cases)
+
+	if pass := result.Pass; pass != expPass {
+		t.Errorf(
+			"exp %v %d %d -> %v, got %v",
+			p, src, tar, expPass, pass,
+		)
 	}
 }

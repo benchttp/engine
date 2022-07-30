@@ -1,43 +1,44 @@
 package metrics
 
-import (
-	"time"
+type Value interface{}
 
-	"github.com/benchttp/engine/runner/internal/recorder"
+type Source string
+
+const (
+	ResponseTimeAvg     Source = "AVG"
+	ResponseTimeMin     Source = "MIN"
+	ResponseTimeMax     Source = "MAX"
+	RequestFailCount    Source = "FAILURE_COUNT"
+	RequestSuccessCount Source = "SUCCESS_COUNT"
+	RequestCount        Source = "TOTAL_COUNT"
 )
 
-// Aggregate is an aggregate of metrics resulting from
-// from recorded requests.
-type Aggregate struct {
-	Min, Max, Avg                          time.Duration
-	SuccessCount, FailureCount, TotalCount int
-	// Median, StdDev            time.Duration
-	// Deciles                   map[int]float64
-	// StatusCodeDistribution    map[string]int
-	// RequestEventsDistribution map[recorder.Event]int
+func (agg Aggregate) MetricOf(src Source) Metric {
+	var v interface{}
+	switch src {
+	case ResponseTimeAvg:
+		v = agg.Avg
+	case ResponseTimeMin:
+		v = agg.Min
+	case ResponseTimeMax:
+		v = agg.Max
+	case RequestFailCount:
+		v = agg.FailureCount
+	case RequestSuccessCount:
+		v = agg.SuccessCount
+	case RequestCount:
+		v = agg.TotalCount
+	default:
+		panic("metrics.Aggregate.MetricOf: unknown Source: " + src)
+	}
+	return Metric{Source: src, Value: v}
 }
 
-// Compute computes and aggregates metrics from the given
-// requests records.
-func Compute(records []recorder.Record) (agg Aggregate) {
-	if len(records) == 0 {
-		return
-	}
+type Metric struct {
+	Source Source
+	Value  Value
+}
 
-	agg.TotalCount = len(records)
-	agg.Min, agg.Max = records[0].Time, records[0].Time
-	for _, rec := range records {
-		if rec.Error != "" {
-			agg.FailureCount++
-		}
-		if rec.Time < agg.Min {
-			agg.Min = rec.Time
-		}
-		if rec.Time > agg.Max {
-			agg.Max = rec.Time
-		}
-		agg.Avg += rec.Time / time.Duration(len(records))
-	}
-	agg.SuccessCount = agg.TotalCount - agg.FailureCount
-	return
+func (m Metric) Compare(to Metric) ComparisonResult {
+	return compareMetrics(m, to)
 }

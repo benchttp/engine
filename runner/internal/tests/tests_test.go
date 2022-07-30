@@ -12,22 +12,18 @@ import (
 func TestRun(t *testing.T) {
 	t.Run("happy path", func(_ *testing.T) {
 		agg := metricsStub()
-		queries := []tests.Input{
+		queries := []tests.Case{
 			{
-				Name: "metrics.Min",
-				Metric: func(agg metrics.Aggregate) tests.Value {
-					return tests.Value(agg.Min)
-				},
+				Name:      "minimum response time is 50ms", // succeeding case
+				Source:    metrics.ResponseTimeMax,
 				Predicate: tests.GT,
-				Value:     tests.Value(50 * time.Millisecond), // expect pass
+				Target:    metrics.Value(50 * time.Millisecond),
 			},
 			{
-				Name: "metrics.Max",
-				Metric: func(agg metrics.Aggregate) tests.Value {
-					return tests.Value(agg.Max)
-				},
+				Name:      "maximum response time is 110ms", // failing case
+				Source:    metrics.ResponseTimeMax,
 				Predicate: tests.LT,
-				Value:     tests.Value(110 * time.Millisecond), // expect fail
+				Target:    metrics.Value(110 * time.Millisecond),
 			},
 		}
 		result := tests.Run(agg, queries)

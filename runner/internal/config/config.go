@@ -84,20 +84,13 @@ type Output struct {
 	Template string
 }
 
-type Test struct {
-	Name      string
-	Metric    tests.Metric
-	Predicate tests.Predicate
-	Value     tests.Value
-}
-
 // Global represents the global configuration of the runner.
 // It must be validated using Global.Validate before usage.
 type Global struct {
 	Request Request
 	Runner  Runner
 	Output  Output
-	Tests   []Test
+	Tests   []tests.Case
 }
 
 // String returns an indented JSON representation of Config
