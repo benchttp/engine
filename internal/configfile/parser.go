@@ -1,4 +1,4 @@
-package configparse
+package configfile
 
 import (
 	"bytes"
@@ -18,8 +18,8 @@ const (
 	extJSON extension = ".json"
 )
 
-// configParser exposes a method parse to read bytes as a raw config.
-type configParser interface {
+// configfiler exposes a method parse to read bytes as a raw config.
+type configfiler interface {
 	// parse parses a raw bytes input as a raw config and stores
 	// the resulting value into dst.
 	parse(in []byte, dst *configFileRepr) error
@@ -27,7 +27,7 @@ type configParser interface {
 
 // newParser returns an appropriate parser according to ext, or a non-nil
 // error if ext is not an expected extension.
-func newParser(ext extension) (configParser, error) {
+func newParser(ext extension) (configfiler, error) {
 	switch ext {
 	case extYML, extYAML:
 		return yamlParser{}, nil
@@ -38,7 +38,7 @@ func newParser(ext extension) (configParser, error) {
 	}
 }
 
-// yamlParser implements configParser.
+// yamlParser implements configfiler.
 type yamlParser struct{}
 
 // parse decodes a raw yaml input in strict mode (unknown fields disallowed)
@@ -129,7 +129,7 @@ func (p yamlParser) prettyErrorMessage(raw string) string {
 	return raw
 }
 
-// jsonParser implements configParser.
+// jsonParser implements configfiler.
 //
 // TODO: ideally we'll want to move purely config-related marshaling
 // to configio, and here only extends its behavior with file-only logics

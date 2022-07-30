@@ -1,4 +1,4 @@
-package configparse
+package configfile
 
 import "os"
 

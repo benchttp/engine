@@ -4,7 +4,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/benchttp/engine/internal/configparse"
+	"github.com/benchttp/engine/internal/configfile"
 )
 
 func (s *server) handleRun(w http.ResponseWriter, r *http.Request) {
@@ -23,7 +23,7 @@ func (s *server) handleRun(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Parse json config
-	cfg, err := configparse.JSON(readBody)
+	cfg, err := configfile.JSON(readBody)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
