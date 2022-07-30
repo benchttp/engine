@@ -94,7 +94,6 @@ func TestGlobal_Override(t *testing.T) {
 	})
 
 	t.Run("override specified fields", func(t *testing.T) {
-		baseCfg := config.Global{}
 		fields := []string{
 			config.FieldMethod,
 			config.FieldURL,
@@ -105,7 +104,8 @@ func TestGlobal_Override(t *testing.T) {
 			config.FieldBody,
 			config.FieldSilent,
 		}
-		newCfg := config.Global{
+		zeroCfg := config.Global{}
+		nextCfg := config.Global{
 			Request: config.Request{
 				Body: validBody,
 			}.WithURL("http://a.b?p=2"),
@@ -120,8 +120,8 @@ func TestGlobal_Override(t *testing.T) {
 			},
 		}.WithFields(fields...)
 
-		if gotCfg := baseCfg.Override(newCfg); !reflect.DeepEqual(gotCfg, newCfg) {
-			t.Errorf("did not override expected fields:\nexp %v\ngot %v", baseCfg, gotCfg)
+		if gotCfg := zeroCfg.Override(nextCfg); !gotCfg.Equal(nextCfg) {
+			t.Errorf("did not override expected fields:\nexp %v\ngot %v", zeroCfg, gotCfg)
 			t.Log(fields)
 		}
 	})
