@@ -95,6 +95,16 @@ func TestGlobal_Override(t *testing.T) {
 
 	t.Run("override specified fields", func(t *testing.T) {
 		baseCfg := config.Global{}
+		fields := []string{
+			config.FieldMethod,
+			config.FieldURL,
+			config.FieldRequests,
+			config.FieldConcurrency,
+			config.FieldRequestTimeout,
+			config.FieldGlobalTimeout,
+			config.FieldBody,
+			config.FieldSilent,
+		}
 		newCfg := config.Global{
 			Request: config.Request{
 				Body: validBody,

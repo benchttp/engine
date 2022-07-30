@@ -144,7 +144,7 @@ func parseAndMergeConfigs(uconfs []unmarshaledConfig) (cfg runner.Config, err er
 		if err != nil {
 			return cfg, errWithDetails(ErrParse, err)
 		}
-		cfg = cfg.Override(pconf.config, pconf.fields...)
+		cfg = cfg.Override(pconf.config.WithFields(pconf.fields...))
 	}
 
 	return cfg, nil

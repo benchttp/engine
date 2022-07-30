@@ -99,10 +99,12 @@ func (cmd *cmdRun) parseArgs(args []string) []string {
 // options if found, overridden with CLI options listed in fields
 // slice param.
 func (cmd *cmdRun) makeConfig(fields []string) (cfg runner.Config, err error) {
+	cliConfig := cmd.config.WithFields(fields...)
+
 	// configFile not set and default ones not found:
 	// skip the merge and return the cli config
 	if cmd.configFile == "" {
-		return cmd.config, cmd.config.Validate()
+		return cliConfig, cliConfig.Validate()
 	}
 
 	fileConfig, err := configparse.Parse(cmd.configFile)
@@ -112,7 +114,7 @@ func (cmd *cmdRun) makeConfig(fields []string) (cfg runner.Config, err error) {
 		return
 	}
 
-	mergedConfig := fileConfig.Override(cmd.config, fields...)
+	mergedConfig := fileConfig.Override(cliConfig)
 
 	return mergedConfig, mergedConfig.Validate()
 }

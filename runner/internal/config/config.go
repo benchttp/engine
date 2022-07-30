@@ -82,12 +82,29 @@ type Output struct {
 	Template string
 }
 
+type set map[string]struct{}
+
 // Global represents the global configuration of the runner.
 // It must be validated using Global.Validate before usage.
 type Global struct {
 	Request Request
 	Runner  Runner
 	Output  Output
+
+	fieldsSet set
+}
+
+// WithField returns a new Global with the input fields marked as set.
+func (cfg Global) WithFields(fields ...string) Global {
+	fieldsSet := cfg.fieldsSet
+	if fieldsSet == nil {
+		fieldsSet = set{}
+	}
+	for _, field := range fields {
+		fieldsSet[field] = struct{}{}
+	}
+	cfg.fieldsSet = fieldsSet
+	return cfg
 }
 
 // String returns an indented JSON representation of Config

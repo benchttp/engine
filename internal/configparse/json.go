@@ -18,5 +18,7 @@ func JSON(in []byte) (runner.Config, error) {
 		return runner.Config{}, err
 	}
 
-	return runner.DefaultConfig().Override(pconf.config, pconf.fields...), nil
+	return runner.
+		DefaultConfig().
+		Override(pconf.config.WithFields(pconf.fields...)), nil
 }
