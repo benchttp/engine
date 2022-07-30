@@ -2,7 +2,6 @@ package config
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -113,13 +112,6 @@ func (cfg Global) Equal(c Global) bool {
 	cfg.fieldsSet = nil
 	c.fieldsSet = nil
 	return reflect.DeepEqual(cfg, c)
-}
-
-// String returns an indented JSON representation of Config
-// for debugging purposes.
-func (cfg Global) String() string {
-	b, _ := json.MarshalIndent(cfg, "", "  ")
-	return string(b)
 }
 
 // Override returns a new Config based on cfg with overridden values from c.

@@ -22,7 +22,7 @@ const (
 type configParser interface {
 	// parse parses a raw bytes input as a raw config and stores
 	// the resulting value into dst.
-	parse(in []byte, dst *DTO) error
+	parse(in []byte, dst *configFileRepr) error
 }
 
 // newParser returns an appropriate parser according to ext, or a non-nil
@@ -43,7 +43,11 @@ type yamlParser struct{}
 
 // parse decodes a raw yaml input in strict mode (unknown fields disallowed)
 // and stores the resulting value into dst.
-func (p yamlParser) parse(in []byte, dst *DTO) error {
+//
+// TODO: ideally we'll want to move purely config-related marshaling
+// to configio, and here only extends its behavior with file-only logics
+// (e.g. field Extends).
+func (p yamlParser) parse(in []byte, dst *configFileRepr) error {
 	decoder := yaml.NewDecoder(bytes.NewReader(in))
 	decoder.KnownFields(true)
 	return p.handleError(decoder.Decode(dst))
@@ -126,11 +130,15 @@ func (p yamlParser) prettyErrorMessage(raw string) string {
 }
 
 // jsonParser implements configParser.
+//
+// TODO: ideally we'll want to move purely config-related marshaling
+// to configio, and here only extends its behavior with file-only logics
+// (e.g. field Extends).
 type jsonParser struct{}
 
 // parse decodes a raw JSON input in strict mode (unknown fields disallowed)
 // and stores the resulting value into dst.
-func (p jsonParser) parse(in []byte, dst *DTO) error {
+func (p jsonParser) parse(in []byte, dst *configFileRepr) error {
 	decoder := json.NewDecoder(bytes.NewReader(in))
 	decoder.DisallowUnknownFields()
 	return p.handleError(decoder.Decode(dst))
