@@ -117,8 +117,11 @@ func (cfg Global) String() string {
 // Override returns a new Config based on cfg with overridden values from c.
 // Only fields specified in options are replaced. Accepted options are limited
 // to existing Fields, other values are silently ignored.
-func (cfg Global) Override(c Global, fields ...string) Global {
-	for _, field := range fields {
+func (cfg Global) Override(c Global) Global {
+	if len(c.fieldsSet) == 0 {
+		return cfg
+	}
+	for field := range c.fieldsSet {
 		switch field {
 		case FieldMethod:
 			cfg.Request.Method = c.Request.Method
