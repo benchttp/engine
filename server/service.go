@@ -10,18 +10,15 @@ import (
 )
 
 type service struct {
-	mu sync.RWMutex
-
+	mu     sync.RWMutex
 	runner *runner.Runner
 	cancel context.CancelFunc
 }
 
-// doRun calls to runner.Run. Any previous state is immediately flushed.
-// Once the doRun is done, the state is updated. doRun uses w to notify
-// that the doRun has started and the done status upon completion.
+// doRun calls runner.Runner.Run. The service state is overwritten.
+// The return value of runner.Runner.Run is send to the client via
+// w. The run progress is streamed through w.
 func (s *service) doRun(w socketio.Writer, cfg runner.Config) {
-	s.flush()
-
 	ctx, cancel := context.WithCancel(context.Background())
 	s.cancel = cancel
 
@@ -36,18 +33,23 @@ func (s *service) doRun(w socketio.Writer, cfg runner.Config) {
 	_ = w.WriteJSON(doneMessage{Event: "done", Data: *out})
 }
 
-// cancelRun stops the run if it is running. The state is always flushed.
+// cancelRun cancels the run of the current runner.
+// If the runner is nil, cancelRun is noop.
 func (s *service) cancelRun() (ok bool) {
-	ok = s.runner != nil
-	s.flush()
-	return
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.runner == nil {
+		return false
+	}
+	s.cancel()
+	return true
 }
 
-// sendRecordingProgess sends the current runner.RecordingProgress via w.
-// As multiple goroutines may invoke run.sendRecordingProgess concurrently
-// as a callback from runner.onRecordingProgress, writing to w
-// is protected by a lock.
+// sendRecordingProgess returns a callback
+// to send the current runner progress via w.
 func (s *service) sendRecordingProgess(w socketio.Writer) func(runner.RecordingProgress) {
+	// The callback is invoked from a goroutine spawned by Recorder.Record.
+	// Protect w from concurrent write with a lock.
 	return func(rp runner.RecordingProgress) {
 		s.mu.Lock()
 		defer s.mu.Unlock()
@@ -60,14 +62,11 @@ func (s *service) sendRecordingProgess(w socketio.Writer) func(runner.RecordingP
 	}
 }
 
-// flush clears the state. Calling run.flush locks the run for writing.
+// flush clears the service state.
+// Calling service.flush locks it for writing.
 func (s *service) flush() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-
-	if s.cancel != nil {
-		s.cancel()
-	}
 	s.runner = nil
 	s.cancel = nil
 }

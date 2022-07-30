@@ -7,14 +7,13 @@ import (
 
 type clientMessage struct {
 	Action string `json:"action"`
-	// Data is non-empty if MessageProcedure.Action is "start".
+	// Data is non-empty if field Action is "run".
 	Data configparse.UnmarshaledConfig `json:"data"`
 }
 
 type progressMessage struct {
 	Event string `json:"state"`
-	// Data  runner.RecordingProgress `json:"data"`
-	Data string `json:"data"`
+	Data  string `json:"data"` // TODO runner.RecordingProgress
 }
 
 type doneMessage struct {

@@ -8,15 +8,16 @@ import (
 	"github.com/benchttp/engine/server"
 )
 
-const port = "8080"
+const (
+	port  = "8080"
+	token = "6db67fafc4f5bf965a5a" //nolint:gosec
+)
 
 func main() {
 	addr := ":" + port
 	fmt.Println("http://localhost" + addr)
 
-	handler := &server.Handler{
-		Silent: false,
-	}
+	handler := server.NewHandler(false, token)
 
 	log.Fatal(http.ListenAndServe(addr, handler))
 }
