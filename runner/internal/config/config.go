@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"reflect"
 	"time"
 )
 
@@ -105,6 +106,13 @@ func (cfg Global) WithFields(fields ...string) Global {
 	}
 	cfg.fieldsSet = fieldsSet
 	return cfg
+}
+
+// Equal returns true if cfg and c are equal configurations.
+func (cfg Global) Equal(c Global) bool {
+	cfg.fieldsSet = nil
+	c.fieldsSet = nil
+	return reflect.DeepEqual(cfg, c)
 }
 
 // String returns an indented JSON representation of Config
