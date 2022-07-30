@@ -40,18 +40,18 @@ func (h *Handler) handle(w http.ResponseWriter, r *http.Request) {
 	reader := socketio.NewReader(ws, h.Silent)
 	writer := socketio.NewWriter(ws, h.Silent)
 
-	run := run{}
-	defer run.flush()
+	srv := &service{}
+	defer srv.flush()
 
 	for {
-		inc := messageProcedure{}
+		inc := clientMessage{}
 		err := reader.ReadJSON(&inc)
 		if err != nil {
 			log.Println(err)
 			break
 		}
 
-		switch inc.Procedure {
+		switch inc.Action {
 		case "run":
 			// TODO Update package configparse for this purpose.
 			p, err := json.Marshal(inc.Data)
@@ -65,16 +65,16 @@ func (h *Handler) handle(w http.ResponseWriter, r *http.Request) {
 				break
 			}
 
-			go run.start(writer, cfg)
+			go srv.doRun(writer, cfg)
 
-		case "stop":
-			ok := run.stop()
+		case "cancel":
+			ok := srv.cancelRun()
 			if !ok {
-				_ = writer.WriteJSON(messageError{Event: "error", Error: errors.New("not running")})
+				_ = writer.WriteJSON(errorMessage{Event: "error", Error: "not running"})
 			}
 
 		default:
-			_ = writer.WriteTextMessage(fmt.Sprintf("unknown procedure: %s", inc.Procedure))
+			_ = writer.WriteTextMessage(fmt.Sprintf("unknown procedure: %s", inc.Action))
 		}
 	}
 }

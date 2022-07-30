@@ -5,24 +5,24 @@ import (
 	"github.com/benchttp/engine/runner"
 )
 
-type messageProcedure struct {
-	Procedure string `json:"procedure"`
-	// Data is non-empty if MessageProcedure.Procedure is "start".
+type clientMessage struct {
+	Action string `json:"action"`
+	// Data is non-empty if MessageProcedure.Action is "start".
 	Data configparse.UnmarshaledConfig `json:"data"`
 }
 
-type messageProgress struct {
-	Event string `json:"event"`
+type progressMessage struct {
+	Event string `json:"state"`
 	// Data  runner.RecordingProgress `json:"data"`
 	Data string `json:"data"`
 }
 
-type messageDone struct {
-	Event string        `json:"event"`
+type doneMessage struct {
+	Event string        `json:"state"`
 	Data  runner.Report `json:"data"`
 }
 
-type messageError struct {
-	Event string `json:"event"`
-	Error error  `json:"error"`
+type errorMessage struct {
+	Event string `json:"state"`
+	Error string `json:"error"`
 }
