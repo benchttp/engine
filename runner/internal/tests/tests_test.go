@@ -24,13 +24,13 @@ func TestRun(t *testing.T) {
 				{
 					Name:      "average response time below 120ms (pass)",
 					Predicate: tests.LT,
-					Source:    metrics.ResponseTimeAvg,
+					Field:     metrics.ResponseTimeAvg,
 					Target:    120 * time.Millisecond,
 				},
 				{
 					Name:      "average response time is above 80ms (pass)",
 					Predicate: tests.GT,
-					Source:    metrics.ResponseTimeAvg,
+					Field:     metrics.ResponseTimeAvg,
 					Target:    80 * time.Millisecond,
 				},
 			},
@@ -47,13 +47,13 @@ func TestRun(t *testing.T) {
 				{
 					Name:      "average response time below 120ms (fail)",
 					Predicate: tests.LT,
-					Source:    metrics.ResponseTimeAvg,
+					Field:     metrics.ResponseTimeAvg,
 					Target:    120 * time.Millisecond,
 				},
 				{
 					Name:      "average response time is above 80ms (pass)",
 					Predicate: tests.GT,
-					Source:    metrics.ResponseTimeAvg,
+					Field:     metrics.ResponseTimeAvg,
 					Target:    80 * time.Millisecond,
 				},
 			},

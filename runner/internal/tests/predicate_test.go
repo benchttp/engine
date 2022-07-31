@@ -9,10 +9,9 @@ import (
 
 func TestPredicate(t *testing.T) {
 	const (
-		source = 100
-		same   = source
-		more   = source + 1
-		less   = source - 1
+		base = 100
+		more = base + 1
+		less = base - 1
 	)
 
 	testcases := []struct {
@@ -22,32 +21,32 @@ func TestPredicate(t *testing.T) {
 	}{
 		{
 			Predicate:  tests.EQ,
-			PassValues: []int{same},
+			PassValues: []int{base},
 			FailValues: []int{more, less},
 		},
 		{
 			Predicate:  tests.NEQ,
 			PassValues: []int{less, more},
-			FailValues: []int{same},
+			FailValues: []int{base},
 		},
 		{
 			Predicate:  tests.LT,
 			PassValues: []int{more},
-			FailValues: []int{same, less},
+			FailValues: []int{base, less},
 		},
 		{
 			Predicate:  tests.LTE,
-			PassValues: []int{more, same},
+			PassValues: []int{more, base},
 			FailValues: []int{less},
 		},
 		{
 			Predicate:  tests.GT,
 			PassValues: []int{less},
-			FailValues: []int{same, more},
+			FailValues: []int{base, more},
 		},
 		{
 			Predicate:  tests.GTE,
-			PassValues: []int{less, same},
+			PassValues: []int{less, base},
 			FailValues: []int{more},
 		},
 	}
@@ -55,12 +54,12 @@ func TestPredicate(t *testing.T) {
 	for _, tc := range testcases {
 		t.Run(string(tc.Predicate)+":pass", func(t *testing.T) {
 			for _, passValue := range tc.PassValues {
-				expectPredicatePass(t, tc.Predicate, source, passValue)
+				expectPredicatePass(t, tc.Predicate, base, passValue)
 			}
 		})
 		t.Run(string(tc.Predicate+":fail"), func(t *testing.T) {
 			for _, failValue := range tc.FailValues {
-				expectPredicateFail(t, tc.Predicate, source, failValue)
+				expectPredicateFail(t, tc.Predicate, base, failValue)
 			}
 		})
 	}
@@ -98,7 +97,7 @@ func expectPredicateResult(
 
 	result := tests.Run(agg, []tests.Case{{
 		Predicate: p,
-		Source:    metrics.RequestCount,
+		Field:     metrics.RequestCount,
 		Target:    tar,
 	}})
 

@@ -5,19 +5,19 @@ import "reflect"
 // Value is a concrete metric value, e.g. 120 or 3 * time.Second.
 type Value interface{}
 
-// Source represents the origin of a Metric.
+// Field represents the origin of a Metric.
 // It exposes a method Type that returns the type of the metric.
 // It can be used to reference a Metric in an Aggregate
 // via Aggregate.MetricOf.
-type Source string
+type Field string
 
 const (
-	ResponseTimeAvg     Source = "AVG"
-	ResponseTimeMin     Source = "MIN"
-	ResponseTimeMax     Source = "MAX"
-	RequestFailCount    Source = "FAILURE_COUNT"
-	RequestSuccessCount Source = "SUCCESS_COUNT"
-	RequestCount        Source = "TOTAL_COUNT"
+	ResponseTimeAvg     Field = "AVG"
+	ResponseTimeMin     Field = "MIN"
+	ResponseTimeMax     Field = "MAX"
+	RequestFailCount    Field = "FAILURE_COUNT"
+	RequestSuccessCount Field = "SUCCESS_COUNT"
+	RequestCount        Field = "TOTAL_COUNT"
 )
 
 // Type represents the underlying type of a Value.
@@ -32,21 +32,21 @@ const (
 	TypeDuration = Type(lastGoReflectKind + iota)
 )
 
-// Type returns the underlying type of the metric src refers to.
-func (src Source) Type() Type {
-	switch src {
+// Type returns the underlying type of the metric field refers to.
+func (field Field) Type() Type {
+	switch field {
 	case ResponseTimeAvg, ResponseTimeMin, ResponseTimeMax:
 		return TypeDuration
 	case RequestFailCount, RequestSuccessCount, RequestCount:
 		return TypeInt
 	}
-	panic(badSource(src))
+	panic(badField(field))
 }
 
-// MetricOf returns the Metric for the given Source in Aggregate.
-func (agg Aggregate) MetricOf(src Source) Metric {
+// MetricOf returns the Metric for the given Field in Aggregate.
+func (agg Aggregate) MetricOf(field Field) Metric {
 	var v interface{}
-	switch src {
+	switch field {
 	case ResponseTimeAvg:
 		v = agg.Avg
 	case ResponseTimeMin:
@@ -60,17 +60,17 @@ func (agg Aggregate) MetricOf(src Source) Metric {
 	case RequestCount:
 		v = agg.TotalCount
 	default:
-		panic(badSource(src))
+		panic(badField(field))
 	}
-	return Metric{Source: src, Value: v}
+	return Metric{Field: field, Value: v}
 }
 
-// Metric represents an Aggregate metric. It links together a Value
-// and its Source from the Aggregate.
+// Metric represents an Aggregate metric. It links together a Field
+// and its Value from the Aggregate.
 // It exposes a method Compare that compares its Value to another.
 type Metric struct {
-	Source Source
-	Value  Value
+	Field Field
+	Value Value
 }
 
 // Compare compares a Metric's value to another.
@@ -97,6 +97,6 @@ func (m Metric) Compare(to Metric) ComparisonResult {
 	return compareMetrics(to, m)
 }
 
-func badSource(src Source) string {
-	return "metrics: unknown Source: " + string(src)
+func badField(field Field) string {
+	return "metrics: unknown Field: " + string(field)
 }

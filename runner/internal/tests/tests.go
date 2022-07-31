@@ -8,7 +8,7 @@ import (
 
 type Case struct {
 	Name      string
-	Source    metrics.Source
+	Field     metrics.Field
 	Predicate Predicate
 	Target    metrics.Value
 }
@@ -41,8 +41,8 @@ func Run(agg metrics.Aggregate, cases []Case) SuiteResult {
 }
 
 func runTestCase(agg metrics.Aggregate, c Case) CaseResult {
-	gotMetric := agg.MetricOf(c.Source)
-	tarMetric := metrics.Metric{Source: c.Source, Value: c.Target}
+	gotMetric := agg.MetricOf(c.Field)
+	tarMetric := metrics.Metric{Field: c.Field, Value: c.Target}
 	comparisonResult := gotMetric.Compare(tarMetric)
 
 	return CaseResult{
@@ -50,7 +50,7 @@ func runTestCase(agg metrics.Aggregate, c Case) CaseResult {
 		Pass:  c.Predicate.match(comparisonResult),
 		Summary: fmt.Sprintf(
 			"want %s %s %v, got %v",
-			c.Source, c.Predicate.symbol(), c.Target, gotMetric.Value,
+			c.Field, c.Predicate.symbol(), c.Target, gotMetric.Value,
 		),
 	}
 }

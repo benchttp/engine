@@ -212,19 +212,19 @@ func newExpConfig() runner.Config {
 		Tests: []runner.TestCase{
 			{
 				Name:      "minimum response time",
-				Source:    "MIN",
+				Field:     "MIN",
 				Predicate: "GT",
 				Target:    80 * time.Millisecond,
 			},
 			{
 				Name:      "maximum response time",
-				Source:    "MAX",
+				Field:     "MAX",
 				Predicate: "LTE",
 				Target:    120 * time.Millisecond,
 			},
 			{
 				Name:      "100% availability",
-				Source:    "FAILURE_COUNT",
+				Field:     "FAILURE_COUNT",
 				Predicate: "EQ",
 				Target:    0,
 			},

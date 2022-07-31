@@ -46,7 +46,7 @@ type UnmarshaledConfig struct {
 
 	Tests []struct {
 		Name      *string `yaml:"name" json:"name"`
-		Source    *string `yaml:"source" json:"source"`
+		Field     *string `yaml:"field" json:"field"`
 		Predicate *string `yaml:"predicate" json:"predicate"`
 		Target    *string `yaml:"target" json:"target"`
 	} `yaml:"tests" json:"tests"`
@@ -263,14 +263,14 @@ func newParsedConfig(uconf UnmarshaledConfig) (parsedConfig, error) { //nolint:g
 	if tests := uconf.Tests; len(tests) > 0 {
 		cases := make([]runner.TestCase, len(tests))
 		for i, t := range tests {
-			source := runner.MetricsSource(*t.Source)
-			target, err := parseMetricValue(source.Type(), *t.Target)
+			field := runner.MetricsField(*t.Field)
+			target, err := parseMetricValue(field.Type(), *t.Target)
 			if err != nil {
 				return parsedConfig{}, err
 			}
 			cases[i] = runner.TestCase{
 				Name:      *t.Name,
-				Source:    runner.MetricsSource(*t.Source),
+				Field:     runner.MetricsField(*t.Field),
 				Predicate: runner.TestPredicate(*t.Predicate),
 				Target:    target,
 			}

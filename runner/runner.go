@@ -23,9 +23,9 @@ type (
 
 	Report = report.Report
 
-	MetricsSource = metrics.Source
-	MetricsValue  = metrics.Value
-	MetricsType   = metrics.Type
+	MetricsField = metrics.Field
+	MetricsValue = metrics.Value
+	MetricsType  = metrics.Type
 
 	TestCase      = tests.Case
 	TestPredicate = tests.Predicate

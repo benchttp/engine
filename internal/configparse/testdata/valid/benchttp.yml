@@ -23,14 +23,14 @@ output:
 
 tests:
   - name: minimum response time
-    source: MIN
+    field: MIN
     predicate: GT
     target: 80ms
   - name: maximum response time
-    source: MAX
+    field: MAX
     predicate: LTE
     target: 120ms
   - name: 100% availability
-    source: FAILURE_COUNT
+    field: FAILURE_COUNT
     predicate: EQ
     target: 0
