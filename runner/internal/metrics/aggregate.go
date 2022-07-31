@@ -17,6 +17,11 @@ type Aggregate struct {
 	// RequestEventsDistribution map[recorder.Event]int
 }
 
+// MetricOf returns the Metric for the given Source in Aggregate.
+func (agg Aggregate) MetricOf(field Field) Metric {
+	return retrieveFieldOrPanic(field).metricOf(agg)
+}
+
 // Compute computes and aggregates metrics from the given
 // requests records.
 func Compute(records []recorder.Record) (agg Aggregate) {
