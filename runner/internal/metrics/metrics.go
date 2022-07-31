@@ -18,8 +18,10 @@ const (
 type Type uint8
 
 const (
-	TypeInt      Type = Type(reflect.Int)
-	TypeDuration Type = 12
+	lastGoReflectKind = reflect.UnsafePointer
+
+	TypeInt      = Type(reflect.Int)
+	TypeDuration = Type(lastGoReflectKind + iota)
 )
 
 func (src Source) Type() Type {
