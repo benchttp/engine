@@ -5,10 +5,10 @@ import "reflect"
 // Value is a concrete metric value, e.g. 120 or 3 * time.Second.
 type Value interface{}
 
-// Field represents the origin of a Metric.
-// It exposes a method Type that returns the type of the metric.
-// It can be used to reference a Metric in an Aggregate
-// via Aggregate.MetricOf.
+// Field references an Aggregate field.
+// It exposes a method Type that returns its intrisic type.
+// It can be used to retrieve a Metric from an Aggregate
+// via Aggregate.MetricOf(field).
 type Field string
 
 const (
@@ -19,6 +19,44 @@ const (
 	RequestSuccessCount Field = "SUCCESS_COUNT"
 	RequestCount        Field = "TOTAL_COUNT"
 )
+
+type fieldInfo struct {
+	typ      Type
+	metricOf func(Aggregate) Metric
+}
+
+var fieldRecord = map[Field]fieldInfo{
+	ResponseTimeAvg:     {TypeDuration, metricGetter(ResponseTimeAvg)},
+	ResponseTimeMin:     {TypeDuration, metricGetter(ResponseTimeMin)},
+	ResponseTimeMax:     {TypeDuration, metricGetter(ResponseTimeMax)},
+	RequestFailCount:    {TypeInt, metricGetter(RequestFailCount)},
+	RequestSuccessCount: {TypeInt, metricGetter(RequestSuccessCount)},
+	RequestCount:        {TypeInt, metricGetter(RequestCount)},
+}
+
+func metricGetter(field Field) func(Aggregate) Metric {
+	getter := func(getValue func(Aggregate) Value) func(Aggregate) Metric {
+		return func(agg Aggregate) Metric {
+			return Metric{Field: field, Value: getValue(agg)}
+		}
+	}
+	switch field {
+	case ResponseTimeAvg:
+		return getter(func(agg Aggregate) Value { return agg.Avg })
+	case ResponseTimeMin:
+		return getter(func(agg Aggregate) Value { return agg.Min })
+	case ResponseTimeMax:
+		return getter(func(agg Aggregate) Value { return agg.Max })
+	case RequestFailCount:
+		return getter(func(agg Aggregate) Value { return agg.FailureCount })
+	case RequestSuccessCount:
+		return getter(func(agg Aggregate) Value { return agg.SuccessCount })
+	case RequestCount:
+		return getter(func(agg Aggregate) Value { return agg.TotalCount })
+	default:
+		panic(badField(field))
+	}
+}
 
 // Type represents the underlying type of a Value.
 type Type uint8
@@ -32,37 +70,14 @@ const (
 	TypeDuration = Type(lastGoReflectKind + iota)
 )
 
-// Type returns the underlying type of the metric field refers to.
+// Type returns the field's intrisic type.
 func (field Field) Type() Type {
-	switch field {
-	case ResponseTimeAvg, ResponseTimeMin, ResponseTimeMax:
-		return TypeDuration
-	case RequestFailCount, RequestSuccessCount, RequestCount:
-		return TypeInt
-	}
-	panic(badField(field))
+	return retrieveFieldOrPanic(field).typ
 }
 
-// MetricOf returns the Metric for the given Field in Aggregate.
+// MetricOf returns the Metric for the given Source in Aggregate.
 func (agg Aggregate) MetricOf(field Field) Metric {
-	var v interface{}
-	switch field {
-	case ResponseTimeAvg:
-		v = agg.Avg
-	case ResponseTimeMin:
-		v = agg.Min
-	case ResponseTimeMax:
-		v = agg.Max
-	case RequestFailCount:
-		v = agg.FailureCount
-	case RequestSuccessCount:
-		v = agg.SuccessCount
-	case RequestCount:
-		v = agg.TotalCount
-	default:
-		panic(badField(field))
-	}
-	return Metric{Field: field, Value: v}
+	return retrieveFieldOrPanic(field).metricOf(agg)
 }
 
 // Metric represents an Aggregate metric. It links together a Field
@@ -97,6 +112,17 @@ func (m Metric) Compare(to Metric) ComparisonResult {
 	return compareMetrics(to, m)
 }
 
+// retrieveFieldInfoOrPanic retrieves the fieldInfo for the given field.
+//
+// It panics if the field is not defined in fieldRecord.
+func retrieveFieldOrPanic(field Field) fieldInfo {
+	fieldData, ok := fieldRecord[field]
+	if !ok {
+		panic(badField(field))
+	}
+	return fieldData
+}
+
 func badField(field Field) string {
-	return "metrics: unknown Field: " + string(field)
+	return "metrics: unknown field: " + string(field)
 }
