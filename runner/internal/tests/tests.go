@@ -49,7 +49,7 @@ func runTestCase(agg metrics.Aggregate, c Case) CaseResult {
 		Input: c,
 		Pass:  c.Predicate.match(comparisonResult),
 		Summary: fmt.Sprintf(
-			"want %s %s %v, got %d",
+			"want %s %s %v, got %v",
 			c.Source, c.Predicate.symbol(), c.Target, gotMetric.Value,
 		),
 	}
