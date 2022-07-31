@@ -61,7 +61,7 @@ type Metric struct {
 }
 
 func (m Metric) Compare(to Metric) ComparisonResult {
-	return compareMetrics(m, to)
+	return compareMetrics(to, m)
 }
 
 func badSource(src Source) string {
