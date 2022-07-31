@@ -2,10 +2,12 @@ package configparse
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/benchttp/engine/runner"
@@ -261,12 +263,16 @@ func newParsedConfig(uconf UnmarshaledConfig) (parsedConfig, error) { //nolint:g
 	if tests := uconf.Tests; len(tests) > 0 {
 		cases := make([]runner.TestCase, len(tests))
 		for i, t := range tests {
-			d, _ := parseOptionalDuration(*t.Target)
+			source := runner.MetricsSource(*t.Source)
+			target, err := parseMetricValue(source.Type(), *t.Target)
+			if err != nil {
+				return parsedConfig{}, err
+			}
 			cases[i] = runner.TestCase{
 				Name:      *t.Name,
 				Source:    runner.MetricsSource(*t.Source),
 				Predicate: runner.TestPredicate(*t.Predicate),
-				Target:    runner.MetricsValue(d),
+				Target:    target,
 			}
 		}
 		cfg.Tests = cases
@@ -308,4 +314,15 @@ func parseOptionalDuration(raw string) (time.Duration, error) {
 		return 0, nil
 	}
 	return time.ParseDuration(raw)
+}
+
+func parseMetricValue(typ runner.MetricsType, in string) (runner.MetricsValue, error) {
+	switch typ {
+	case runner.MetricsTypeInt:
+		return strconv.Atoi(in)
+	case runner.MetricsTypeDuration:
+		return time.ParseDuration(in)
+	default:
+		return nil, fmt.Errorf("cannot parse metrics type: %v", typ)
+	}
 }

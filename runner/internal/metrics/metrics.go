@@ -1,5 +1,7 @@
 package metrics
 
+import "reflect"
+
 type Value interface{}
 
 type Source string
@@ -12,6 +14,23 @@ const (
 	RequestSuccessCount Source = "SUCCESS_COUNT"
 	RequestCount        Source = "TOTAL_COUNT"
 )
+
+type Type uint8
+
+const (
+	TypeInt      Type = Type(reflect.Int)
+	TypeDuration Type = 12
+)
+
+func (src Source) Type() Type {
+	switch src {
+	case ResponseTimeAvg, ResponseTimeMin, ResponseTimeMax:
+		return TypeDuration
+	case RequestFailCount, RequestSuccessCount, RequestCount:
+		return TypeInt
+	}
+	panic(badSource(src))
+}
 
 func (agg Aggregate) MetricOf(src Source) Metric {
 	var v interface{}
@@ -29,7 +48,7 @@ func (agg Aggregate) MetricOf(src Source) Metric {
 	case RequestCount:
 		v = agg.TotalCount
 	default:
-		panic("metrics.Aggregate.MetricOf: unknown Source: " + src)
+		panic(badSource(src))
 	}
 	return Metric{Source: src, Value: v}
 }
@@ -41,4 +60,8 @@ type Metric struct {
 
 func (m Metric) Compare(to Metric) ComparisonResult {
 	return compareMetrics(m, to)
+}
+
+func badSource(src Source) string {
+	return "metrics: unknown Source: " + string(src)
 }

@@ -222,6 +222,12 @@ func newExpConfig() runner.Config {
 				Predicate: "LTE",
 				Target:    120 * time.Millisecond,
 			},
+			{
+				Name:      "100% availability",
+				Source:    "FAILURE_COUNT",
+				Predicate: "EQ",
+				Target:    0,
+			},
 		},
 	}
 }

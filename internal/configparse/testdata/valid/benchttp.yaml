@@ -26,14 +26,14 @@ output:
 
 tests:
   - name: minimum response time
-    metric: MIN
+    source: MIN
     predicate: GT
-    value: 80ms
+    target: 80ms
   - name: maximum response time
-    metric: MAX
+    source: MAX
     predicate: LTE
-    value: 120ms
-  # - name: 100% availability
-  #   metric: FAILURE_COUNT
-  #   predicate: EQ
-  #   value: 0
+    target: 120ms
+  - name: 100% availability
+    source: FAILURE_COUNT
+    predicate: EQ
+    target: 0

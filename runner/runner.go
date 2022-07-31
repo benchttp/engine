@@ -25,6 +25,7 @@ type (
 
 	MetricsSource = metrics.Source
 	MetricsValue  = metrics.Value
+	MetricsType   = metrics.Type
 
 	TestCase      = tests.Case
 	TestPredicate = tests.Predicate
@@ -55,6 +56,9 @@ var (
 	ConfigFieldsUsage = config.FieldsUsage
 	NewRequestBody    = config.NewRequestBody
 	IsConfigField     = config.IsField
+
+	MetricsTypeInt      = metrics.TypeInt
+	MetricsTypeDuration = metrics.TypeDuration
 )
 
 type Runner struct {
