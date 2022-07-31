@@ -9,9 +9,10 @@ import (
 
 func TestPredicate(t *testing.T) {
 	const (
-		metric    = 100
-		metricInc = metric + 1
-		metricDec = metric - 1
+		source = 100
+		same   = source
+		more   = source + 1
+		less   = source - 1
 	)
 
 	testcases := []struct {
@@ -21,45 +22,45 @@ func TestPredicate(t *testing.T) {
 	}{
 		{
 			Predicate:  tests.EQ,
-			PassValues: []int{metric},
-			FailValues: []int{metricDec, metricInc},
+			PassValues: []int{same},
+			FailValues: []int{more, less},
 		},
 		{
 			Predicate:  tests.NEQ,
-			PassValues: []int{metricInc, metricDec},
-			FailValues: []int{metric},
+			PassValues: []int{less, more},
+			FailValues: []int{same},
 		},
 		{
 			Predicate:  tests.LT,
-			PassValues: []int{metricDec},
-			FailValues: []int{metric, metricInc},
+			PassValues: []int{more},
+			FailValues: []int{same, less},
 		},
 		{
 			Predicate:  tests.LTE,
-			PassValues: []int{metricDec, metric},
-			FailValues: []int{metricInc},
+			PassValues: []int{more, same},
+			FailValues: []int{less},
 		},
 		{
 			Predicate:  tests.GT,
-			PassValues: []int{metricInc},
-			FailValues: []int{metric, metricDec},
+			PassValues: []int{less},
+			FailValues: []int{same, more},
 		},
 		{
 			Predicate:  tests.GTE,
-			PassValues: []int{metricInc, metric},
-			FailValues: []int{metricDec},
+			PassValues: []int{less, same},
+			FailValues: []int{more},
 		},
 	}
 
 	for _, tc := range testcases {
 		t.Run(string(tc.Predicate)+":pass", func(t *testing.T) {
 			for _, passValue := range tc.PassValues {
-				expectPredicatePass(t, tc.Predicate, metric, passValue)
+				expectPredicatePass(t, tc.Predicate, source, passValue)
 			}
 		})
 		t.Run(string(tc.Predicate+":fail"), func(t *testing.T) {
 			for _, failValue := range tc.FailValues {
-				expectPredicateFail(t, tc.Predicate, metric, failValue)
+				expectPredicateFail(t, tc.Predicate, source, failValue)
 			}
 		})
 	}
@@ -95,13 +96,11 @@ func expectPredicateResult(
 		TotalCount: src,
 	}
 
-	cases := []tests.Case{{
+	result := tests.Run(agg, []tests.Case{{
 		Predicate: p,
 		Source:    metrics.RequestCount,
-		Target:    metrics.Value(tar),
-	}}
-
-	result := tests.Run(agg, cases)
+		Target:    tar,
+	}})
 
 	if pass := result.Pass; pass != expPass {
 		t.Errorf(
