@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/benchttp/engine/internal/socketio"
+	"github.com/benchttp/engine/internal/websocketio"
 	"github.com/benchttp/engine/runner"
 )
 
@@ -18,7 +18,7 @@ type service struct {
 // doRun calls runner.Runner.Run. The service state is overwritten.
 // The return value of runner.Runner.Run is send to the client via
 // w. The run progress is streamed through w.
-func (s *service) doRun(w socketio.Writer, cfg runner.Config) {
+func (s *service) doRun(w websocketio.Writer, cfg runner.Config) {
 	ctx, cancel := context.WithCancel(context.Background())
 	s.cancel = cancel
 
@@ -47,7 +47,7 @@ func (s *service) cancelRun() (ok bool) {
 
 // sendRecordingProgess returns a callback
 // to send the current runner progress via w.
-func (s *service) sendRecordingProgess(w socketio.Writer) func(runner.RecordingProgress) {
+func (s *service) sendRecordingProgess(w websocketio.Writer) func(runner.RecordingProgress) {
 	// The callback is invoked from a goroutine spawned by Recorder.Record.
 	// Protect w from concurrent write with a lock.
 	return func(rp runner.RecordingProgress) {

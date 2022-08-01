@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"github.com/benchttp/engine/internal/configparse"
-	"github.com/benchttp/engine/internal/socketio"
+	"github.com/benchttp/engine/internal/websocketio"
 	"github.com/benchttp/engine/runner"
 	"github.com/gorilla/websocket"
 )
@@ -60,12 +60,11 @@ func (h *Handler) handle(w http.ResponseWriter, r *http.Request) {
 
 	log.Println("connected with client via websocket")
 
-	reader := socketio.NewReader(ws, h.Silent)
-	writer := socketio.NewWriter(ws, h.Silent)
+	rw := websocketio.NewReadWriter(ws, h.Silent)
 
 	for {
 		m := clientMessage{}
-		err := reader.ReadJSON(&m)
+		err := rw.ReadJSON(&m)
 		if err != nil {
 			log.Println(err)
 			break
@@ -79,16 +78,16 @@ func (h *Handler) handle(w http.ResponseWriter, r *http.Request) {
 				break
 			}
 
-			go h.service.doRun(writer, cfg)
+			go h.service.doRun(rw, cfg)
 
 		case "cancel":
 			ok := h.service.cancelRun()
 			if !ok {
-				_ = writer.WriteJSON(errorMessage{Event: "error", Error: "not running"})
+				_ = rw.WriteJSON(errorMessage{Event: "error", Error: "not running"})
 			}
 
 		default:
-			_ = writer.WriteTextMessage(fmt.Sprintf("unknown procedure: %s", m.Action))
+			_ = rw.WriteTextMessage(fmt.Sprintf("unknown procedure: %s", m.Action))
 		}
 	}
 }
