@@ -174,11 +174,8 @@ func (pconf *parsedConfig) add(field string) {
 // newParsedConfig parses an input raw config as a runner.ConfigGlobal and returns
 // a parsedConfig or the first non-nil error occurring in the process.
 func newParsedConfig(uconf UnmarshaledConfig) (parsedConfig, error) { //nolint:gocognit // acceptable complexity for a parsing func
-	const numField = 13 // should match the number of config Fields (not critical)
-
-	pconf := parsedConfig{
-		fields: make([]string, 0, numField),
-	}
+	maxFields := len(runner.ConfigFieldsUsage)
+	pconf := parsedConfig{fields: make([]string, 0, maxFields)}
 	cfg := &pconf.config
 
 	if method := uconf.Request.Method; method != nil {
