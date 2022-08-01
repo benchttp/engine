@@ -51,10 +51,12 @@ func (h *Handler) handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	defer ws.Close()
-	// The client is gone, flush all the state.
-	// TODO Handle reconnect?
-	defer h.service.flush()
+	defer func() {
+		ws.Close()
+		// The client is gone, flush all the state.
+		// TODO Handle reconnect?
+		h.service.flush()
+	}()
 
 	log.Println("connected with client via websocket")
 
