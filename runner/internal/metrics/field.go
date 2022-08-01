@@ -1,8 +1,13 @@
 package metrics
 
 import (
+	"errors"
 	"reflect"
+
+	"github.com/benchttp/engine/internal/errorutil"
 )
+
+var ErrUnknownField = errors.New("metrics: unknown field")
 
 // Field is the name of an Aggregate field.
 // It exposes a method Type that returns its intrisic type.
@@ -79,7 +84,7 @@ func (field Field) Type() Type {
 // Validate returns ErrUnknownField if field is not a know Field, else nil.
 func (field Field) Validate() error {
 	if !field.exists() {
-		return errWithDetails(ErrUnknownField, field)
+		return errorutil.WithDetails(ErrUnknownField, field)
 	}
 	return nil
 }

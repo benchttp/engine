@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/benchttp/engine/internal/errorutil"
 	"github.com/benchttp/engine/runner"
 )
 
@@ -114,19 +115,19 @@ func parseFile(filename string) (uconf UnmarshaledConfig, err error) {
 	switch {
 	case err == nil:
 	case errors.Is(err, os.ErrNotExist):
-		return uconf, errWithDetails(ErrFileNotFound, filename)
+		return uconf, errorutil.WithDetails(ErrFileNotFound, filename)
 	default:
-		return uconf, errWithDetails(ErrFileRead, filename, err)
+		return uconf, errorutil.WithDetails(ErrFileRead, filename, err)
 	}
 
 	ext := extension(filepath.Ext(filename))
 	parser, err := newParser(ext)
 	if err != nil {
-		return uconf, errWithDetails(ErrFileExt, ext, err)
+		return uconf, errorutil.WithDetails(ErrFileExt, ext, err)
 	}
 
 	if err = parser.parse(b, &uconf); err != nil {
-		return uconf, errWithDetails(ErrParse, filename, err)
+		return uconf, errorutil.WithDetails(ErrParse, filename, err)
 	}
 
 	return uconf, nil
@@ -151,7 +152,7 @@ func parseAndMergeConfigs(uconfs []UnmarshaledConfig) (cfg runner.Config, err er
 		uconf := uconfs[i]
 		pconf, err := newParsedConfig(uconf)
 		if err != nil {
-			return cfg, errWithDetails(ErrParse, err)
+			return cfg, errorutil.WithDetails(ErrParse, err)
 		}
 		cfg = cfg.Override(pconf.config, pconf.fields...)
 	}

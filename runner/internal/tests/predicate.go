@@ -1,8 +1,13 @@
 package tests
 
 import (
+	"errors"
+
+	"github.com/benchttp/engine/internal/errorutil"
 	"github.com/benchttp/engine/runner/internal/metrics"
 )
+
+var ErrUnknownPredicate = errors.New("tests: unknown predicate")
 
 // Predicate represents a comparison operator.
 type Predicate string
@@ -19,7 +24,7 @@ const (
 // Validate returns ErrUnknownPredicate if p is not a know Predicate, else nil.
 func (p Predicate) Validate() error {
 	if _, ok := predicateSymbols[p]; !ok {
-		return errWithDetails(ErrUnknownPredicate, p)
+		return errorutil.WithDetails(ErrUnknownPredicate, p)
 	}
 	return nil
 }
