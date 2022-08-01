@@ -137,12 +137,13 @@ func (rep *Report) writeTestsResult(w io.StringWriter) {
 	for _, tr := range sr.Results {
 		writeIndent(w, 1)
 		writeResultString(w, tr.Pass)
-		w.WriteString(": ")
+		w.WriteString(" ")
 		w.WriteString(tr.Input.Name)
 
 		if !tr.Pass {
-			w.WriteString("\n")
-			writeIndent(w, 2)
+			w.WriteString("\n ")
+			writeIndent(w, 3)
+			w.WriteString(ansi.Bold("→ "))
 			w.WriteString(tr.Summary)
 		}
 
@@ -152,11 +153,9 @@ func (rep *Report) writeTestsResult(w io.StringWriter) {
 
 func writeResultString(w io.StringWriter, pass bool) {
 	if pass {
-		w.WriteString(ansi.Green("√"))
-		w.WriteString(" PASS")
+		w.WriteString(ansi.Green("PASS"))
 	} else {
-		w.WriteString(ansi.Red("x"))
-		w.WriteString(" FAIL")
+		w.WriteString(ansi.Red("FAIL"))
 	}
 }
 
