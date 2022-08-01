@@ -19,7 +19,6 @@ runner:
 
 output:
   silent: true
-  template: "{{ .Metrics.Avg }}"
 
 tests:
   - name: minimum response time
