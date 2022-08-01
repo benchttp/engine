@@ -17,9 +17,11 @@ type Aggregate struct {
 	// RequestEventsDistribution map[recorder.Event]int
 }
 
-// MetricOf returns the Metric for the given Source in Aggregate.
+// MetricOf returns the Metric for the given field in Aggregate.
+//
+// It panics if field is not a known field.
 func (agg Aggregate) MetricOf(field Field) Metric {
-	return retrieveFieldOrPanic(field).metricOf(agg)
+	return Metric{Field: field, Value: field.valueIn(agg)}
 }
 
 // Compute computes and aggregates metrics from the given
