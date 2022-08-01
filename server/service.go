@@ -35,6 +35,8 @@ func (s *service) doRun(w websocketio.Writer, cfg runner.Config) {
 
 // cancelRun cancels the run of the current runner.
 // If the runner is nil, cancelRun is noop.
+// cancelRun panics if cancelRun is invoked while
+// service.runner is non-nil yet service.cancel is nil.
 func (s *service) cancelRun() (ok bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
