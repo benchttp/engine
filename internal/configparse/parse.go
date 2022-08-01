@@ -46,10 +46,10 @@ type UnmarshaledConfig struct {
 	} `yaml:"output" json:"output"`
 
 	Tests []struct {
-		Name      *string `yaml:"name" json:"name"`
-		Field     *string `yaml:"field" json:"field"`
-		Predicate *string `yaml:"predicate" json:"predicate"`
-		Target    *string `yaml:"target" json:"target"`
+		Name      *string     `yaml:"name" json:"name"`
+		Field     *string     `yaml:"field" json:"field"`
+		Predicate *string     `yaml:"predicate" json:"predicate"`
+		Target    interface{} `yaml:"target" json:"target"`
 	} `yaml:"tests" json:"tests"`
 }
 
@@ -272,7 +272,7 @@ func newParsedConfig(uconf UnmarshaledConfig) (parsedConfig, error) { //nolint:g
 			return fmt.Sprintf("tests[%d].%s", i, caseField)
 		}
 
-		if err := requireConfigFields(map[string]*string{
+		if err := requireConfigFields(map[string]interface{}{
 			fieldPath("name"):      t.Name,
 			fieldPath("field"):     t.Field,
 			fieldPath("predicate"): t.Predicate,
@@ -291,7 +291,7 @@ func newParsedConfig(uconf UnmarshaledConfig) (parsedConfig, error) { //nolint:g
 			return abort(fmt.Errorf("%s: %s", fieldPath("predicate"), err))
 		}
 
-		target, err := parseMetricValue(field, *t.Target)
+		target, err := parseMetricValue(field, fmt.Sprint(t.Target))
 		if err != nil {
 			return abort(fmt.Errorf("%s: %s", fieldPath("target"), err))
 		}
@@ -363,7 +363,7 @@ func parseMetricValue(field runner.MetricsField, in string) (runner.MetricsValue
 	}
 }
 
-func requireConfigFields(fields map[string]*string) error {
+func requireConfigFields(fields map[string]interface{}) error {
 	for name, value := range fields {
 		if err := requireConfigField(name, value); err != nil {
 			return err
@@ -372,7 +372,7 @@ func requireConfigFields(fields map[string]*string) error {
 	return nil
 }
 
-func requireConfigField(field string, value *string) error {
+func requireConfigField(field string, value interface{}) error {
 	if value == nil {
 		return fmt.Errorf("%s: missing field", field)
 	}
