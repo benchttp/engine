@@ -8,6 +8,8 @@ import (
 	"net/url"
 	"reflect"
 	"time"
+
+	"github.com/benchttp/engine/internal/ds"
 )
 
 // RequestBody represents a request body associated with a type.
@@ -82,8 +84,6 @@ type OutputConfig struct {
 	Template string
 }
 
-type set map[string]struct{}
-
 // Config represents the global configuration of the runner.
 // It must be validated using Config.Validate before usage.
 type Config struct {
@@ -91,17 +91,17 @@ type Config struct {
 	Runner  RecorderConfig
 	Output  OutputConfig
 
-	fieldsSet set
+	fieldsSet ds.StringSet
 }
 
 // WithField returns a new Global with the input fields marked as set.
 func (cfg Config) WithFields(fields ...string) Config {
 	fieldsSet := cfg.fieldsSet
 	if fieldsSet == nil {
-		fieldsSet = set{}
+		fieldsSet = ds.StringSet{}
 	}
 	for _, field := range fields {
-		fieldsSet[field] = struct{}{}
+		fieldsSet.Add(field)
 	}
 	cfg.fieldsSet = fieldsSet
 	return cfg

@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/benchttp/engine/internal/ds"
 	"github.com/benchttp/engine/runner"
 	"github.com/benchttp/engine/runner/configio"
 )
@@ -20,24 +21,15 @@ type configFileRepr struct {
 // and returns it or the first non-nil error occurring in the process,
 // which can be any of the values declared in the package.
 func Parse(filename string) (cfg runner.Config, err error) {
-	rawConfigs, err := parseFileRecursive(filename, []configio.Interface{}, set{})
+	rawConfigs, err := parseFileRecursive(
+		filename,
+		[]configio.Interface{},
+		ds.StringSet{},
+	)
 	if err != nil {
 		return
 	}
 	return configio.ParseManyWithDefault(rawConfigs)
-}
-
-// set is a collection of unique string values.
-type set map[string]bool
-
-// add adds v to the receiver. If v is already set, it returns a non-nil
-// error instead.
-func (s set) add(v string) error {
-	if _, exists := s[v]; exists {
-		return errors.New("value already set")
-	}
-	s[v] = true
-	return nil
 }
 
 // parseFileRecursive parses a config file and its parent found from key
@@ -47,10 +39,10 @@ func (s set) add(v string) error {
 func parseFileRecursive(
 	filename string,
 	rawConfigs []configio.Interface,
-	seen set,
+	seen ds.StringSet,
 ) ([]configio.Interface, error) {
 	// avoid infinite recursion caused by circular reference
-	if err := seen.add(filename); err != nil {
+	if newfile := seen.Add(filename); !newfile {
 		return rawConfigs, ErrCircularExtends
 	}
 
