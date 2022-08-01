@@ -12,9 +12,9 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-// Handler has as single method, Handler.ServeHTTP.
-// It serves a websocket server allowing remote
-// manipulation of runner.Runner.
+// Handler implements http.Handler.
+// It serves a websocket server allowing
+// remote manipulation of runner.Runner.
 type Handler struct {
 	Silent   bool
 	Token    string
