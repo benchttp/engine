@@ -9,17 +9,15 @@ import (
 	"github.com/benchttp/engine/internal/configparse"
 	"github.com/benchttp/engine/internal/websocketio"
 	"github.com/benchttp/engine/runner"
-	"github.com/gorilla/websocket"
 )
 
 // Handler implements http.Handler.
 // It serves a websocket server allowing
 // remote manipulation of runner.Runner.
 type Handler struct {
-	Silent   bool
-	Token    string
-	service  *service
-	upgrader websocket.Upgrader
+	Silent  bool
+	Token   string
+	service *service
 }
 
 func NewHandler(silent bool, token string) *Handler {
@@ -27,11 +25,6 @@ func NewHandler(silent bool, token string) *Handler {
 		Silent:  silent,
 		Token:   token,
 		service: &service{},
-		upgrader: websocket.Upgrader{
-			CheckOrigin: func(r *http.Request) bool {
-				return r.URL.Query().Get("access_token") == token
-			},
-		},
 	}
 }
 
@@ -45,7 +38,8 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) handle(w http.ResponseWriter, r *http.Request) {
-	ws, err := h.upgrader.Upgrade(w, r, nil)
+	upgrader := secureUpgrader(h.Token)
+	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
 		return
