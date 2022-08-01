@@ -41,8 +41,7 @@ type UnmarshaledConfig struct {
 	} `yaml:"runner" json:"runner"`
 
 	Output struct {
-		Silent   *bool   `yaml:"silent" json:"silent"`
-		Template *string `yaml:"template" json:"template"`
+		Silent *bool `yaml:"silent" json:"silent"`
 	} `yaml:"output" json:"output"`
 
 	Tests []struct {
@@ -254,11 +253,6 @@ func newParsedConfig(uconf UnmarshaledConfig) (parsedConfig, error) { //nolint:g
 	if silent := uconf.Output.Silent; silent != nil {
 		cfg.Output.Silent = *silent
 		pconf.add(runner.ConfigFieldSilent)
-	}
-
-	if template := uconf.Output.Template; template != nil {
-		cfg.Output.Template = *template
-		pconf.add(runner.ConfigFieldTemplate)
 	}
 
 	testSuite := uconf.Tests

@@ -47,7 +47,6 @@ const (
 	ConfigFieldRequestTimeout = config.FieldRequestTimeout
 	ConfigFieldGlobalTimeout  = config.FieldGlobalTimeout
 	ConfigFieldSilent         = config.FieldSilent
-	ConfigFieldTemplate       = config.FieldTemplate
 	ConfigFieldTests          = config.FieldTests
 )
 

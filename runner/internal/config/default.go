@@ -21,8 +21,7 @@ var defaultConfig = Global{
 		GlobalTimeout:  30 * time.Second,
 	},
 	Output: Output{
-		Silent:   false,
-		Template: "",
+		Silent: false,
 	},
 }
 

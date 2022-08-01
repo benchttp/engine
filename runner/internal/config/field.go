@@ -11,7 +11,6 @@ const (
 	FieldRequestTimeout = "requestTimeout"
 	FieldGlobalTimeout  = "globalTimeout"
 	FieldSilent         = "silent"
-	FieldTemplate       = "template"
 	FieldTests          = "tests"
 )
 
@@ -27,7 +26,6 @@ var FieldsUsage = map[string]string{
 	FieldRequestTimeout: "Timeout for each HTTP request",
 	FieldGlobalTimeout:  "Max duration of test",
 	FieldSilent:         "Silent mode (no write to stdout)",
-	FieldTemplate:       "Output template",
 	FieldTests:          "Test suite",
 }
 

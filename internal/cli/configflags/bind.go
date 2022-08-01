@@ -80,10 +80,4 @@ func Bind(flagset *flag.FlagSet, dst *runner.Config) {
 		dst.Output.Silent,
 		runner.ConfigFieldsUsage[runner.ConfigFieldSilent],
 	)
-	// output template
-	flagset.StringVar(&dst.Output.Template,
-		runner.ConfigFieldTemplate,
-		dst.Output.Template,
-		runner.ConfigFieldsUsage[runner.ConfigFieldTemplate],
-	)
 }
