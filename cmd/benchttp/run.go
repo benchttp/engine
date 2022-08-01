@@ -107,14 +107,15 @@ func (cmd *cmdRun) makeConfig(fields []string) (cfg runner.Config, err error) {
 		return cliConfig, cliConfig.Validate()
 	}
 
-	fileConfig, err := configfile.Parse(cmd.configFile)
+	fileConfig := runner.DefaultConfig()
+	err = configfile.Parse(cmd.configFile, &fileConfig)
 	if err != nil && !errors.Is(err, configfile.ErrFileNotFound) {
 		// config file is not mandatory: discard ErrFileNotFound.
 		// other errors are critical
 		return
 	}
 
-	mergedConfig := fileConfig.Override(cliConfig)
+	mergedConfig := cliConfig.Override(fileConfig)
 
 	return mergedConfig, mergedConfig.Validate()
 }

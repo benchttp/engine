@@ -20,16 +20,16 @@ type configFileRepr struct {
 // Parse parses a benchttp runner config file into a runner.ConfigGlobal
 // and returns it or the first non-nil error occurring in the process,
 // which can be any of the values declared in the package.
-func Parse(filename string) (cfg runner.Config, err error) {
+func Parse(filename string, dst *runner.Config) error {
 	rawConfigs, err := parseFileRecursive(
 		filename,
-		[]configio.Interface{},
+		[]configio.Unmarshaler{},
 		ds.StringSet{},
 	)
 	if err != nil {
-		return
+		return err
 	}
-	return configio.ParseManyWithDefault(rawConfigs)
+	return configio.UnmarshalMany(rawConfigs, dst)
 }
 
 // parseFileRecursive parses a config file and its parent found from key
@@ -38,9 +38,9 @@ func Parse(filename string) (cfg runner.Config, err error) {
 // occurring in the process.
 func parseFileRecursive(
 	filename string,
-	rawConfigs []configio.Interface,
+	rawConfigs []configio.Unmarshaler,
 	seen ds.StringSet,
-) ([]configio.Interface, error) {
+) ([]configio.Unmarshaler, error) {
 	// avoid infinite recursion caused by circular reference
 	if newfile := seen.Add(filename); !newfile {
 		return rawConfigs, ErrCircularExtends

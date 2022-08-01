@@ -18,5 +18,10 @@ func JSON(in []byte) (runner.Config, error) {
 		return runner.Config{}, err
 	}
 
-	return raw.DTO.ConfigWithDefault()
+	cfg := runner.DefaultConfig()
+	if err := raw.UnmarshalConfig(&cfg); err != nil {
+		return runner.Config{}, err
+	}
+
+	return cfg, nil
 }

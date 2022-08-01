@@ -4,7 +4,7 @@ import (
 	"github.com/benchttp/engine/runner"
 )
 
-var _ Interface = (*DTO)(nil)
+var _ Unmarshaler = (*DTO)(nil)
 
 // DTO is a config adapter for IO communications, such as JSON or YAML.
 // It serves as a receiver for unmarshaling processes and for that reason
@@ -37,12 +37,6 @@ type DTO struct {
 	} `yaml:"output" json:"output"`
 }
 
-// Config returns Parse(raw).
-func (raw DTO) Config() (runner.Config, error) {
-	return Parse(raw)
-}
-
-// Config returns ParseWithDefault(raw).
-func (raw DTO) ConfigWithDefault() (runner.Config, error) {
-	return ParseWithDefault(raw)
+func (raw DTO) UnmarshalConfig(dst *runner.Config) error {
+	return Unmarshal(raw, dst)
 }

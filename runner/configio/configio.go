@@ -9,145 +9,131 @@ import (
 	"github.com/benchttp/engine/runner"
 )
 
-// Interface exposes a method Config to retrieve a runner.Config.
-// Its main purpose is to be able to use any slice of struct that
-// implements this interface (notably: structs that embed DTO)
-// as a valid argument for ParseMany without the need of a conversion.
-type Interface interface {
-	Config() (runner.Config, error)
+var (
+	ErrNilConfigPtr       = errors.New("nil runner.Config pointer")
+	ErrMissingUnmarshaler = errors.New("no Unmarshaler provided")
+)
+
+// Unmarshaler is the interface implemented by types that can unmarshal
+// a runner.Config description of themselves.
+type Unmarshaler interface {
+	UnmarshalConfig(dst *runner.Config) error
 }
 
-// ParseMany parses and overrides raws iteratively, from right to left,
-// starting with a zero-value runner.Config.
-// It returns the resulting merged runner.Config or the first non-nil error
-// occurring in the process.
-func ParseMany(raws []Interface) (runner.Config, error) {
-	return parseMany(raws, runner.Config{})
-}
-
-// ParseManyWithDefault does the same as ParseMany, but uses the default
-// runner.Config as the base.
-func ParseManyWithDefault(raws []Interface) (runner.Config, error) {
-	return parseMany(raws, runner.DefaultConfig())
-}
-
-// Parse turns a DTO into a runner.Config and returns it or the first
-// non-nil error occurring in the process.
-func Parse(parser DTO) (runner.Config, error) {
-	return parseSingle(parser, runner.Config{})
-}
-
-// Parse turns a DTO into a runner.Config, merges it with a the default config
-// and returns it or the first non-nil error occurring in the process.
-func ParseWithDefault(parser DTO) (runner.Config, error) {
-	return parseSingle(parser, runner.DefaultConfig())
-}
-
-func parseMany(raws []Interface, baseConfig runner.Config) (runner.Config, error) {
-	if len(raws) == 0 {
-		return baseConfig, errors.New("no configs provided")
+// UnmarshalMany overrides dst iteratively with the resulting config of each
+// unmarshaler, starting from the last one.
+func UnmarshalMany(unmarshalers []Unmarshaler, dst *runner.Config) error {
+	n := len(unmarshalers)
+	if n == 0 {
+		return ErrMissingUnmarshaler
+	}
+	if dst == nil {
+		return ErrNilConfigPtr
 	}
 
-	merged := baseConfig
-	for i := len(raws) - 1; i >= 0; i-- {
-		raw := raws[i]
-		currentConfig, err := raw.Config()
-		if err != nil {
-			return merged, err
+	for i := n - 1; i >= 0; i-- {
+		raw := unmarshalers[i]
+		cfg := runner.Config{}
+		if err := raw.UnmarshalConfig(&cfg); err != nil {
+			return err
 		}
-		merged = currentConfig.Override(merged)
+		*dst = cfg.Override(*dst)
 	}
 
-	return merged, nil
+	return nil
 }
 
-func parseSingle(parser DTO, baseConfig runner.Config) (runner.Config, error) { //nolint:gocognit // acceptable complexity for a parsing func
-	cfg := baseConfig
-	fieldsSet := []string{}
+func Unmarshal(in DTO, dst *runner.Config) error { //nolint:gocognit // acceptable complexity for a parsing func
+	if dst == nil {
+		return ErrNilConfigPtr
+	}
 
+	fieldsSet := make([]string, 0, len(runner.ConfigFieldsUsage))
 	setField := func(field string) {
 		fieldsSet = append(fieldsSet, field)
 	}
 
-	if method := parser.Request.Method; method != nil {
-		cfg.Request.Method = *method
+	if method := in.Request.Method; method != nil {
+		dst.Request.Method = *method
 		setField(runner.ConfigFieldMethod)
 	}
 
-	if rawURL := parser.Request.URL; rawURL != nil {
-		parsedURL, err := parseAndBuildURL(*parser.Request.URL, parser.Request.QueryParams)
+	if rawURL := in.Request.URL; rawURL != nil {
+		parsedURL, err := parseAndBuildURL(*in.Request.URL, in.Request.QueryParams)
 		if err != nil {
-			return runner.Config{}, err
+			return err
 		}
-		cfg.Request.URL = parsedURL
+		dst.Request.URL = parsedURL
 		setField(runner.ConfigFieldURL)
 	}
 
-	if header := parser.Request.Header; header != nil {
+	if header := in.Request.Header; header != nil {
 		httpHeader := http.Header{}
 		for key, val := range header {
 			httpHeader[key] = val
 		}
-		cfg.Request.Header = httpHeader
+		dst.Request.Header = httpHeader
 		setField(runner.ConfigFieldHeader)
 	}
 
-	if body := parser.Request.Body; body != nil {
-		cfg.Request.Body = runner.RequestBody{
+	if body := in.Request.Body; body != nil {
+		dst.Request.Body = runner.RequestBody{
 			Type:    body.Type,
 			Content: []byte(body.Content),
 		}
 		setField(runner.ConfigFieldBody)
 	}
 
-	if requests := parser.Runner.Requests; requests != nil {
-		cfg.Runner.Requests = *requests
+	if requests := in.Runner.Requests; requests != nil {
+		dst.Runner.Requests = *requests
 		setField(runner.ConfigFieldRequests)
 	}
 
-	if concurrency := parser.Runner.Concurrency; concurrency != nil {
-		cfg.Runner.Concurrency = *concurrency
+	if concurrency := in.Runner.Concurrency; concurrency != nil {
+		dst.Runner.Concurrency = *concurrency
 		setField(runner.ConfigFieldConcurrency)
 	}
 
-	if interval := parser.Runner.Interval; interval != nil {
+	if interval := in.Runner.Interval; interval != nil {
 		parsedInterval, err := parseOptionalDuration(*interval)
 		if err != nil {
-			return runner.Config{}, err
+			return err
 		}
-		cfg.Runner.Interval = parsedInterval
+		dst.Runner.Interval = parsedInterval
 		setField(runner.ConfigFieldInterval)
 	}
 
-	if requestTimeout := parser.Runner.RequestTimeout; requestTimeout != nil {
+	if requestTimeout := in.Runner.RequestTimeout; requestTimeout != nil {
 		parsedTimeout, err := parseOptionalDuration(*requestTimeout)
 		if err != nil {
-			return runner.Config{}, err
+			return err
 		}
-		cfg.Runner.RequestTimeout = parsedTimeout
+		dst.Runner.RequestTimeout = parsedTimeout
 		setField(runner.ConfigFieldRequestTimeout)
 	}
 
-	if globalTimeout := parser.Runner.GlobalTimeout; globalTimeout != nil {
+	if globalTimeout := in.Runner.GlobalTimeout; globalTimeout != nil {
 		parsedGlobalTimeout, err := parseOptionalDuration(*globalTimeout)
 		if err != nil {
-			return runner.Config{}, err
+			return err
 		}
-		cfg.Runner.GlobalTimeout = parsedGlobalTimeout
+		dst.Runner.GlobalTimeout = parsedGlobalTimeout
 		setField(runner.ConfigFieldGlobalTimeout)
 	}
 
-	if silent := parser.Output.Silent; silent != nil {
-		cfg.Output.Silent = *silent
+	if silent := in.Output.Silent; silent != nil {
+		dst.Output.Silent = *silent
 		setField(runner.ConfigFieldSilent)
 	}
 
-	if template := parser.Output.Template; template != nil {
-		cfg.Output.Template = *template
+	if template := in.Output.Template; template != nil {
+		dst.Output.Template = *template
 		setField(runner.ConfigFieldTemplate)
 	}
 
-	return cfg.WithFields(fieldsSet...), nil
+	*dst = dst.WithFields(fieldsSet...)
+
+	return nil
 }
 
 // helpers

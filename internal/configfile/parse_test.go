@@ -67,7 +67,8 @@ func TestParse(t *testing.T) {
 
 		for _, tc := range testcases {
 			t.Run(tc.label, func(t *testing.T) {
-				gotCfg, gotErr := configfile.Parse(tc.path)
+				gotCfg := runner.Config{}
+				gotErr := configfile.Parse(tc.path, &gotCfg)
 
 				if gotErr == nil {
 					t.Fatal("exp non-nil error, got nil")
@@ -89,9 +90,8 @@ func TestParse(t *testing.T) {
 			expCfg := newExpConfig()
 			fname := configPath("valid/benchttp" + ext)
 
-			gotCfg, err := configfile.Parse(fname)
-			if err != nil {
-				// critical error, stop the test
+			gotCfg := runner.DefaultConfig()
+			if err := configfile.Parse(fname, &gotCfg); err != nil {
 				t.Fatal(err)
 			}
 
@@ -124,8 +124,8 @@ func TestParse(t *testing.T) {
 
 		fname := configPath("valid/benchttp-zeros.yml")
 
-		cfg, err := configfile.Parse(fname)
-		if err != nil {
+		cfg := runner.DefaultConfig()
+		if err := configfile.Parse(fname, &cfg); err != nil {
 			t.Fatal(err)
 		}
 
@@ -160,8 +160,8 @@ func TestParse(t *testing.T) {
 
 		for _, tc := range testcases {
 			t.Run(tc.label, func(t *testing.T) {
-				cfg, err := configfile.Parse(tc.cfpath)
-				if err != nil {
+				cfg := runner.DefaultConfig()
+				if err := configfile.Parse(tc.cfpath, &cfg); err != nil {
 					t.Fatal(err)
 				}
 
