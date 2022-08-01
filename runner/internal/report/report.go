@@ -2,7 +2,6 @@ package report
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"strconv"
@@ -20,8 +19,6 @@ type Report struct {
 	Metrics  metrics.Aggregate
 	Metadata Metadata
 	Tests    tests.SuiteResult
-
-	errTemplateFailTriggered error
 }
 
 // Metadata contains contextual information about a run.
@@ -52,26 +49,8 @@ func New(
 // String returns a default summary of the Report as a string.
 func (rep *Report) String() string {
 	var b strings.Builder
-
-	s, err := rep.applyTemplate(rep.Metadata.Config.Output.Template)
-	switch {
-	case err == nil:
-		// template is non-empty and correctly executed,
-		// return its result instead of default summary.
-		rep.writeTestsResult(&b)
-		return s
-	case errors.Is(err, errTemplateSyntax):
-		// template is non-empty but has syntax errors,
-		// inform the user about it and fallback to default summary.
-		b.WriteString(err.Error())
-		b.WriteString("\nFalling back to default summary:\n")
-	case errors.Is(err, errTemplateEmpty):
-		// template is empty, use default summary.
-	}
-
 	rep.writeDefaultSummary(&b)
 	rep.writeTestsResult(&b)
-
 	return b.String()
 }
 

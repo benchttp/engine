@@ -1,9 +1,6 @@
 package report_test
 
 import (
-	"net/url"
-	"strconv"
-	"strings"
 	"testing"
 	"time"
 
@@ -15,49 +12,18 @@ import (
 )
 
 func TestReport_String(t *testing.T) {
-	const d = 15 * time.Second
+	t.Run("returns metrics summary", func(t *testing.T) {
+		agg, d := metricsStub()
+		cfg := configStub()
 
-	t.Run("return default summary if template is empty", func(t *testing.T) {
-		const tpl = ""
-
-		rep := report.New(newMetrics(), newConfigWithTemplate(tpl), d, tests.SuiteResult{})
+		rep := report.New(agg, cfg, d, tests.SuiteResult{})
 		checkSummary(t, rep.String())
-	})
-
-	t.Run("return executed template if valid", func(t *testing.T) {
-		const tpl = "{{ .Metrics.TotalCount }}"
-
-		m := newMetrics()
-		rep := report.New(m, newConfigWithTemplate(tpl), d, tests.SuiteResult{})
-
-		if got, exp := rep.String(), strconv.Itoa(m.TotalCount); got != exp {
-			t.Errorf("\nunexpected output\nexp %s\ngot %s", exp, got)
-		}
-	})
-
-	t.Run("fallback to default summary if template is invalid", func(t *testing.T) {
-		const tpl = "{{ .Marcel.Patulacci }}"
-
-		rep := report.New(newMetrics(), newConfigWithTemplate(tpl), d, tests.SuiteResult{})
-		got := rep.String()
-		split := strings.Split(got, "Falling back to default summary:\n")
-
-		if len(split) != 2 {
-			t.Fatalf("\nunexpected output:\n%s", got)
-		}
-
-		errMsg, summary := split[0], split[1]
-		if !strings.Contains(errMsg, "template syntax error") {
-			t.Errorf("\nexp template syntax error\ngot %s", errMsg)
-		}
-
-		checkSummary(t, summary)
 	})
 }
 
 // helpers
 
-func newMetrics() metrics.Aggregate {
+func metricsStub() (agg metrics.Aggregate, total time.Duration) {
 	return metrics.Aggregate{
 		FailureCount: 1,
 		SuccessCount: 2,
@@ -65,16 +31,14 @@ func newMetrics() metrics.Aggregate {
 		Min:          4 * time.Second,
 		Max:          6 * time.Second,
 		Avg:          5 * time.Second,
-	}
+	}, 15 * time.Second
 }
 
-func newConfigWithTemplate(tpl string) config.Global {
-	urlURL, _ := url.ParseRequestURI("https://a.b.com")
-	return config.Global{
-		Request: config.Request{URL: urlURL},
-		Runner:  config.Runner{Requests: -1},
-		Output:  config.Output{Template: tpl},
-	}
+func configStub() config.Global {
+	cfg := config.Global{}
+	cfg.Request = cfg.Request.WithURL("https://a.b.com")
+	cfg.Runner.Requests = -1
+	return cfg
 }
 
 func checkSummary(t *testing.T, summary string) {
