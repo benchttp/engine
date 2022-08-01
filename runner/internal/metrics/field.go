@@ -1,6 +1,8 @@
 package metrics
 
-import "reflect"
+import (
+	"reflect"
+)
 
 // Field is the name of an Aggregate field.
 // It exposes a method Type that returns its intrisic type.
@@ -52,11 +54,37 @@ const (
 	TypeDuration = Type(lastGoReflectKind + iota)
 )
 
+// String returns a human-readable representation of the field.
+//
+// Example:
+// 	TypeDuration.String() == "time.Duration"
+// 	Type(123).String() == "[unknown type]"
+func (typ Type) String() string {
+	switch typ {
+	case TypeInt:
+		return "int"
+	case TypeDuration:
+		return "time.Duration"
+	default:
+		return "[unknown type]"
+	}
+}
+
 // Type returns the field's intrisic type.
 // It panics if field is not defined in fieldDefinitions.
 func (field Field) Type() Type {
 	return field.mustRetrieve().typ
 }
+
+// Validate returns ErrUnknownField if field is not a know Field, else nil.
+func (field Field) Validate() error {
+	if !field.exists() {
+		return errWithDetails(ErrUnknownField, field)
+	}
+	return nil
+}
+
+// func (field Field) IsCompatibleWith()
 
 // valueIn returns the field's bound value in the given Aggregate.
 // It panics if field is not defined in fieldDefinitions.
@@ -64,11 +92,21 @@ func (field Field) valueIn(agg Aggregate) Value {
 	return field.mustRetrieve().boundValue(agg)
 }
 
+func (field Field) retrieve() (fieldDefinition, bool) {
+	fieldData, exists := fieldDefinitions[field]
+	return fieldData, exists
+}
+
+func (field Field) exists() bool {
+	_, exists := fieldDefinitions[field]
+	return exists
+}
+
 // mustRetrieve retrieves the fieldDefinition for the given field
 // from fieldDefinitions, or panics if not found.
 func (field Field) mustRetrieve() fieldDefinition {
-	fieldData, ok := fieldDefinitions[field]
-	if !ok {
+	fieldData, exists := field.retrieve()
+	if !exists {
 		panic(badField(field))
 	}
 	return fieldData

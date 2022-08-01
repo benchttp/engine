@@ -4,6 +4,7 @@ import (
 	"github.com/benchttp/engine/runner/internal/metrics"
 )
 
+// Predicate represents a comparison operator.
 type Predicate string
 
 const (
@@ -14,6 +15,14 @@ const (
 	LT  Predicate = "LT"
 	LTE Predicate = "LTE"
 )
+
+// Validate returns ErrUnknownPredicate if p is not a know Predicate, else nil.
+func (p Predicate) Validate() error {
+	if _, ok := predicateSymbols[p]; !ok {
+		return errWithDetails(ErrUnknownPredicate, p)
+	}
+	return nil
+}
 
 func (p Predicate) match(comparisonResult metrics.ComparisonResult) bool {
 	sup := comparisonResult == metrics.SUP

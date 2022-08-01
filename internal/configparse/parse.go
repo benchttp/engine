@@ -178,6 +178,10 @@ func newParsedConfig(uconf UnmarshaledConfig) (parsedConfig, error) { //nolint:g
 	pconf := parsedConfig{fields: make([]string, 0, maxFields)}
 	cfg := &pconf.config
 
+	abort := func(err error) (parsedConfig, error) {
+		return parsedConfig{}, err
+	}
+
 	if method := uconf.Request.Method; method != nil {
 		cfg.Request.Method = *method
 		pconf.add(runner.ConfigFieldMethod)
@@ -186,7 +190,7 @@ func newParsedConfig(uconf UnmarshaledConfig) (parsedConfig, error) { //nolint:g
 	if rawURL := uconf.Request.URL; rawURL != nil {
 		parsedURL, err := parseAndBuildURL(*uconf.Request.URL, uconf.Request.QueryParams)
 		if err != nil {
-			return parsedConfig{}, err
+			return abort(err)
 		}
 		cfg.Request.URL = parsedURL
 		pconf.add(runner.ConfigFieldURL)
@@ -222,7 +226,7 @@ func newParsedConfig(uconf UnmarshaledConfig) (parsedConfig, error) { //nolint:g
 	if interval := uconf.Runner.Interval; interval != nil {
 		parsedInterval, err := parseOptionalDuration(*interval)
 		if err != nil {
-			return parsedConfig{}, err
+			return abort(err)
 		}
 		cfg.Runner.Interval = parsedInterval
 		pconf.add(runner.ConfigFieldInterval)
@@ -231,7 +235,7 @@ func newParsedConfig(uconf UnmarshaledConfig) (parsedConfig, error) { //nolint:g
 	if requestTimeout := uconf.Runner.RequestTimeout; requestTimeout != nil {
 		parsedTimeout, err := parseOptionalDuration(*requestTimeout)
 		if err != nil {
-			return parsedConfig{}, err
+			return abort(err)
 		}
 		cfg.Runner.RequestTimeout = parsedTimeout
 		pconf.add(runner.ConfigFieldRequestTimeout)
@@ -240,7 +244,7 @@ func newParsedConfig(uconf UnmarshaledConfig) (parsedConfig, error) { //nolint:g
 	if globalTimeout := uconf.Runner.GlobalTimeout; globalTimeout != nil {
 		parsedGlobalTimeout, err := parseOptionalDuration(*globalTimeout)
 		if err != nil {
-			return parsedConfig{}, err
+			return abort(err)
 		}
 		cfg.Runner.GlobalTimeout = parsedGlobalTimeout
 		pconf.add(runner.ConfigFieldGlobalTimeout)
@@ -256,25 +260,50 @@ func newParsedConfig(uconf UnmarshaledConfig) (parsedConfig, error) { //nolint:g
 		pconf.add(runner.ConfigFieldTemplate)
 	}
 
-	// TODO: handle nil values (assumed non nil for now)
-	if tests := uconf.Tests; len(tests) > 0 {
-		cases := make([]runner.TestCase, len(tests))
-		for i, t := range tests {
-			field := runner.MetricsField(*t.Field)
-			target, err := parseMetricValue(field.Type(), *t.Target)
-			if err != nil {
-				return parsedConfig{}, err
-			}
-			cases[i] = runner.TestCase{
-				Name:      *t.Name,
-				Field:     runner.MetricsField(*t.Field),
-				Predicate: runner.TestPredicate(*t.Predicate),
-				Target:    target,
-			}
-		}
-		cfg.Tests = cases
-		pconf.add(runner.ConfigFieldTests)
+	testSuite := uconf.Tests
+	if len(testSuite) == 0 {
+		return pconf, nil
 	}
+
+	cases := make([]runner.TestCase, len(testSuite))
+	for i, t := range testSuite {
+		fieldPath := func(caseField string) string {
+			return fmt.Sprintf("tests[%d].%s", i, caseField)
+		}
+
+		if err := requireConfigFields(map[string]*string{
+			fieldPath("name"):      t.Name,
+			fieldPath("field"):     t.Field,
+			fieldPath("predicate"): t.Predicate,
+			fieldPath("target"):    t.Target,
+		}); err != nil {
+			return abort(err)
+		}
+
+		field := runner.MetricsField(*t.Field)
+		if err := field.Validate(); err != nil {
+			return abort(fmt.Errorf("%s: %s", fieldPath("field"), err))
+		}
+
+		predicate := runner.TestPredicate(*t.Predicate)
+		if err := predicate.Validate(); err != nil {
+			return abort(fmt.Errorf("%s: %s", fieldPath("predicate"), err))
+		}
+
+		target, err := parseMetricValue(field, *t.Target)
+		if err != nil {
+			return abort(fmt.Errorf("%s: %s", fieldPath("target"), err))
+		}
+
+		cases[i] = runner.TestCase{
+			Name:      *t.Name,
+			Field:     field,
+			Predicate: predicate,
+			Target:    target,
+		}
+	}
+	cfg.Tests = cases
+	pconf.add(runner.ConfigFieldTests)
 
 	return pconf, nil
 }
@@ -313,13 +342,38 @@ func parseOptionalDuration(raw string) (time.Duration, error) {
 	return time.ParseDuration(raw)
 }
 
-func parseMetricValue(typ runner.MetricsType, in string) (runner.MetricsValue, error) {
-	switch typ {
-	case runner.MetricsTypeInt:
-		return strconv.Atoi(in)
-	case runner.MetricsTypeDuration:
-		return time.ParseDuration(in)
-	default:
-		return nil, fmt.Errorf("cannot parse metrics type: %v", typ)
+func parseMetricValue(field runner.MetricsField, in string) (runner.MetricsValue, error) {
+	handleError := func(v interface{}, err error) (runner.MetricsValue, error) {
+		if err != nil {
+			return nil, fmt.Errorf(
+				"value %q is incompatible with field %s (want %s)",
+				in, field, field.Type(),
+			)
+		}
+		return v, nil
 	}
+	switch typ := field.Type(); typ {
+	case runner.MetricsTypeInt:
+		return handleError(strconv.Atoi(in))
+	case runner.MetricsTypeDuration:
+		return handleError(time.ParseDuration(in))
+	default:
+		return nil, fmt.Errorf("unknown field: %v", field)
+	}
+}
+
+func requireConfigFields(fields map[string]*string) error {
+	for name, value := range fields {
+		if err := requireConfigField(name, value); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func requireConfigField(field string, value *string) error {
+	if value == nil {
+		return fmt.Errorf("%s: missing field", field)
+	}
+	return nil
 }
