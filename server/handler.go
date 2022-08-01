@@ -18,15 +18,15 @@ import (
 type Handler struct {
 	Silent   bool
 	Token    string
-	srv      *service
+	service  *service
 	upgrader websocket.Upgrader
 }
 
 func NewHandler(silent bool, token string) *Handler {
 	return &Handler{
-		Silent: silent,
-		Token:  token,
-		srv:    &service{},
+		Silent:  silent,
+		Token:   token,
+		service: &service{},
 		upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
 				return r.URL.Query().Get("access_token") == token
@@ -54,7 +54,7 @@ func (h *Handler) handle(w http.ResponseWriter, r *http.Request) {
 	defer ws.Close()
 	// The client is gone, flush all the state.
 	// TODO Handle reconnect?
-	defer h.srv.flush()
+	defer h.service.flush()
 
 	log.Println("connected with client via websocket")
 
@@ -77,10 +77,10 @@ func (h *Handler) handle(w http.ResponseWriter, r *http.Request) {
 				break
 			}
 
-			go h.srv.doRun(writer, cfg)
+			go h.service.doRun(writer, cfg)
 
 		case "cancel":
-			ok := h.srv.cancelRun()
+			ok := h.service.cancelRun()
 			if !ok {
 				_ = writer.WriteJSON(errorMessage{Event: "error", Error: "not running"})
 			}
