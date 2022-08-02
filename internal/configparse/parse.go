@@ -365,16 +365,9 @@ func parseMetricValue(field runner.MetricsField, in string) (runner.MetricsValue
 
 func requireConfigFields(fields map[string]interface{}) error {
 	for name, value := range fields {
-		if err := requireConfigField(name, value); err != nil {
-			return err
+		if value == nil {
+			return fmt.Errorf("%s: missing field", name)
 		}
-	}
-	return nil
-}
-
-func requireConfigField(field string, value interface{}) error {
-	if value == nil {
-		return fmt.Errorf("%s: missing field", field)
 	}
 	return nil
 }
