@@ -8,7 +8,7 @@ import (
 func JSON(in []byte) (runner.Config, error) {
 	parser := jsonParser{}
 
-	var uconf unmarshaledConfig
+	var uconf UnmarshaledConfig
 	if err := parser.parse(in, &uconf); err != nil {
 		return runner.Config{}, err
 	}

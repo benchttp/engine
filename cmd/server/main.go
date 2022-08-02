@@ -2,20 +2,23 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"net/http"
 
 	"github.com/benchttp/engine/server"
 )
 
-const port = "8080"
+const (
+	port = "8080"
+	// token is a dummy token used for development only.
+	token = "6db67fafc4f5bf965a5a" //nolint:gosec
+)
 
 func main() {
-	if err := run(); err != nil {
-		fmt.Println(err)
-	}
-}
-
-func run() error {
 	addr := ":" + port
 	fmt.Println("http://localhost" + addr)
-	return server.ListenAndServe(addr)
+
+	handler := server.NewHandler(false, token)
+
+	log.Fatal(http.ListenAndServe(addr, handler))
 }
