@@ -41,7 +41,7 @@ func (h *Handler) handle(w http.ResponseWriter, r *http.Request) {
 	upgrader := secureUpgrader(h.Token)
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Println(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -58,8 +58,7 @@ func (h *Handler) handle(w http.ResponseWriter, r *http.Request) {
 
 	for {
 		m := clientMessage{}
-		err := rw.ReadJSON(&m)
-		if err != nil {
+		if err := rw.ReadJSON(&m); err != nil {
 			log.Println(err)
 			break
 		}
@@ -75,13 +74,12 @@ func (h *Handler) handle(w http.ResponseWriter, r *http.Request) {
 			go h.service.doRun(rw, cfg)
 
 		case "cancel":
-			ok := h.service.cancelRun()
-			if !ok {
-				_ = rw.WriteJSON(errorMessage{Event: "error", Error: "not running"})
+			if ok := h.service.cancelRun(); !ok {
+				rw.WriteJSON(errorMessage{Event: "error", Error: "not running"}) //nolint:errcheck
 			}
 
 		default:
-			_ = rw.WriteTextMessage(fmt.Sprintf("unknown procedure: %s", m.Action))
+			rw.WriteTextMessage(fmt.Sprintf("unknown procedure: %s", m.Action)) //nolint:errcheck
 		}
 	}
 }
