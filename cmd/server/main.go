@@ -9,7 +9,8 @@ import (
 )
 
 const (
-	port  = "8080"
+	port = "8080"
+	// token is a dummy token used for development only.
 	token = "6db67fafc4f5bf965a5a" //nolint:gosec
 )
 
