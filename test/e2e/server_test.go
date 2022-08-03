@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/url"
 	"testing"
+	"time"
 
 	"github.com/benchttp/engine/runner"
 	"github.com/gorilla/websocket"
@@ -14,6 +15,7 @@ import (
 func TestServer(t *testing.T) {
 	t.Run("happy path", func(t *testing.T) {
 		const numRequest = 4
+		const failingMaxDuration = 10 * time.Millisecond
 
 		cfg := map[string]interface{}{
 			"request": map[string]interface{}{
@@ -22,6 +24,20 @@ func TestServer(t *testing.T) {
 			"runner": map[string]interface{}{
 				"requests":    numRequest,
 				"concurrency": 2,
+			},
+			"tests": []map[string]interface{}{
+				{
+					"name":      "some passing test",
+					"field":     "TOTAL_COUNT",
+					"predicate": "EQ",
+					"target":    numRequest,
+				},
+				{
+					"name":      "some failing test",
+					"field":     "MAX",
+					"predicate": "LT",
+					"target":    failingMaxDuration.String(),
+				},
 			},
 		}
 
@@ -35,9 +51,31 @@ func TestServer(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		gotRequestCount := report.Metrics.TotalCount
-		if gotRequestCount != numRequest {
-			t.Errorf("got bad report: %+v", report)
+		// some non-exhaustive healthchecks on retrieved Report
+
+		t.Run("requests count", func(t *testing.T) {
+			if report.Metrics.TotalCount != numRequest {
+				t.Errorf("got bad report: %+v", report)
+			}
+		})
+
+		t.Run("test suite results", func(t *testing.T) {
+			if gotlen, explen := len(report.Tests.Results), 2; gotlen != explen {
+				t.Errorf("len(report.Tests.Results): exp %d, got %d", explen, gotlen)
+			}
+			if gotPass, expPass := report.Tests.Pass, false; gotPass != expPass {
+				t.Errorf("report.Tests.Pass: exp %v, got %v", expPass, gotPass)
+			}
+			if gotPass, expPass := report.Tests.Results[0].Pass, true; gotPass != expPass {
+				t.Errorf("report.Tests.Results[0].Pass: exp %v, got %v", expPass, gotPass)
+			}
+			if gotPass, expPass := report.Tests.Results[1].Pass, false; gotPass != expPass {
+				t.Errorf("report.Tests.Results[1].Pass: exp %v, got %v", expPass, gotPass)
+			}
+		})
+
+		if t.Failed() {
+			t.Logf("\n%+v", report)
 		}
 	})
 }

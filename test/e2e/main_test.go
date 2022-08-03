@@ -49,7 +49,7 @@ func startServer() (shutdown func()) {
 	stopped := true
 	go func() {
 		if b, err := cmd.CombinedOutput(); err != nil && stopped {
-			fmt.Printf("server output: %s", string(b))
+			fmt.Printf("\nserver output:\n%s", string(b))
 			panic("cmd.Run: " + err.Error())
 		}
 	}()
