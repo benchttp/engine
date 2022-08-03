@@ -15,7 +15,7 @@ import (
 func TestServer(t *testing.T) {
 	t.Run("happy path", func(t *testing.T) {
 		const numRequest = 4
-		const failingMaxDuration = 10 * time.Millisecond
+		const failingMaxDuration = 1 * time.Nanosecond
 
 		cfg := map[string]interface{}{
 			"request": map[string]interface{}{
