@@ -40,7 +40,6 @@ func TestBind(t *testing.T) {
 			"-requestTimeout", "4s",
 			"-globalTimeout", "5s",
 			"-silent",
-			"-template", "{{ .Report.Length }}",
 		}
 
 		cfg := runner.Config{}
@@ -63,8 +62,7 @@ func TestBind(t *testing.T) {
 				GlobalTimeout:  5 * time.Second,
 			},
 			Output: runner.OutputConfig{
-				Silent:   true,
-				Template: "{{ .Report.Length }}",
+				Silent: true,
 			},
 		}
 

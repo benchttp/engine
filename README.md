@@ -17,7 +17,7 @@
 ## About
 
 `benchttp/engine` runs benchmarks on specified endpoints.
-Highly configurable, it can serve many purposes such as monitoring (paired with our [webapp](https://www.benchttp.app)), CI tool (with output templates) or as a simple testing tool at development time.
+Highly configurable, it can serve many purposes such as monitoring (paired with our [webapp](https://www.benchttp.app)), CI integration (with test suites) or as a simple testing tool at development time.
 
 ## Installation
 
@@ -90,11 +90,6 @@ Note: the expected format for durations is `<int><unit>`, with `unit` being any 
 
 #### Output options
 
-| CLI flag    | File option       | Description                     | Usage example                    |
-| ----------- | ----------------- | ------------------------------- | -------------------------------- |
-| `-silent`   | `output.silent`   | Remove convenience prints       | `-silent` / `-silent=false`      |
-| `-template` | `output.template` | Custom output when using stdout | `-template '{{ .Metrics.Avg }}'` |
-
-Note: the template uses Go's powerful templating engine.
-To take full advantage of it, see our [templating docs](./examples/output/templating.md)
-for the available fields and functions, with usage examples.
+| CLI flag  | File option     | Description               | Usage example               |
+| --------- | --------------- | ------------------------- | --------------------------- |
+| `-silent` | `output.silent` | Remove convenience prints | `-silent` / `-silent=false` |

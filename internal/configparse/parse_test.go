@@ -206,8 +206,7 @@ func newExpConfig() runner.Config {
 			GlobalTimeout:  60 * time.Second,
 		},
 		Output: runner.OutputConfig{
-			Silent:   true,
-			Template: "{{ .Metrics.Avg }}",
+			Silent: true,
 		},
 		Tests: []runner.TestCase{
 			{

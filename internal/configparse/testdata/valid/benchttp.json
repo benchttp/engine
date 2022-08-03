@@ -22,8 +22,7 @@
     "globalTimeout": "60s"
   },
   "output": {
-    "silent": true,
-    "template": "{{ .Metrics.Avg }}"
+    "silent": true
   },
   "tests": [
     {
