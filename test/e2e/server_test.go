@@ -1,59 +1,117 @@
 package server_test
 
 import (
-	"bytes"
 	"encoding/json"
-	"net/http"
+	"errors"
+	"fmt"
+	"net/url"
 	"testing"
 
 	"github.com/benchttp/engine/runner"
+	"github.com/gorilla/websocket"
 )
 
 func TestServer(t *testing.T) {
 	t.Run("happy path", func(t *testing.T) {
-		config := map[string]interface{}{
+		const numRequest = 4
+
+		cfg := map[string]interface{}{
 			"request": map[string]interface{}{
 				"url": "https://example.com",
 			},
 			"runner": map[string]interface{}{
-				"requests":    10,
+				"requests":    numRequest,
 				"concurrency": 2,
 			},
-			// "tests": []map[string]interface{}{
-			// 	{
-			// 		"name":      "maximum response time",
-			// 		"metric":    "MAX",
-			// 		"predicate": "LT",
-			// 		"value":     "100ms",
-			// 	},
-			// },
 		}
 
-		resp, err := makeRunRequest(config)
+		ws, err := connectWS()
 		if err != nil {
 			t.Fatal(err)
 		}
-		defer resp.Body.Close()
 
-		if resp.StatusCode != http.StatusOK {
-			t.Fatalf("unexpected status code: %d", resp.StatusCode)
+		report, err := runAndWait(ws, cfg)
+		if err != nil {
+			t.Fatal(err)
 		}
 
-		report := runner.Report{}
-		if err := json.NewDecoder(resp.Body).Decode(&report); err != nil {
-			t.Fatal(err)
+		gotRequestCount := report.Metrics.TotalCount
+		if gotRequestCount != numRequest {
+			t.Errorf("got bad report: %+v", report)
 		}
 	})
 }
 
-func makeRunRequest(cfg map[string]interface{}) (*http.Response, error) {
-	jsonConfig, err := json.Marshal(cfg)
+func connectWS() (*websocket.Conn, error) {
+	u := url.URL{
+		Scheme:   "ws",
+		Host:     serverAddr,
+		Path:     "run",
+		RawQuery: url.Values{"access_token": []string{serverDummyToken}}.Encode(),
+	}
+
+	ws, resp, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
-	mime := "application/json"
-	body := bytes.NewReader(jsonConfig)
+	return ws, nil
+}
 
-	return http.Post(serverRunEndpoint, mime, body)
+func runAndWait(
+	ws *websocket.Conn,
+	cfg map[string]interface{},
+) (runner.Report, error) {
+	if err := ws.WriteJSON(map[string]interface{}{
+		"action": "run",
+		"data":   cfg,
+	}); err != nil {
+		return runner.Report{}, err
+	}
+
+	for {
+		var msg map[string]interface{}
+		if err := ws.ReadJSON(&msg); err != nil {
+			return runner.Report{}, err
+		}
+
+		if msg["state"] == "progress" {
+			// TODO: tests on progress event
+			continue
+		}
+
+		if msg["state"] == "done" {
+			errStr, isErr := msg["error"]
+			if isErr {
+				return runner.Report{}, fmt.Errorf("event done: got error message: %s", errStr)
+			}
+
+			data, hasData := msg["data"]
+			if !hasData {
+				return runner.Report{}, errors.New("event done: no data")
+			}
+
+			dataMap, validType := data.(map[string]interface{})
+			if !validType {
+				return runner.Report{}, fmt.Errorf("event done: bad data type: %+v", dataMap)
+			}
+
+			return mapToReport(dataMap)
+		}
+	}
+}
+
+func mapToReport(m map[string]interface{}) (runner.Report, error) {
+	b, err := json.Marshal(m)
+	if err != nil {
+		return runner.Report{}, fmt.Errorf("mapToReport: %w", err)
+	}
+
+	report := runner.Report{}
+	if err := json.Unmarshal(b, &report); err != nil {
+		return runner.Report{}, fmt.Errorf("mapToReport: %w", err)
+	}
+
+	return report, nil
 }
