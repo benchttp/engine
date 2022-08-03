@@ -12,6 +12,7 @@ const (
 	FieldGlobalTimeout  = "globalTimeout"
 	FieldSilent         = "silent"
 	FieldTemplate       = "template"
+	FieldTests          = "tests"
 )
 
 // FieldsUsage is a record of all available config fields and their usage.
@@ -27,6 +28,7 @@ var FieldsUsage = map[string]string{
 	FieldGlobalTimeout:  "Max duration of test",
 	FieldSilent:         "Silent mode (no write to stdout)",
 	FieldTemplate:       "Output template",
+	FieldTests:          "Test suite",
 }
 
 func IsField(v string) bool {

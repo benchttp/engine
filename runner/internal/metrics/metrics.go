@@ -1,43 +1,36 @@
 package metrics
 
-import (
-	"time"
+// Value is a concrete metric value, e.g. 120 or 3 * time.Second.
+type Value interface{}
 
-	"github.com/benchttp/engine/runner/internal/recorder"
-)
-
-// Aggregate is an aggregate of metrics resulting from
-// from recorded requests.
-type Aggregate struct {
-	Min, Max, Avg                          time.Duration
-	SuccessCount, FailureCount, TotalCount int
-	// Median, StdDev            time.Duration
-	// Deciles                   map[int]float64
-	// StatusCodeDistribution    map[string]int
-	// RequestEventsDistribution map[recorder.Event]int
+// Metric represents an Aggregate metric. It links together a Field
+// and its Value from the Aggregate.
+// It exposes a method Compare that compares its Value to another.
+type Metric struct {
+	Field Field
+	Value Value
 }
 
-// Compute computes and aggregates metrics from the given
-// requests records.
-func Compute(records []recorder.Record) (agg Aggregate) {
-	if len(records) == 0 {
-		return
-	}
-
-	agg.TotalCount = len(records)
-	agg.Min, agg.Max = records[0].Time, records[0].Time
-	for _, rec := range records {
-		if rec.Error != "" {
-			agg.FailureCount++
-		}
-		if rec.Time < agg.Min {
-			agg.Min = rec.Time
-		}
-		if rec.Time > agg.Max {
-			agg.Max = rec.Time
-		}
-		agg.Avg += rec.Time / time.Duration(len(records))
-	}
-	agg.SuccessCount = agg.TotalCount - agg.FailureCount
-	return
+// Compare compares a Metric's value to another.
+// It returns a ComparisonResult that indicates the relationship
+// between the two values from the receiver's point of view.
+//
+// It panics if m and n are not of the same type,
+// or if their type is not handled.
+//
+// Examples:
+//
+// 	receiver := Metric{Value: 120}
+// 	comparer := Metric{Value: 100}
+// 	receiver.Compare(comparer) == SUP
+//
+// 	receiver := Metric{Value: 120 * time.Millisecond}
+// 	comparer := Metric{Value: 100}
+// 	receiver.Compare(comparer) // panics!
+//
+// 	receiver := Metric{Value: http.Header{}}
+// 	comparer := Metric{Value: http.Header{}}
+// 	receiver.Compare(comparer) // panics!
+func (m Metric) Compare(to Metric) ComparisonResult {
+	return compareMetrics(to, m)
 }

@@ -2,8 +2,6 @@ package configparse
 
 import (
 	"errors"
-	"fmt"
-	"strings"
 )
 
 var (
@@ -26,13 +24,3 @@ var (
 	// ErrCircularExtends signals a circular reference in the config file.
 	ErrCircularExtends = errors.New("circular reference detected")
 )
-
-// errWithDetails returns an error wrapping err, appended with a string
-// representation of details separated by ": ".
-func errWithDetails(err error, details ...interface{}) error {
-	detailsStr := make([]string, len(details))
-	for i := range details {
-		detailsStr[i] = fmt.Sprint(details[i])
-	}
-	return fmt.Errorf("%w: %s", err, strings.Join(detailsStr, ": "))
-}

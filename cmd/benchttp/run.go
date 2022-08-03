@@ -67,6 +67,10 @@ func (cmd *cmdRun) execute(args []string) error {
 		return err
 	}
 
+	if !out.Tests.Pass {
+		return errors.New("test suite failed")
+	}
+
 	return nil
 }
 

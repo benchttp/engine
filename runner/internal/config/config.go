@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/benchttp/engine/runner/internal/tests"
 )
 
 // RequestBody represents a request body associated with a type.
@@ -88,6 +90,7 @@ type Global struct {
 	Request Request
 	Runner  Runner
 	Output  Output
+	Tests   []tests.Case
 }
 
 // String returns an indented JSON representation of Config
@@ -125,6 +128,8 @@ func (cfg Global) Override(c Global, fields ...string) Global {
 			cfg.Output.Silent = c.Output.Silent
 		case FieldTemplate:
 			cfg.Output.Template = c.Output.Template
+		case FieldTests:
+			cfg.Tests = c.Tests
 		}
 	}
 	return cfg

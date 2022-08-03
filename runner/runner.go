@@ -8,6 +8,7 @@ import (
 	"github.com/benchttp/engine/runner/internal/metrics"
 	"github.com/benchttp/engine/runner/internal/recorder"
 	"github.com/benchttp/engine/runner/internal/report"
+	"github.com/benchttp/engine/runner/internal/tests"
 )
 
 type (
@@ -21,6 +22,13 @@ type (
 	RecordingStatus   = recorder.Status
 
 	Report = report.Report
+
+	MetricsField = metrics.Field
+	MetricsValue = metrics.Value
+	MetricsType  = metrics.Type
+
+	TestCase      = tests.Case
+	TestPredicate = tests.Predicate
 )
 
 const (
@@ -40,6 +48,7 @@ const (
 	ConfigFieldGlobalTimeout  = config.FieldGlobalTimeout
 	ConfigFieldSilent         = config.FieldSilent
 	ConfigFieldTemplate       = config.FieldTemplate
+	ConfigFieldTests          = config.FieldTests
 )
 
 var (
@@ -47,6 +56,9 @@ var (
 	ConfigFieldsUsage = config.FieldsUsage
 	NewRequestBody    = config.NewRequestBody
 	IsConfigField     = config.IsField
+
+	MetricsTypeInt      = metrics.TypeInt
+	MetricsTypeDuration = metrics.TypeDuration
 )
 
 type Runner struct {
@@ -85,7 +97,9 @@ func (r *Runner) Run(ctx context.Context, cfg config.Global) (*Report, error) {
 
 	duration := time.Since(startTime)
 
-	return report.New(agg, cfg, duration), nil
+	testResults := tests.Run(agg, cfg.Tests)
+
+	return report.New(agg, cfg, duration, testResults), nil
 }
 
 // Progress returns the current progress of the recording.

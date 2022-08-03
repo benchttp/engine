@@ -20,3 +20,17 @@ runner:
 output:
   silent: true
   template: "{{ .Metrics.Avg }}"
+
+tests:
+  - name: minimum response time
+    field: MIN
+    predicate: GT
+    target: 80ms
+  - name: maximum response time
+    field: MAX
+    predicate: LTE
+    target: 120ms
+  - name: 100% availability
+    field: FAILURE_COUNT
+    predicate: EQ
+    target: 0
