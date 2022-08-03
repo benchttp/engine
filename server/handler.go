@@ -67,7 +67,7 @@ func (h *Handler) handle(w http.ResponseWriter, r *http.Request) {
 		case "run":
 			cfg, err := parseConfig(m.Data)
 			if err != nil {
-				log.Println(err)
+				rw.WriteJSON(errorMessage{Event: "error", Error: err.Error()}) //nolint:errcheck
 				break
 			}
 
