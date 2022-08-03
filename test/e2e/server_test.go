@@ -76,14 +76,19 @@ func runAndWait(
 			return runner.Report{}, err
 		}
 
-		if msg["state"] == "progress" {
+		switch msg["state"] {
+		case "error":
+			if errStr, exists := msg["error"]; exists {
+				return runner.Report{}, fmt.Errorf("got error message: %s", errStr)
+			}
+			return runner.Report{}, fmt.Errorf("got unexpected error message: %+v", msg)
+
+		case "progress":
 			// TODO: tests on progress event
 			continue
-		}
 
-		if msg["state"] == "done" {
-			errStr, isErr := msg["error"]
-			if isErr {
+		case "done":
+			if errStr, exists := msg["error"]; exists {
 				return runner.Report{}, fmt.Errorf("event done: got error message: %s", errStr)
 			}
 

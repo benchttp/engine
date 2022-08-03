@@ -2,6 +2,7 @@ package server_test
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os/exec"
 	"testing"
@@ -47,7 +48,8 @@ func startServer() (shutdown func()) {
 
 	stopped := true
 	go func() {
-		if err := cmd.Run(); err != nil && stopped {
+		if b, err := cmd.CombinedOutput(); err != nil && stopped {
+			fmt.Printf("server output: %s", string(b))
 			panic("cmd.Run: " + err.Error())
 		}
 	}()
