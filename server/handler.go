@@ -1,10 +1,13 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+	"sync"
+	"time"
 
 	"github.com/benchttp/engine/internal/configparse"
 	"github.com/benchttp/engine/internal/websocketio"
@@ -15,6 +18,7 @@ import (
 // It serves a websocket server allowing
 // remote manipulation of runner.Runner.
 type Handler struct {
+	mu      sync.Mutex
 	Silent  bool
 	Token   string
 	service *service
@@ -32,6 +36,8 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch r.URL.Path {
 	case "/run":
 		h.handle(w, r)
+	case "/stream":
+		h.handleStream(w, r)
 	default:
 		http.NotFound(w, r)
 	}
@@ -99,4 +105,37 @@ func parseConfig(data configparse.UnmarshaledConfig) (runner.Config, error) {
 	}
 
 	return cfg, nil
+}
+
+func (h *Handler) handleStream(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	cfg := runner.DefaultConfig()
+	cfg.Request = cfg.Request.WithURL("https://example.com")
+	cfg.Runner.Requests = 10
+	cfg.Runner.Concurrency = 1
+	cfg.Runner.Interval = 1 * time.Second
+
+	rep, err := runner.New(h.streamProgress(w)).Run(context.Background(), cfg)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if err := json.NewEncoder(w).Encode(rep); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func (h *Handler) streamProgress(w http.ResponseWriter) func(runner.RecordingProgress) {
+	enc := json.NewEncoder(w)
+	return func(progress runner.RecordingProgress) {
+		h.mu.Lock()
+		defer h.mu.Unlock()
+		if err := enc.Encode(progress); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		w.(http.Flusher).Flush()
+	}
 }
