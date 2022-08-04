@@ -7,7 +7,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"sync"
 	"time"
 
 	"github.com/benchttp/engine/internal/configparse"
@@ -128,6 +127,11 @@ func (h *Handler) handleStream(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// hack: the write for the Report sometimes appears to be merged
+	// with the last write for the Progress, leading to invalid JSON.
+	// The issue is likely on the read side (front-end), but this is
+	// the easiest fix for now.
+	time.Sleep(10 * time.Millisecond)
 	if err := json.NewEncoder(w).Encode(rep); err != nil {
 		internalError(w, err)
 		return
