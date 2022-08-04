@@ -19,7 +19,6 @@ import (
 // It serves a websocket server allowing
 // remote manipulation of runner.Runner.
 type Handler struct {
-	mu      sync.Mutex
 	Silent  bool
 	Token   string
 	service *service

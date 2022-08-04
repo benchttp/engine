@@ -165,7 +165,6 @@ func (r *Recorder) recordSingle(req *http.Request, interval time.Duration) func(
 			Events: events,
 		})
 
-		r.updateProgress()
 		time.Sleep(interval)
 	}
 }
@@ -178,7 +177,7 @@ func (r *Recorder) appendRecord(rec Record) {
 
 // tickProgress refreshes the Progress every second.
 func (r *Recorder) tickProgress() {
-	ticker := time.NewTicker(time.Second)
+	ticker := time.NewTicker(100 * time.Millisecond)
 	tick := ticker.C
 	for {
 		if r.done {
