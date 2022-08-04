@@ -154,7 +154,9 @@ func (r *Recorder) recordSingle(req *http.Request, interval time.Duration) func(
 		// Retrieve tracer events and append BodyRead event
 		events := []Event{}
 		if reqtracer, ok := client.Transport.(*tracer); ok {
+			r.mu.Lock()
 			reqtracer.addEventBodyRead()
+			r.mu.Unlock()
 			events = reqtracer.events
 		}
 
@@ -180,7 +182,10 @@ func (r *Recorder) tickProgress() {
 	ticker := time.NewTicker(100 * time.Millisecond)
 	tick := ticker.C
 	for {
-		if r.done {
+		r.mu.RLock()
+		done := r.done
+		r.mu.RUnlock()
+		if done {
 			ticker.Stop()
 			break
 		}
