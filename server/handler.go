@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"sync"
@@ -110,20 +111,26 @@ func parseConfig(data configparse.UnmarshaledConfig) (runner.Config, error) {
 func (h *Handler) handleStream(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
-	cfg := runner.DefaultConfig()
-	cfg.Request = cfg.Request.WithURL("https://example.com")
-	cfg.Runner.Requests = 10
-	cfg.Runner.Concurrency = 1
-	cfg.Runner.Interval = 1 * time.Second
+	b, err := io.ReadAll(r.Body)
+	if err != nil {
+		internalError(w, err)
+		return
+	}
+
+	cfg, err := configparse.JSON(b)
+	if err != nil {
+		internalError(w, err)
+		return
+	}
 
 	rep, err := runner.New(h.streamProgress(w)).Run(context.Background(), cfg)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		internalError(w, err)
 		return
 	}
 
 	if err := json.NewEncoder(w).Encode(rep); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		internalError(w, err)
 		return
 	}
 }
@@ -131,11 +138,13 @@ func (h *Handler) handleStream(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) streamProgress(w http.ResponseWriter) func(runner.RecordingProgress) {
 	enc := json.NewEncoder(w)
 	return func(progress runner.RecordingProgress) {
-		h.mu.Lock()
-		defer h.mu.Unlock()
 		if err := enc.Encode(progress); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			internalError(w, err)
 		}
 		w.(http.Flusher).Flush()
 	}
+}
+
+func internalError(w http.ResponseWriter, err error) {
+	http.Error(w, err.Error(), http.StatusInternalServerError)
 }
