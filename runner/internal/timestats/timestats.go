@@ -1,6 +1,8 @@
 package timestats
 
 import (
+	"fmt"
+	"sort"
 	"time"
 
 	"github.com/benchttp/engine/runner/internal/recorder"
@@ -9,6 +11,7 @@ import (
 
 type TimeStats struct {
 	Min, Max, Avg, Median, StdDev time.Duration
+	Deciles                       map[int]time.Duration
 }
 
 func Compute(records []recorder.Record) (timeStats TimeStats, errs []error) {
@@ -39,11 +42,35 @@ func Compute(records []recorder.Record) (timeStats TimeStats, errs []error) {
 		errs = append(errs, stdDevErrs...)
 	}
 
-	if errs != nil {
+	deciles := map[int]float64{1: 10, 2: 20, 3: 30, 4: 40, 5: 50, 6: 60, 7: 70, 8: 80, 9: 90}
+
+	keys := make([]int, 0)
+	for k := range deciles {
+		keys = append(keys, k)
+	}
+	sort.Ints(keys)
+
+	decilesErrs := []error{}
+
+	for _, k := range keys {
+		var decileErrs []error = make([]error, 1)
+		float64v := float64(deciles[k])
+		n := fmt.Sprintf("%s decile", ordinal(k))
+		deciles[k], decileErrs = pipe(n, errs)(stats.Percentile(times, float64v))
+		if len(decileErrs) > 0 {
+			errs = append(decilesErrs, decileErrs...)
+		}
+	}
+
+	if len(decilesErrs) > 0 {
+		errs = append(errs, decilesErrs...)
+	}
+
+	if len(errs) > 0 {
 		return timeStats, errs
 	}
 
-	timeStats = convertTimeStatsBackToTimeDuration(min, max, avg, median, stdDev)
+	timeStats = convertTimeStatsBackToTimeDuration(min, max, avg, median, stdDev, deciles)
 
 	return timeStats, nil
 }
@@ -66,12 +93,39 @@ func getFloat64Times(records []recorder.Record) []float64 {
 	return float64Times
 }
 
-func convertTimeStatsBackToTimeDuration(min float64, max float64, avg float64, median float64, stdDev float64) (timeStats TimeStats) {
+func convertTimeStatsBackToTimeDuration(min float64, max float64, avg float64, median float64, stdDev float64, deciles map[int]float64) (timeStats TimeStats) {
 	timeStats.Min = time.Duration(min)
 	timeStats.Max = time.Duration(max)
 	timeStats.Avg = time.Duration(avg)
 	timeStats.Median = time.Duration(median)
 	timeStats.StdDev = time.Duration(stdDev)
 
+	timeStats.Deciles = make(map[int]time.Duration, 9)
+
+	for i, p := range deciles {
+		timeStats.Deciles[i] = time.Duration(p)
+	}
+
 	return timeStats
+}
+
+// ordinal return x ordinal format.
+//	ordinal(3) == "3rd"
+func ordinal(x int) string {
+	suffix := "th"
+	switch x % 10 {
+	case 1:
+		if x%100 != 11 {
+			suffix = "st"
+		}
+	case 2:
+		if x%100 != 12 {
+			suffix = "nd"
+		}
+	case 3:
+		if x%100 != 13 {
+			suffix = "rd"
+		}
+	}
+	return fmt.Sprintf("%d%s", x, suffix)
 }
