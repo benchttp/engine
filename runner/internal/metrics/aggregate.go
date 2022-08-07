@@ -1,19 +1,17 @@
 package metrics
 
 import (
-	"time"
+	"errors"
 
 	"github.com/benchttp/engine/runner/internal/recorder"
+	"github.com/benchttp/engine/runner/internal/timestats"
 )
 
 // Aggregate is an aggregate of metrics resulting from
 // from recorded requests.
 type Aggregate struct {
-	Min, Max, Avg                          time.Duration
+	ResponseTimes                          timestats.TimeStats
 	SuccessCount, FailureCount, TotalCount int
-	// Median, StdDev            time.Duration
-	// Deciles                   map[int]float64
-	// StatusCodeDistribution    map[string]int
 	// RequestEventsDistribution map[recorder.Event]int
 }
 
@@ -26,25 +24,20 @@ func (agg Aggregate) MetricOf(field Field) Metric {
 
 // Compute computes and aggregates metrics from the given
 // requests records.
-func Compute(records []recorder.Record) (agg Aggregate) {
+func Compute(records []recorder.Record) (agg Aggregate, err error) {
 	if len(records) == 0 {
 		return
 	}
 
 	agg.TotalCount = len(records)
-	agg.Min, agg.Max = records[0].Time, records[0].Time
-	for _, rec := range records {
-		if rec.Error != "" {
-			agg.FailureCount++
-		}
-		if rec.Time < agg.Min {
-			agg.Min = rec.Time
-		}
-		if rec.Time > agg.Max {
-			agg.Max = rec.Time
-		}
-		agg.Avg += rec.Time / time.Duration(len(records))
-	}
 	agg.SuccessCount = agg.TotalCount - agg.FailureCount
-	return
+
+	errs := []error{}
+	agg.ResponseTimes, errs = timestats.Compute(records)
+
+	if len(errs) > 0 {
+		return agg, errors.New("could not compute time stats")
+	}
+
+	return agg, nil
 }
