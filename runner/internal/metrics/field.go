@@ -39,9 +39,9 @@ type fieldDefinition struct {
 // fieldDefinitions is a table of truth for fields.
 // It maps all Field references to their intrinsic fieldDefinition.
 var fieldDefinitions = map[Field]fieldDefinition{
-	ResponseTimeAvg:     {TypeDuration, func(a Aggregate) Value { return a.Avg }},
-	ResponseTimeMin:     {TypeDuration, func(a Aggregate) Value { return a.Min }},
-	ResponseTimeMax:     {TypeDuration, func(a Aggregate) Value { return a.Max }},
+	ResponseTimeAvg:     {TypeDuration, func(a Aggregate) Value { return a.ResponseTimes.Avg }},
+	ResponseTimeMin:     {TypeDuration, func(a Aggregate) Value { return a.ResponseTimes.Min }},
+	ResponseTimeMax:     {TypeDuration, func(a Aggregate) Value { return a.ResponseTimes.Max }},
 	RequestFailCount:    {TypeInt, func(a Aggregate) Value { return a.FailureCount }},
 	RequestSuccessCount: {TypeInt, func(a Aggregate) Value { return a.SuccessCount }},
 	RequestCount:        {TypeInt, func(a Aggregate) Value { return a.TotalCount }},
