@@ -1,8 +1,6 @@
 package metrics
 
 import (
-	"errors"
-
 	"github.com/benchttp/engine/runner/internal/recorder"
 	"github.com/benchttp/engine/runner/internal/timestats"
 )
@@ -24,7 +22,7 @@ func (agg Aggregate) MetricOf(field Field) Metric {
 
 // Compute computes and aggregates metrics from the given
 // requests records.
-func Compute(records []recorder.Record) (agg Aggregate, err error) {
+func Compute(records []recorder.Record) (agg Aggregate, errs []error) {
 	if len(records) == 0 {
 		return
 	}
@@ -32,11 +30,13 @@ func Compute(records []recorder.Record) (agg Aggregate, err error) {
 	agg.TotalCount = len(records)
 	agg.SuccessCount = agg.TotalCount - agg.FailureCount
 
-	errs := []error{}
-	agg.ResponseTimes, errs = timestats.Compute(records)
+	var reponseTimesErrs []error
+	agg.ResponseTimes, reponseTimesErrs = timestats.Compute(records)
+
+	errs = append(errs, reponseTimesErrs...)
 
 	if len(errs) > 0 {
-		return agg, errors.New("could not compute time stats")
+		return agg, errs
 	}
 
 	return agg, nil
