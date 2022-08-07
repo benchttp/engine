@@ -8,7 +8,7 @@ import (
 )
 
 type TimeStats struct {
-	Min, Max, Avg time.Duration
+	Min, Max, Avg, Median time.Duration
 }
 
 func Compute(records []recorder.Record) (timeStats TimeStats, errs []error) {
@@ -30,12 +30,16 @@ func Compute(records []recorder.Record) (timeStats TimeStats, errs []error) {
 	if avgErrs != nil {
 		errs = append(errs, avgErrs...)
 	}
+	median, medianErrs := pipe("avg", errs)(stats.Median(times))
+	if avgErrs != nil {
+		errs = append(errs, medianErrs...)
+	}
 
 	if errs != nil {
 		return timeStats, errs
 	}
 
-	timeStats = convertTimeStatsBackToTimeDuration(min, max, avg)
+	timeStats = convertTimeStatsBackToTimeDuration(min, max, avg, median)
 
 	return timeStats, nil
 }
@@ -58,10 +62,11 @@ func getFloat64Times(records []recorder.Record) []float64 {
 	return float64Times
 }
 
-func convertTimeStatsBackToTimeDuration(min float64, max float64, avg float64) (timeStats TimeStats) {
+func convertTimeStatsBackToTimeDuration(min float64, max float64, avg float64, median float64) (timeStats TimeStats) {
 	timeStats.Min = time.Duration(min)
 	timeStats.Max = time.Duration(max)
 	timeStats.Avg = time.Duration(avg)
+	timeStats.Median = time.Duration(median)
 
 	return timeStats
 }

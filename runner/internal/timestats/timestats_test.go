@@ -45,9 +45,10 @@ var validRecords = []recorder.Record{
 func TestCompute(t *testing.T) {
 	t.Run("happy path", func(t *testing.T) {
 		want := timestats.TimeStats{
-			Min: 100,
-			Max: 400,
-			Avg: 240,
+			Min:    100,
+			Max:    400,
+			Avg:    240,
+			Median: 200,
 		}
 
 		got, errs := timestats.Compute(validRecords)
