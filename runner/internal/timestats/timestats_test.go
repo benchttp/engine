@@ -49,6 +49,7 @@ func TestCompute(t *testing.T) {
 			Max:    400,
 			Avg:    240,
 			Median: 200,
+			StdDev: 101,
 		}
 
 		got, errs := timestats.Compute(validRecords)
