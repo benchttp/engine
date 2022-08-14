@@ -16,7 +16,7 @@ type Aggregate struct {
 	RequestFailures        []struct {
 		Reason string
 	}
-	// RequestEventsDistribution map[recorder.Event]int
+	RequestEventsDistribution map[string]int
 }
 
 // MetricOf returns the Metric for the given field in Aggregate.
@@ -40,17 +40,21 @@ func Compute(records []recorder.Record) (agg Aggregate, errs []error) {
 
 	agg.ResponseTimes = timestats.Compute(times)
 
+	var statusCodeDistributionErrs []error
+	agg.StatusCodeDistribution, statusCodeDistributionErrs = ComputeStatusCodesDistribution(records)
+	errs = append(errs, statusCodeDistributionErrs...)
+
+	agg.RequestEventTimes = ComputeRequestEventTimes(records)
+
 	for _, rec := range records {
 		if rec.Error != "" {
 			agg.RequestFailures = append(agg.RequestFailures, struct{ Reason string }{rec.Error})
 		}
 	}
 
-	var statusCodeDistributionErrs []error
-	agg.StatusCodeDistribution, statusCodeDistributionErrs = ComputeStatusCodesDistribution(records)
-	errs = append(errs, statusCodeDistributionErrs...)
-
-	agg.RequestEventTimes = ComputeRequestEventTimes(records)
+	var requestEventsDistributionErrs []error
+	agg.RequestEventsDistribution, requestEventsDistributionErrs = ComputeRequestEventsDistribution(records)
+	errs = append(errs, requestEventsDistributionErrs...)
 
 	if len(errs) > 0 {
 		return agg, errs
