@@ -11,10 +11,10 @@ import (
 // from recorded requests.
 type Aggregate struct {
 	SuccessCount, FailureCount, TotalCount int
-	ResponseTimes          timestats.TimeStats
-	StatusCodeDistribution map[string]int
-	RequestEventTimes      map[string]timestats.TimeStats
-	RequestEventsDistribution map[string]int
+	ResponseTimes                          timestats.TimeStats
+	StatusCodeDistribution                 map[string]int
+	RequestEventTimes                      map[string]timestats.TimeStats
+	RequestEventsDistribution              map[string]int
 }
 
 // MetricOf returns the Metric for the given field in Aggregate.
@@ -26,25 +26,36 @@ func (agg Aggregate) MetricOf(field Field) Metric {
 
 // Compute computes and aggregates metrics from the given
 // requests records.
-func Compute(records []recorder.Record) (agg Aggregate) {
+func Compute(records []recorder.Record) (agg Aggregate, errs []error) {
 	if len(records) == 0 {
 		return
 	}
 
-	agg.TotalCount = len(records)
-	agg.Min, agg.Max = records[0].Time, records[0].Time
-	for _, rec := range records {
+	times := make([]time.Duration, len(records))
+	for i, rec := range records {
+		times[i] = rec.Time
 		if rec.Error != "" {
 			agg.FailureCount++
 		}
-		if rec.Time < agg.Min {
-			agg.Min = rec.Time
-		}
-		if rec.Time > agg.Max {
-			agg.Max = rec.Time
-		}
-		agg.Avg += rec.Time / time.Duration(len(records))
 	}
 	agg.SuccessCount = agg.TotalCount - agg.FailureCount
 	return
+
+	agg.ResponseTimes = timestats.Compute(times)
+
+	var statusCodeDistributionErrs []error
+	agg.StatusCodeDistribution, statusCodeDistributionErrs = ComputeStatusCodesDistribution(records)
+	errs = append(errs, statusCodeDistributionErrs...)
+
+	agg.RequestEventTimes = ComputeRequestEventTimes(records)
+
+	var requestEventsDistributionErrs []error
+	agg.RequestEventsDistribution, requestEventsDistributionErrs = ComputeRequestEventsDistribution(records)
+	errs = append(errs, requestEventsDistributionErrs...)
+
+	if len(errs) > 0 {
+		return agg, errs
+	}
+
+	return agg, nil
 }
