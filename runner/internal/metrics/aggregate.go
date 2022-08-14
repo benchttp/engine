@@ -9,12 +9,17 @@ import (
 
 // Aggregate is an aggregate of metrics resulting from
 // from recorded requests.
-type Aggregate struct {
-	SuccessCount, FailureCount, TotalCount int
-	ResponseTimes                          timestats.TimeStats
-	StatusCodeDistribution                 map[string]int
-	RequestEventTimes                      map[string]timestats.TimeStats
-	RequestEventsDistribution              map[string]int
+type MetricsAggregate struct {
+	ResponseTimes          timestats.TimeStats
+	StatusCodeDistribution map[string]int
+	RequestEventTimes      map[string]timestats.TimeStats
+	Records                []struct {
+		ResponseTime time.Duration
+	}
+	RequestFailures []struct {
+		Reason string
+	}
+	RequestEventsDistribution map[string]int
 }
 
 // MetricOf returns the Metric for the given field in Aggregate.
@@ -33,13 +38,12 @@ func Compute(records []recorder.Record) (agg Aggregate, errs []error) {
 
 	times := make([]time.Duration, len(records))
 	for i, rec := range records {
+		agg.Records = append(agg.Records, struct{ ResponseTime time.Duration }{rec.Time})
 		times[i] = rec.Time
 		if rec.Error != "" {
-			agg.FailureCount++
+			agg.RequestFailures = append(agg.RequestFailures, struct{ Reason string }{rec.Error})
 		}
 	}
-	agg.SuccessCount = agg.TotalCount - agg.FailureCount
-	return
 
 	agg.ResponseTimes = timestats.Compute(times)
 
