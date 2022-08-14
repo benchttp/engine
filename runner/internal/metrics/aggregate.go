@@ -11,6 +11,7 @@ import (
 // from recorded requests.
 type Aggregate struct {
 	ResponseTimes                          timestats.TimeStats
+	StatusCodeDistribution                 map[string]int
 	SuccessCount, FailureCount, TotalCount int
 	// RequestEventsDistribution map[recorder.Event]int
 }
@@ -38,6 +39,11 @@ func Compute(records []recorder.Record) (agg Aggregate, errs []error) {
 	}
 
 	agg.ResponseTimes = timestats.Compute(times)
+
+	var statusCodeDistributionErrs []error
+	agg.StatusCodeDistribution, statusCodeDistributionErrs = ComputeStatusCodesDistribution(records)
+
+	errs = append(errs, statusCodeDistributionErrs...)
 
 	if len(errs) > 0 {
 		return agg, errs
