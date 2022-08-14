@@ -4,17 +4,14 @@ import (
 	"time"
 
 	"github.com/benchttp/engine/runner/internal/recorder"
+	"github.com/benchttp/engine/runner/internal/timestats"
 )
 
 // Aggregate is an aggregate of metrics resulting from
 // from recorded requests.
 type Aggregate struct {
-	Min, Max, Avg                          time.Duration
 	SuccessCount, FailureCount, TotalCount int
-	// Median, StdDev            time.Duration
-	// Deciles                   map[int]float64
-	// StatusCodeDistribution    map[string]int
-	// RequestEventsDistribution map[recorder.Event]int
+	ResponseTimes          timestats.TimeStats
 }
 
 // MetricOf returns the Metric for the given field in Aggregate.
