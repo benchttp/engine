@@ -12,6 +12,7 @@ import (
 type Aggregate struct {
 	SuccessCount, FailureCount, TotalCount int
 	ResponseTimes          timestats.TimeStats
+	StatusCodeDistribution map[string]int
 }
 
 // MetricOf returns the Metric for the given field in Aggregate.
