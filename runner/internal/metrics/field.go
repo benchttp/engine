@@ -33,18 +33,18 @@ type fieldDefinition struct {
 	typ Type
 	// boundValue is an accessor that binds a field
 	// to the value it represents in an Aggregate.
-	boundValue func(Aggregate) Value
+	boundValue func(MetricsAggregate) Value
 }
 
 // fieldDefinitions is a table of truth for fields.
 // It maps all Field references to their intrinsic fieldDefinition.
 var fieldDefinitions = map[Field]fieldDefinition{
-	ResponseTimeAvg:     {TypeDuration, func(a Aggregate) Value { return a.Avg }},
-	ResponseTimeMin:     {TypeDuration, func(a Aggregate) Value { return a.Min }},
-	ResponseTimeMax:     {TypeDuration, func(a Aggregate) Value { return a.Max }},
-	RequestFailCount:    {TypeInt, func(a Aggregate) Value { return a.FailureCount }},
-	RequestSuccessCount: {TypeInt, func(a Aggregate) Value { return a.SuccessCount }},
-	RequestCount:        {TypeInt, func(a Aggregate) Value { return a.TotalCount }},
+	ResponseTimeAvg:     {TypeDuration, func(a MetricsAggregate) Value { return a.ResponseTimes.Avg }},
+	ResponseTimeMin:     {TypeDuration, func(a MetricsAggregate) Value { return a.ResponseTimes.Min }},
+	ResponseTimeMax:     {TypeDuration, func(a MetricsAggregate) Value { return a.ResponseTimes.Max }},
+	RequestFailCount:    {TypeInt, func(a MetricsAggregate) Value { return len(a.RequestFailures) }},
+	RequestSuccessCount: {TypeInt, func(a MetricsAggregate) Value { return len(a.Records) - len(a.RequestFailures) }},
+	RequestCount:        {TypeInt, func(a MetricsAggregate) Value { return len(a.Records) }},
 }
 
 // Type represents the underlying type of a Value.
@@ -94,7 +94,7 @@ func (field Field) Validate() error {
 
 // valueIn returns the field's bound value in the given Aggregate.
 // It panics if field is not defined in fieldDefinitions.
-func (field Field) valueIn(agg Aggregate) Value {
+func (field Field) valueIn(agg MetricsAggregate) Value {
 	return field.mustRetrieve().boundValue(agg)
 }
 

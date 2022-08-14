@@ -24,7 +24,7 @@ type CaseResult struct {
 	Summary string
 }
 
-func Run(agg metrics.Aggregate, cases []Case) SuiteResult {
+func Run(agg metrics.MetricsAggregate, cases []Case) SuiteResult {
 	allpass := true
 	results := make([]CaseResult, len(cases))
 	for i, input := range cases {
@@ -40,7 +40,7 @@ func Run(agg metrics.Aggregate, cases []Case) SuiteResult {
 	}
 }
 
-func runTestCase(agg metrics.Aggregate, c Case) CaseResult {
+func runTestCase(agg metrics.MetricsAggregate, c Case) CaseResult {
 	gotMetric := agg.MetricOf(c.Field)
 	tarMetric := metrics.Metric{Field: c.Field, Value: c.Target}
 	comparisonResult := gotMetric.Compare(tarMetric)

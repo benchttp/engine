@@ -7,19 +7,20 @@ import (
 
 	"github.com/benchttp/engine/runner/internal/metrics"
 	"github.com/benchttp/engine/runner/internal/tests"
+	"github.com/benchttp/engine/runner/internal/timestats"
 )
 
 func TestRun(t *testing.T) {
 	testcases := []struct {
 		label          string
-		inputAgg       metrics.Aggregate
+		inputAgg       metrics.MetricsAggregate
 		inputCases     []tests.Case
 		expGlobalPass  bool
 		expCaseResults []tests.CaseResult
 	}{
 		{
 			label:    "pass if all cases pass",
-			inputAgg: metrics.Aggregate{Avg: 100 * time.Millisecond},
+			inputAgg: metrics.MetricsAggregate{ResponseTimes: timestats.TimeStats{Avg: 100 * time.Millisecond}},
 			inputCases: []tests.Case{
 				{
 					Name:      "average response time below 120ms (pass)",
@@ -42,7 +43,7 @@ func TestRun(t *testing.T) {
 		},
 		{
 			label:    "fail if at least one case fails",
-			inputAgg: metrics.Aggregate{Avg: 200 * time.Millisecond},
+			inputAgg: metrics.MetricsAggregate{ResponseTimes: timestats.TimeStats{Avg: 200 * time.Millisecond}},
 			inputCases: []tests.Case{
 				{
 					Name:      "average response time below 120ms (fail)",

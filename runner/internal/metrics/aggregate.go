@@ -7,7 +7,7 @@ import (
 	"github.com/benchttp/engine/runner/internal/timestats"
 )
 
-// Aggregate is an aggregate of metrics resulting from
+// MetricsAggregate is an aggregate of metrics resulting from
 // from recorded requests.
 type MetricsAggregate struct {
 	ResponseTimes          timestats.TimeStats
@@ -25,13 +25,13 @@ type MetricsAggregate struct {
 // MetricOf returns the Metric for the given field in Aggregate.
 //
 // It panics if field is not a known field.
-func (agg Aggregate) MetricOf(field Field) Metric {
+func (agg MetricsAggregate) MetricOf(field Field) Metric {
 	return Metric{Field: field, Value: field.valueIn(agg)}
 }
 
 // Compute computes and aggregates metrics from the given
 // requests records.
-func Compute(records []recorder.Record) (agg Aggregate, errs []error) {
+func Compute(records []recorder.Record) (agg MetricsAggregate, errs []error) {
 	if len(records) == 0 {
 		return
 	}
