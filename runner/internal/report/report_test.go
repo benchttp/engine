@@ -26,9 +26,10 @@ func TestReport_String(t *testing.T) {
 
 func metricsStub() (agg metrics.MetricsAggregate, total time.Duration) {
 	return metrics.MetricsAggregate{
-		FailureCount: 1,
-		SuccessCount: 2,
-		TotalCount:   3,
+		RequestFailures: make([]struct {
+			Reason string
+		}, 1),
+		Records: make([]struct{ ResponseTime time.Duration }, 3),
 		ResponseTimes: timestats.TimeStats{
 			Min: 4 * time.Second,
 			Max: 6 * time.Second,

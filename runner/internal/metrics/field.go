@@ -42,9 +42,9 @@ var fieldDefinitions = map[Field]fieldDefinition{
 	ResponseTimeAvg:     {TypeDuration, func(a MetricsAggregate) Value { return a.ResponseTimes.Avg }},
 	ResponseTimeMin:     {TypeDuration, func(a MetricsAggregate) Value { return a.ResponseTimes.Min }},
 	ResponseTimeMax:     {TypeDuration, func(a MetricsAggregate) Value { return a.ResponseTimes.Max }},
-	RequestFailCount:    {TypeInt, func(a MetricsAggregate) Value { return a.FailureCount }},
-	RequestSuccessCount: {TypeInt, func(a MetricsAggregate) Value { return a.SuccessCount }},
-	RequestCount:        {TypeInt, func(a MetricsAggregate) Value { return a.TotalCount }},
+	RequestFailCount:    {TypeInt, func(a MetricsAggregate) Value { return len(a.RequestFailures) }},
+	RequestSuccessCount: {TypeInt, func(a MetricsAggregate) Value { return len(a.Records) - len(a.RequestFailures) }},
+	RequestCount:        {TypeInt, func(a MetricsAggregate) Value { return len(a.Records) }},
 }
 
 // Type represents the underlying type of a Value.
