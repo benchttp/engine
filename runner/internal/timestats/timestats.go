@@ -44,33 +44,38 @@ func Compute(records []recorder.Record) (timeStats TimeStats, errs []error) {
 
 	deciles := map[int]float64{1: 10, 2: 20, 3: 30, 4: 40, 5: 50, 6: 60, 7: 70, 8: 80, 9: 90}
 
-	keys := make([]int, 0)
-	for k := range deciles {
-		keys = append(keys, k)
-	}
-	sort.Ints(keys)
-
-	decilesErrs := []error{}
-
-	for _, k := range keys {
-		var decileErrs []error = make([]error, 1)
-		float64v := float64(deciles[k])
-		n := fmt.Sprintf("%s decile", ordinal(k))
-		deciles[k], decileErrs = pipe(n, errs)(stats.Percentile(times, float64v))
-		if len(decileErrs) > 0 {
-			errs = append(decilesErrs, decileErrs...)
+	if len(records) >= 10 {
+		keys := make([]int, 0)
+		for k := range deciles {
+			keys = append(keys, k)
 		}
+		sort.Ints(keys)
+
+		decilesErrs := []error{}
+
+		for _, k := range keys {
+			var decileErrs []error = make([]error, 1)
+			float64v := float64(deciles[k])
+			n := fmt.Sprintf("%s decile", ordinal(k))
+			deciles[k], decileErrs = pipe(n, errs)(stats.Percentile(times, float64v))
+			if len(decileErrs) > 0 {
+				errs = append(decilesErrs, decileErrs...)
+			}
+		}
+
+		if len(decilesErrs) > 0 {
+			errs = append(errs, decilesErrs...)
+		}
+	} else {
+		deciles = make(map[int]float64, 0)
+		errs = append(errs, ErrNotEnoughRecordsForDeciles)
 	}
 
-	if len(decilesErrs) > 0 {
-		errs = append(errs, decilesErrs...)
-	}
+	timeStats = convertTimeStatsBackToTimeDuration(min, max, avg, median, stdDev, deciles)
 
 	if len(errs) > 0 {
 		return timeStats, errs
 	}
-
-	timeStats = convertTimeStatsBackToTimeDuration(min, max, avg, median, stdDev, deciles)
 
 	return timeStats, nil
 }

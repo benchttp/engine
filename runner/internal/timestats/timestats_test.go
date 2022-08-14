@@ -50,7 +50,7 @@ func TestCompute(t *testing.T) {
 			Avg:     240,
 			Median:  200,
 			StdDev:  101,
-			Deciles: map[int]time.Duration{10: 100, 20: 100, 30: 200, 40: 200, 50: 200, 60: 200, 70: 300, 80: 300, 90: 400},
+			Deciles: map[int]time.Duration{1: 100, 2: 100, 3: 200, 4: 200, 5: 200, 6: 200, 7: 300, 8: 300, 9: 400},
 		}
 
 		got, errs := timestats.Compute(validRecords)
@@ -67,11 +67,21 @@ func TestCompute(t *testing.T) {
 			{"min", want.Min, got.Min},
 			{"max", want.Max, got.Max},
 			{"avg", want.Avg, got.Avg},
+			{"median", want.Median, got.Median},
+			{"stdDev", want.StdDev, got.StdDev},
 		} {
 			if !approxEqualTime(stat.got, stat.want, 1) {
 				t.Errorf("%s: want %d, got %d", stat.name, stat.want, stat.got)
 			}
 		}
+
+		for key, _ := range got.Deciles {
+			if got.Deciles[key] != want.Deciles[key] {
+				t.Errorf("decile %d: want %d, got %d", key, want.Deciles[key], got.Deciles[key])
+			}
+
+		}
+
 	})
 
 	t.Run("passing invalid dataset returns error", func(t *testing.T) {
@@ -86,6 +96,18 @@ func TestCompute(t *testing.T) {
 				data: []recorder.Record{},
 				want: timestats.ErrEmptySlice,
 				zero: true,
+			},
+			{
+				name: "not enough values",
+				data: []recorder.Record{
+					{
+						Time: time.Duration(100.000000), Code: 200,
+					},
+					{
+						Time: time.Duration(200.000000), Code: 200,
+					}}, // not enough for 9 deciles
+				want: timestats.ErrNotEnoughRecordsForDeciles,
+				zero: false,
 			},
 		} {
 			t.Run(testcase.name, func(t *testing.T) {
