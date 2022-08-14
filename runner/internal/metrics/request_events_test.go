@@ -22,7 +22,8 @@ var validRecordsWithEvents = []recorder.Record{
 			{Name: "DNSDone", Time: 850},
 			{Name: "DNSDone", Time: 950},
 			{Name: "DNSDone", Time: 1050},
-		}},
+		},
+	},
 	{
 		Events: []recorder.Event{
 			{Name: "DNSDone", Time: 100},
@@ -35,7 +36,8 @@ var validRecordsWithEvents = []recorder.Record{
 			{Name: "ConnectDone", Time: 1300},
 			{Name: "ConnectDone", Time: 1500},
 			{Name: "ConnectDone", Time: 1700},
-		}},
+		},
+	},
 }
 
 // We only check some metrics to be confident that the time.Duration of the different
@@ -54,11 +56,12 @@ func TestComputeRequestEventTimes(t *testing.T) {
 			Min:    150,
 			Max:    200,
 			Avg:    175,
-			Median: 175}
+			Median: 175,
+		}
 
 		got := metrics.ComputeRequestEventTimes(validRecordsWithEvents)
 
-		for event, _ := range got {
+		for event := range got {
 			for _, stat := range []struct {
 				name string
 				want time.Duration
@@ -72,7 +75,6 @@ func TestComputeRequestEventTimes(t *testing.T) {
 				if !approxEqualTime(stat.got, stat.want, 1) {
 					t.Errorf("%s: %s: want %d, got %d", event, stat.name, stat.want, stat.got)
 				}
-
 			}
 		}
 	})
@@ -96,11 +98,14 @@ func TestComputeRequestEventsDistribution(t *testing.T) {
 	})
 
 	t.Run("invalid event name provided", func(t *testing.T) {
+		invalidRecordsWithEvents := []recorder.Record{
+			{
+				Events: []recorder.Event{
+					{Name: "not_a_valid_event_name", Time: 100},
+				},
+			},
+		}
 		want := "not_a_valid_event_name is not a valid event name"
-		invalidRecordsWithEvents := append(validRecordsWithEvents, recorder.Record{
-			Events: []recorder.Event{
-				{Name: "not_a_valid_event_name", Time: 100},
-			}})
 
 		_, errs := metrics.ComputeRequestEventsDistribution(invalidRecordsWithEvents)
 

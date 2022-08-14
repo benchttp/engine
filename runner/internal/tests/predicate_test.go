@@ -92,7 +92,7 @@ func expectPredicateResult(
 ) {
 	t.Helper()
 
-	agg := metrics.MetricsAggregate{
+	agg := metrics.Aggregate{
 		Records: make([]struct {
 			ResponseTime time.Duration
 		}, src),

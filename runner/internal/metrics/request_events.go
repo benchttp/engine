@@ -33,8 +33,9 @@ func ComputeRequestEventTimes(records []recorder.Record) (requestEventTimes map[
 }
 
 func ComputeRequestEventsDistribution(records []recorder.Record) (requestEventsDistribution map[string]int, errs []error) {
-	requestEventsDistribution = map[string]int{"DNSDone": 0, "ConnectDone": 0, "TLSHandshakeDone": 0, "WroteHeaders": 0,
-		"WroteRequest": 0, "GotFirstResponseByte": 0, "PutIdleConn": 0}
+	requestEventsDistribution = map[string]int{
+		"DNSDone": 0, "ConnectDone": 0, "TLSHandshakeDone": 0, "WroteHeaders": 0, "WroteRequest": 0, "GotFirstResponseByte": 0, "PutIdleConn": 0,
+	}
 
 	var allEvents []recorder.Event
 	for _, record := range records {
@@ -44,7 +45,7 @@ func ComputeRequestEventsDistribution(records []recorder.Record) (requestEventsD
 	for _, event := range allEvents {
 		_, isPresent := requestEventsDistribution[event.Name]
 		if isPresent {
-			requestEventsDistribution[event.Name] += 1
+			requestEventsDistribution[event.Name]++
 		} else {
 			errs = append(errs, RequestEventsDistributionComputeErr(event.Name))
 		}

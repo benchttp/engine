@@ -36,16 +36,13 @@ func TestCompute(t *testing.T) {
 			if !approxEqualTime(stat.got, stat.want, 1) {
 				t.Errorf("%s: want %d, got %d", stat.name, stat.want, stat.got)
 			}
-
 		}
 
 		for i := range got.Deciles {
 			if got.Deciles[i] != want.Deciles[i] {
 				t.Errorf("decile %d: want %d, got %d", i+1, want.Deciles[i], got.Deciles[i])
 			}
-
 		}
-
 	})
 }
 

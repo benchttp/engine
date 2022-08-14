@@ -67,7 +67,11 @@ func TestComputeStatusCodeDistribution(t *testing.T) {
 	},
 	)
 	t.Run("invalid status code", func(t *testing.T) {
-		invalidRecords := append(validRecords, recorder.Record{Code: -1938})
+		invalidRecords := []recorder.Record{
+			{
+				Code: -1938,
+			},
+		}
 		want := "-1938 is not a valid HTTP status code"
 
 		_, errs := metrics.ComputeStatusCodesDistribution(invalidRecords)

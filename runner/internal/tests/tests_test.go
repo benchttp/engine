@@ -13,14 +13,14 @@ import (
 func TestRun(t *testing.T) {
 	testcases := []struct {
 		label          string
-		inputAgg       metrics.MetricsAggregate
+		inputAgg       metrics.Aggregate
 		inputCases     []tests.Case
 		expGlobalPass  bool
 		expCaseResults []tests.CaseResult
 	}{
 		{
 			label:    "pass if all cases pass",
-			inputAgg: metrics.MetricsAggregate{ResponseTimes: timestats.TimeStats{Avg: 100 * time.Millisecond}},
+			inputAgg: metrics.Aggregate{ResponseTimes: timestats.TimeStats{Avg: 100 * time.Millisecond}},
 			inputCases: []tests.Case{
 				{
 					Name:      "average response time below 120ms (pass)",
@@ -43,7 +43,7 @@ func TestRun(t *testing.T) {
 		},
 		{
 			label:    "fail if at least one case fails",
-			inputAgg: metrics.MetricsAggregate{ResponseTimes: timestats.TimeStats{Avg: 200 * time.Millisecond}},
+			inputAgg: metrics.Aggregate{ResponseTimes: timestats.TimeStats{Avg: 200 * time.Millisecond}},
 			inputCases: []tests.Case{
 				{
 					Name:      "average response time below 120ms (fail)",
