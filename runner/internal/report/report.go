@@ -16,7 +16,7 @@ import (
 
 // Report represents a run result as exported by the runner.
 type Report struct {
-	Metrics  metrics.Aggregate
+	Metrics  metrics.MetricsAggregate
 	Metadata Metadata
 	Tests    tests.SuiteResult
 }
@@ -30,7 +30,7 @@ type Metadata struct {
 
 // New returns an initialized *Report.
 func New(
-	m metrics.Aggregate,
+	m metrics.MetricsAggregate,
 	cfg config.Global,
 	d time.Duration,
 	testResults tests.SuiteResult,

@@ -24,8 +24,8 @@ func TestReport_String(t *testing.T) {
 
 // helpers
 
-func metricsStub() (agg metrics.Aggregate, total time.Duration) {
-	return metrics.Aggregate{
+func metricsStub() (agg metrics.MetricsAggregate, total time.Duration) {
+	return metrics.MetricsAggregate{
 		FailureCount: 1,
 		SuccessCount: 2,
 		TotalCount:   3,

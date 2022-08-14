@@ -91,7 +91,7 @@ func expectPredicateResult(
 ) {
 	t.Helper()
 
-	agg := metrics.Aggregate{
+	agg := metrics.MetricsAggregate{
 		TotalCount: src,
 	}
 
