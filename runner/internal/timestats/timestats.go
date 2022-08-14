@@ -2,135 +2,100 @@ package timestats
 
 import (
 	"fmt"
+	"math"
 	"sort"
 	"time"
-
-	"github.com/benchttp/engine/runner/internal/recorder"
-	"github.com/montanaflynn/stats"
 )
 
 type TimeStats struct {
 	Min, Max, Avg, Median, StdDev time.Duration
-	Deciles                       map[int]time.Duration
+	Quartiles                     [4]time.Duration
+	Deciles                       [10]time.Duration
 }
 
-func Compute(records []recorder.Record) (timeStats TimeStats, errs []error) {
-	if len(records) == 0 {
-		return timeStats, append(errs, ErrEmptySlice)
+func Compute(times []time.Duration) (timeStats TimeStats) {
+	n := len(times)
+	if n == 0 {
+		return
 	}
 
-	times := getFloat64Times(records)
-
-	min, minErrs := pipe("min", errs)(stats.Min(times))
-	if minErrs != nil {
-		errs = append(errs, minErrs...)
-	}
-	max, maxErrs := pipe("max", errs)(stats.Max(times))
-	if maxErrs != nil {
-		errs = append(errs, maxErrs...)
-	}
-	avg, avgErrs := pipe("avg", errs)(stats.Mean(times))
-	if avgErrs != nil {
-		errs = append(errs, avgErrs...)
-	}
-	median, medianErrs := pipe("avg", errs)(stats.Median(times))
-	if avgErrs != nil {
-		errs = append(errs, medianErrs...)
-	}
-	stdDev, stdDevErrs := pipe("avg", errs)(stats.StandardDeviation(times))
-	if avgErrs != nil {
-		errs = append(errs, stdDevErrs...)
+	var sum, avg time.Duration
+	comparableDurations := make(comparableDurations, n)
+	for i, time := range times {
+		comparableDurations[i] = time
+		sum += time
 	}
 
-	deciles := map[int]float64{1: 10, 2: 20, 3: 30, 4: 40, 5: 50, 6: 60, 7: 70, 8: 80, 9: 90}
+	sort.Sort(comparableDurations)
+	avg = sum / time.Duration(n)
 
-	if len(records) >= 10 {
-		keys := make([]int, 0)
-		for k := range deciles {
-			keys = append(keys, k)
-		}
-		sort.Ints(keys)
+	fmt.Println(comparableDurations)
 
-		decilesErrs := []error{}
-
-		for _, k := range keys {
-			var decileErrs []error = make([]error, 1)
-			float64v := float64(deciles[k])
-			n := fmt.Sprintf("%s decile", ordinal(k))
-			deciles[k], decileErrs = pipe(n, errs)(stats.Percentile(times, float64v))
-			if len(decileErrs) > 0 {
-				errs = append(decilesErrs, decileErrs...)
-			}
-		}
-
-		if len(decilesErrs) > 0 {
-			errs = append(errs, decilesErrs...)
-		}
-	} else {
-		deciles = make(map[int]float64, 0)
-		errs = append(errs, ErrNotEnoughRecordsForDeciles)
-	}
-
-	timeStats = convertTimeStatsBackToTimeDuration(min, max, avg, median, stdDev, deciles)
-
-	if len(errs) > 0 {
-		return timeStats, errs
-	}
-
-	return timeStats, nil
-}
-
-func pipe(name string, errs []error) func(float64, error) (float64, []error) {
-	return func(stat float64, err error) (float64, []error) {
-		if err != nil {
-			errs = append(errs, ComputeError(name))
-		}
-		return stat, errs
+	return TimeStats{
+		Min:       comparableDurations[0],
+		Max:       comparableDurations[len(comparableDurations)-1],
+		Avg:       avg,
+		Median:    calculateMedian(comparableDurations),
+		StdDev:    time.Duration(calculateStdDev(times, avg)),
+		Quartiles: calculateQuartiles(comparableDurations),
+		Deciles:   calculateDeciles(comparableDurations),
 	}
 }
 
-// github.com/montanaflynn/stats needs to be provided with float64, not time.Duration
-func getFloat64Times(records []recorder.Record) []float64 {
-	float64Times := make([]float64, len(records))
-	for i, v := range records {
-		float64Times[i] = float64(v.Time)
+func calculateMedian(sorted []time.Duration) time.Duration {
+	n := len(sorted)
+	if n%2 != 0 {
+		return sorted[(n/2)-1]
 	}
-	return float64Times
+	return (sorted[(n/2)-1] + sorted[(n/2)]) / 2
 }
 
-func convertTimeStatsBackToTimeDuration(min float64, max float64, avg float64, median float64, stdDev float64, deciles map[int]float64) (timeStats TimeStats) {
-	timeStats.Min = time.Duration(min)
-	timeStats.Max = time.Duration(max)
-	timeStats.Avg = time.Duration(avg)
-	timeStats.Median = time.Duration(median)
-	timeStats.StdDev = time.Duration(stdDev)
-
-	timeStats.Deciles = make(map[int]time.Duration, 9)
-
-	for i, p := range deciles {
-		timeStats.Deciles[i] = time.Duration(p)
+func calculateStdDev(values []time.Duration, avg time.Duration) time.Duration {
+	n := len(values)
+	sum := time.Duration(0)
+	for _, v := range values {
+		dev := v - avg
+		sum += dev * dev
 	}
-
-	return timeStats
+	return time.Duration(math.Sqrt(float64(sum / time.Duration(n))))
 }
 
-// ordinal return x ordinal format.
-//	ordinal(3) == "3rd"
-func ordinal(x int) string {
-	suffix := "th"
-	switch x % 10 {
-	case 1:
-		if x%100 != 11 {
-			suffix = "st"
+func calculateDeciles(sorted []time.Duration) [10]time.Duration {
+	const numDecile = 10
+	return *(*[10]time.Duration)(calculateQuantiles(sorted, numDecile))
+}
+
+func calculateQuartiles(sorted []time.Duration) [4]time.Duration {
+	const numQuartile = 4
+	return *(*[4]time.Duration)(calculateQuantiles(sorted, numQuartile))
+}
+
+func calculateQuantiles(sorted []time.Duration, numQuantile int) []time.Duration {
+	numValues := len(sorted)
+	step := (numValues + 1) / numQuantile
+
+	quantiles := make([]time.Duration, numQuantile)
+	for i := 0; i < numQuantile; i++ {
+		qtlIndex := (i + 1) * step
+		maxIndex := numValues - 1
+		if qtlIndex > maxIndex {
+			qtlIndex = maxIndex
 		}
-	case 2:
-		if x%100 != 12 {
-			suffix = "nd"
-		}
-	case 3:
-		if x%100 != 13 {
-			suffix = "rd"
-		}
+		quantiles[i] = sorted[qtlIndex]
 	}
-	return fmt.Sprintf("%d%s", x, suffix)
+	return quantiles
+}
+
+type comparableDurations []time.Duration
+
+func (s comparableDurations) Len() int {
+	return len(s)
+}
+
+func (s comparableDurations) Less(i, j int) bool {
+	return s[i] < s[j]
+}
+
+func (s comparableDurations) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
 }
