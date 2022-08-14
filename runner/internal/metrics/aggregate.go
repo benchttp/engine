@@ -13,6 +13,7 @@ type Aggregate struct {
 	SuccessCount, FailureCount, TotalCount int
 	ResponseTimes          timestats.TimeStats
 	StatusCodeDistribution map[string]int
+	RequestEventTimes      map[string]timestats.TimeStats
 }
 
 // MetricOf returns the Metric for the given field in Aggregate.
