@@ -10,10 +10,12 @@ import (
 // Aggregate is an aggregate of metrics resulting from
 // from recorded requests.
 type Aggregate struct {
-	ResponseTimes                          timestats.TimeStats
-	StatusCodeDistribution                 map[string]int
-	RequestEventTimes                      map[string]timestats.TimeStats
-	SuccessCount, FailureCount, TotalCount int
+	ResponseTimes          timestats.TimeStats
+	StatusCodeDistribution map[string]int
+	RequestEventTimes      map[string]timestats.TimeStats
+	RequestFailures        []struct {
+		Reason string
+	}
 	// RequestEventsDistribution map[recorder.Event]int
 }
 
@@ -31,15 +33,18 @@ func Compute(records []recorder.Record) (agg Aggregate, errs []error) {
 		return
 	}
 
-	agg.TotalCount = len(records)
-	agg.SuccessCount = agg.TotalCount - agg.FailureCount
-
 	times := make([]time.Duration, len(records))
 	for i, v := range records {
 		times[i] = v.Time
 	}
 
 	agg.ResponseTimes = timestats.Compute(times)
+
+	for _, rec := range records {
+		if rec.Error != "" {
+			agg.RequestFailures = append(agg.RequestFailures, struct{ Reason string }{rec.Error})
+		}
+	}
 
 	var statusCodeDistributionErrs []error
 	agg.StatusCodeDistribution, statusCodeDistributionErrs = ComputeStatusCodesDistribution(records)
