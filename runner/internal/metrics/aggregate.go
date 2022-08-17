@@ -48,10 +48,10 @@ func Compute(records []recorder.Record) (agg Aggregate, errs []error) {
 	agg.ResponseTimes = timestats.Compute(times)
 
 	var statusCodeDistributionErrs []error
-	agg.StatusCodeDistribution, statusCodeDistributionErrs = ComputeStatusCodesDistribution(records)
+	agg.StatusCodeDistribution, statusCodeDistributionErrs = computeStatusCodesDistribution(records)
 	errs = append(errs, statusCodeDistributionErrs...)
 
-	agg.RequestEventTimes = ComputeRequestEventTimes(records)
+	agg.RequestEventTimes = computeRequestEventTimes(records)
 
 	if len(errs) > 0 {
 		return agg, errs

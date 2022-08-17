@@ -1,0 +1,5 @@
+package metrics
+
+var ComputeStatusCodesDistribution = computeStatusCodesDistribution
+
+var ComputeRequestEventTimes = computeRequestEventTimes

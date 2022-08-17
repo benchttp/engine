@@ -4,7 +4,7 @@ import (
 	"github.com/benchttp/engine/runner/internal/recorder"
 )
 
-func ComputeStatusCodesDistribution(records []recorder.Record) (statusCodesDistribution map[string]int, errs []error) {
+func computeStatusCodesDistribution(records []recorder.Record) (statusCodesDistribution map[string]int, errs []error) {
 	statusCodesDistribution = map[string]int{
 		"Status1xx": 0,
 		"Status2xx": 0,

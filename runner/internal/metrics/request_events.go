@@ -7,7 +7,7 @@ import (
 	"github.com/benchttp/engine/runner/internal/timestats"
 )
 
-func ComputeRequestEventTimes(records []recorder.Record) (requestEventTimes map[string]timestats.TimeStats) {
+func computeRequestEventTimes(records []recorder.Record) (requestEventTimes map[string]timestats.TimeStats) {
 	requestEventTimes = make(map[string]timestats.TimeStats, 0)
 
 	var allEvents []recorder.Event
