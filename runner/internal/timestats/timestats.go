@@ -1,7 +1,6 @@
 package timestats
 
 import (
-	"fmt"
 	"math"
 	"sort"
 	"time"
@@ -28,8 +27,6 @@ func Compute(times []time.Duration) (timeStats TimeStats) {
 
 	sort.Sort(comparableDurations)
 	avg = sum / time.Duration(n)
-
-	fmt.Println(comparableDurations)
 
 	return TimeStats{
 		Min:       comparableDurations[0],
@@ -62,11 +59,17 @@ func calculateStdDev(values []time.Duration, avg time.Duration) time.Duration {
 
 func calculateDeciles(sorted []time.Duration) [10]time.Duration {
 	const numDecile = 10
+	if len(sorted) < numDecile {
+		return [10]time.Duration{0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+	}
 	return *(*[10]time.Duration)(calculateQuantiles(sorted, numDecile))
 }
 
 func calculateQuartiles(sorted []time.Duration) [4]time.Duration {
 	const numQuartile = 4
+	if len(sorted) < numQuartile {
+		return [4]time.Duration{0, 0, 0, 0}
+	}
 	return *(*[4]time.Duration)(calculateQuantiles(sorted, numQuartile))
 }
 
