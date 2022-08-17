@@ -53,10 +53,6 @@ func Compute(records []recorder.Record) (agg Aggregate, errs []error) {
 
 	agg.RequestEventTimes = ComputeRequestEventTimes(records)
 
-	var requestEventsDistributionErrs []error
-	agg.RequestEventsDistribution, requestEventsDistributionErrs = ComputeRequestEventsDistribution(records)
-	errs = append(errs, requestEventsDistributionErrs...)
-
 	if len(errs) > 0 {
 		return agg, errs
 	}

@@ -80,45 +80,6 @@ func TestComputeRequestEventTimes(t *testing.T) {
 	})
 }
 
-func TestComputeRequestEventsDistribution(t *testing.T) {
-	t.Run("happy path", func(t *testing.T) {
-		want := map[string]int{"DNSDone": 10, "ConnectDone": 10}
-
-		got, errs := metrics.ComputeRequestEventsDistribution(validRecordsWithEvents)
-
-		if len(errs) > 0 {
-			t.Errorf("expected nil error, got %v", errs)
-		}
-
-		for event, count := range got {
-			if got[event] != want[event] {
-				t.Errorf("event %s: expected count %v, got %v", event, want, count)
-			}
-		}
-	})
-
-	t.Run("invalid event name provided", func(t *testing.T) {
-		invalidRecordsWithEvents := []recorder.Record{
-			{
-				Events: []recorder.Event{
-					{Name: "not_a_valid_event_name", Time: 100},
-				},
-			},
-		}
-		want := "not_a_valid_event_name is not a valid event name"
-
-		_, errs := metrics.ComputeRequestEventsDistribution(invalidRecordsWithEvents)
-
-		if len(errs) == 0 {
-			t.Fatalf("want error, got none")
-		}
-
-		if errs[0].Error() != want {
-			t.Errorf("did not get expected error: want %v, got %v", want, errs)
-		}
-	})
-}
-
 // approxEqual returns true if val is equal to target with a margin of error.
 func approxEqualTime(val, target, margin time.Duration) bool {
 	return val >= target-margin && val <= target+margin
