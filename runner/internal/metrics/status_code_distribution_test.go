@@ -1,7 +1,6 @@
 package metrics_test
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 
@@ -44,18 +43,9 @@ var validRecords = []recorder.Record{
 
 func TestComputeStatusCodeDistribution(t *testing.T) {
 	t.Run("happy path", func(t *testing.T) {
-		want := map[string]int{
-			"Status1xx": 0,
-			"Status2xx": 7,
-			"Status3xx": 0,
-			"Status4xx": 2,
-			"Status5xx": 1,
-		}
+		want := map[int]int{200: 7, 400: 2, 500: 1}
 
-		got, errs := metrics.ComputeStatusCodesDistribution(validRecords)
-		if errs != nil {
-			t.Fatalf("want nil error, got %v", errs)
-		}
+		got := metrics.ComputeStatusCodesDistribution(validRecords)
 
 		if reflect.ValueOf(got).IsZero() {
 			t.Error("want stats output to be non-zero value, got zero value")
@@ -63,25 +53,6 @@ func TestComputeStatusCodeDistribution(t *testing.T) {
 
 		if !reflect.DeepEqual(got, want) {
 			t.Errorf("StatusCodesDistribution: want %v, got %v", want, got)
-		}
-	},
-	)
-	t.Run("invalid status code", func(t *testing.T) {
-		invalidRecords := []recorder.Record{
-			{
-				Code: -1938,
-			},
-		}
-		want := "-1938 is not a valid HTTP status code"
-
-		_, errs := metrics.ComputeStatusCodesDistribution(invalidRecords)
-		if errs == nil {
-			fmt.Println(errs)
-			t.Fatalf("want error, got nil")
-		}
-
-		if errs[0].Error() != want {
-			t.Errorf("did not get expected error: want %v, got %v", want, errs)
 		}
 	},
 	)

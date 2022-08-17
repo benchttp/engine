@@ -2,7 +2,6 @@ package runner
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/benchttp/engine/runner/internal/config"
@@ -93,17 +92,11 @@ func (r *Runner) Run(ctx context.Context, cfg config.Global) (*Report, error) {
 		return nil, err
 	}
 
-	var errs []error
-
-	agg, errs := metrics.Compute(records)
+	agg := metrics.Compute(records)
 
 	duration := time.Since(startTime)
 
 	testResults := tests.Run(agg, cfg.Tests)
-
-	if len(errs) > 0 {
-		return report.New(agg, cfg, duration, testResults), errors.New("error computing results")
-	}
 
 	return report.New(agg, cfg, duration, testResults), nil
 }

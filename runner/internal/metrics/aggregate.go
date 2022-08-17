@@ -31,7 +31,7 @@ func (agg Aggregate) MetricOf(field Field) Metric {
 
 // Compute computes and aggregates metrics from the given
 // requests records.
-func Compute(records []recorder.Record) (agg Aggregate, errs []error) {
+func Compute(records []recorder.Record) (agg Aggregate) {
 	if len(records) == 0 {
 		return
 	}
@@ -47,15 +47,9 @@ func Compute(records []recorder.Record) (agg Aggregate, errs []error) {
 
 	agg.ResponseTimes = timestats.Compute(times)
 
-	var statusCodeDistributionErrs []error
-	agg.StatusCodeDistribution, statusCodeDistributionErrs = computeStatusCodesDistribution(records)
-	errs = append(errs, statusCodeDistributionErrs...)
+	agg.StatusCodeDistribution = computeStatusCodesDistribution(records)
 
 	agg.RequestEventTimes = computeRequestEventTimes(records)
 
-	if len(errs) > 0 {
-		return agg, errs
-	}
-
-	return agg, nil
+	return agg
 }
