@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -39,7 +38,7 @@ func handleStream(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rep, err := runner.New(streamProgress(w)).Run(context.Background(), cfg)
+	rep, err := runner.New(streamProgress(w)).Run(r.Context(), cfg)
 	if err != nil {
 		internalError(w, err)
 		return
