@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"time"
 
@@ -12,16 +13,39 @@ import (
 	"github.com/benchttp/engine/runner"
 )
 
-const (
-	port = "8080"
-)
-
 func main() {
-	addr := ":" + port
-	fmt.Println("http://localhost" + addr)
+	// Try to bind to any available port.
+	addr, err := net.ResolveTCPAddr("tcp", "localhost:0")
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	//#nosec G114 -- Ignored for convenience
-	log.Fatal(http.ListenAndServe(addr, http.HandlerFunc(handleStream)))
+	l, err := net.ListenTCP("tcp", addr)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	port := l.Addr().(*net.TCPAddr).Port
+
+	s := &http.Server{
+		Addr:    ":" + fmt.Sprint(port),
+		Handler: http.HandlerFunc(handleStream),
+	}
+
+	readyChan := make(chan struct{}, 1)
+	closeChan := make(chan error, 1)
+
+	go func() {
+		readyChan <- struct{}{}
+		closeChan <- (s.Serve(l))
+	}()
+
+	<-readyChan
+	// Notify server is ready.
+	fmt.Println("port:" + fmt.Sprint(port))
+	fmt.Println("http://localhost:" + fmt.Sprint(port))
+
+	log.Fatal(<-closeChan)
 }
 
 func handleStream(w http.ResponseWriter, r *http.Request) {
