@@ -66,5 +66,14 @@ func streamProgress(w http.ResponseWriter) func(runner.RecordingProgress) {
 }
 
 func internalError(w http.ResponseWriter, err error) {
-	http.Error(w, err.Error(), http.StatusInternalServerError)
+	log.Println(err.Error())
+
+	w.WriteHeader(http.StatusInternalServerError)
+
+	if err := json.NewEncoder(w).Encode(&struct {
+		Error string
+	}{Error: err.Error()}); err != nil {
+		// Fallback to plain text encoding.
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
