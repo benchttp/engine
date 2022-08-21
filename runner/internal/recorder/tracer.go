@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"net/http"
 	"net/http/httptrace"
+	"sync"
 	"time"
 )
 
@@ -16,6 +17,8 @@ type Event struct {
 // tracer is a http.RoundTripper to be used as a http.Transport
 // that records the events of an outgoing HTTP request.
 type tracer struct {
+	mu sync.Mutex
+
 	start     time.Time
 	events    []Event
 	transport http.RoundTripper
@@ -76,6 +79,8 @@ func (t *tracer) trace() *httptrace.ClientTrace {
 
 // addEvent appends a timestamped Event to the tracer's events slice.
 func (t *tracer) addEvent(name string) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
 	t.events = append(t.events, Event{Name: name, Time: time.Since(t.start)})
 }
 
