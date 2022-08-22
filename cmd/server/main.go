@@ -2,20 +2,36 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io"
 	"log"
 	"net"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/benchttp/engine/internal/configparse"
 	"github.com/benchttp/engine/runner"
+	"github.com/joho/godotenv"
 )
 
 func main() {
-	// Try to bind to any available port.
-	addr, err := net.ResolveTCPAddr("tcp", "localhost:0")
+	useAnyPort := flag.Bool("any-port", true, "use any available port allocated by the os")
+	flag.Parse()
+
+	var p string
+	if !*useAnyPort {
+		err := godotenv.Load("./.env.development")
+		if err != nil {
+			log.Fatal(err)
+		}
+		p = os.Getenv("VITE_ENGINE_PORT")
+	} else {
+		p = "0"
+	}
+
+	addr, err := net.ResolveTCPAddr("tcp", "localhost:"+p)
 	if err != nil {
 		log.Fatal(err)
 	}
