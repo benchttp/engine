@@ -1,10 +1,9 @@
-package metrics_test
+package metrics
 
 import (
 	"reflect"
 	"testing"
 
-	"github.com/benchttp/engine/runner/internal/metrics"
 	"github.com/benchttp/engine/runner/internal/recorder"
 )
 
@@ -25,7 +24,7 @@ func TestComputeStatusCodeDistribution(t *testing.T) {
 	t.Run("happy path", func(t *testing.T) {
 		want := map[string]int{"200": 7, "400": 2, "500": 1}
 
-		got := metrics.ComputeStatusCodesDistribution(validRecords)
+		got := computeStatusCodesDistribution(validRecords)
 
 		if reflect.ValueOf(got).IsZero() {
 			t.Error("want stats output to be non-zero value, got zero value")
