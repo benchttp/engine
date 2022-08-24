@@ -10,10 +10,10 @@ import (
 // Aggregate is an aggregate of metrics resulting from
 // from recorded requests.
 type Aggregate struct {
-	ResponseTimes          timestats.TimeStats
-	StatusCodeDistribution map[string]int
-	RequestEventTimes      map[string]timestats.TimeStats
-	Records                []struct {
+	ResponseTimes           timestats.TimeStats
+	StatusCodesDistribution map[string]int
+	RequestEventTimes       map[string]timestats.TimeStats
+	Records                 []struct {
 		ResponseTime time.Duration
 	}
 	RequestFailures []struct {
@@ -46,7 +46,7 @@ func Compute(records []recorder.Record) (agg Aggregate) {
 
 	agg.ResponseTimes = timestats.Compute(times)
 
-	agg.StatusCodeDistribution = computeStatusCodesDistribution(records)
+	agg.StatusCodesDistribution = computeStatusCodesDistribution(records)
 
 	agg.RequestEventTimes = computeRequestEventTimes(records)
 
