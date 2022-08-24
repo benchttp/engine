@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"reflect"
 	"testing"
 	"time"
 
@@ -8,57 +9,70 @@ import (
 	"github.com/benchttp/engine/runner/internal/timestats"
 )
 
-var validRecordsWithEvents = []recorder.Record{
-	{
-		Events: []recorder.Event{
-			{Name: "DNSDone", Time: 100},
-			{Name: "ConnectDone", Time: 250},
-			{Name: "DNSDone", Time: 350},
-			{Name: "DNSDone", Time: 450},
-			{Name: "DNSDone", Time: 550},
-			{Name: "DNSDone", Time: 650},
-			{Name: "DNSDone", Time: 750},
-			{Name: "DNSDone", Time: 850},
-			{Name: "DNSDone", Time: 950},
-			{Name: "DNSDone", Time: 1050},
-		},
-	},
-	{
-		Events: []recorder.Event{
-			{Name: "DNSDone", Time: 100},
-			{Name: "ConnectDone", Time: 250},
-			{Name: "ConnectDone", Time: 400},
-			{Name: "ConnectDone", Time: 550},
-			{Name: "ConnectDone", Time: 700},
-			{Name: "ConnectDone", Time: 900},
-			{Name: "ConnectDone", Time: 1100},
-			{Name: "ConnectDone", Time: 1300},
-			{Name: "ConnectDone", Time: 1500},
-			{Name: "ConnectDone", Time: 1700},
-		},
-	},
+func TestDiff(t *testing.T) {
+	if diff(100, 200) != diff(200, 100) {
+		t.Error("expected duration difference to be indifferent of arguments order")
+	}
 }
 
-// We only check some metrics to be confident that the time.Duration of the different
-// events are well handled.
-// All timestats are checked in timestats_test.go.
+func TestDiffEventsTimes(t *testing.T) {
+	e := []recorder.Event{
+		{Time: 0},
+		{Time: 100},
+		{Time: 110},
+		{Time: 200},
+	}
+
+	got := diffEventsTimes(e)
+	want := []recorder.Event{{Time: 0}, {Time: 100}, {Time: 10}, {Time: 90}}
+	if !reflect.DeepEqual(want, got) {
+		t.Errorf("incorrect diff: want %v, got %v", want, got)
+	}
+}
+
 func TestComputeRequestEventTimes(t *testing.T) {
 	t.Run("happy path", func(t *testing.T) {
-		want := map[string]timestats.TimeStats{}
-		want["DNSDone"] = timestats.TimeStats{
-			Min:    100,
-			Max:    100,
-			Mean:   100,
-			Median: 100,
-		}
-		want["ConnectDone"] = timestats.TimeStats{
-			Min:    150,
-			Max:    200,
-			Mean:   175,
-			Median: 175,
-		}
+		got := computeRequestEventTimes([]recorder.Record{
+			{
+				Events: []recorder.Event{
+					{Name: "1", Time: 100},
+					{Name: "2", Time: 200}, // diff is 100
+				},
+			},
+			{
+				Events: []recorder.Event{
+					{Name: "1", Time: 200},
+					{Name: "2", Time: 200}, // diff is 0
+				},
+			},
+			{
+				Events: []recorder.Event{
+					{Name: "1", Time: 300},
+					{Name: "2", Time: 400}, // diff is 100
+				},
+			},
+			{
+				Events: []recorder.Event{
+					{Name: "1", Time: 400},
+					{Name: "2", Time: 500}, // diff is 100
+				},
+			},
+		})
 
-		got := computeRequestEventTimes(validRecordsWithEvents)
+		want := map[string]timestats.TimeStats{
+			"1": {
+				Min:    100,
+				Max:    400,
+				Mean:   250,
+				Median: 300,
+			},
+			"2": {
+				Min:    0,
+				Max:    100,
+				Mean:   75,
+				Median: 100,
+			},
+		}
 
 		for event := range got {
 			for _, stat := range []struct {

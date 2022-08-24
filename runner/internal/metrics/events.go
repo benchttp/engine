@@ -7,34 +7,52 @@ import (
 	"github.com/benchttp/engine/runner/internal/timestats"
 )
 
-func computeRequestEventTimes(records []recorder.Record) (requestEventTimes map[string]timestats.TimeStats) {
-	requestEventTimes = make(map[string]timestats.TimeStats, 0)
+func computeRequestEventTimes(records []recorder.Record) map[string]timestats.TimeStats {
+	events := getUnnestedDiffedEvents(records)
 
-	allEventsWithTime := extractAllEventsWithTime(records)
+	timesByEvent := map[string][]time.Duration{}
 
-	EachEventWithTimes := make(map[string][]time.Duration, 0)
-	for _, event := range allEventsWithTime {
-		EachEventWithTimes[event.Name] = append(EachEventWithTimes[event.Name], event.Time)
+	for _, e := range events {
+		timesByEvent[e.Name] = append(timesByEvent[e.Name], e.Time)
 	}
 
-	for eventName, times := range EachEventWithTimes {
-		requestEventTimes[eventName] = timestats.Compute(times)
+	statsByEvent := map[string]timestats.TimeStats{}
+
+	for e, times := range timesByEvent {
+		statsByEvent[e] = timestats.Compute(times)
 	}
 
-	return requestEventTimes
+	return statsByEvent
 }
 
-// extractAllEventsWithTime gets all events in all records of a slice of records, with their time.
-// It takes care of calculating the time of each event, as opposed to
-// the time since the beginning of the request as it appears in the records.
-func extractAllEventsWithTime(records []recorder.Record) (allEventsWithTime []recorder.Event) {
+func getUnnestedDiffedEvents(records []recorder.Record) []recorder.Event {
+	events := []recorder.Event{}
 	for _, record := range records {
-		for i, event := range record.Events {
-			if i > 0 {
-				event = recorder.Event{Name: event.Name, Time: event.Time - record.Events[i-1].Time}
-			}
-			allEventsWithTime = append(allEventsWithTime, event)
+		events = append(events, diffEventsTimes(record.Events)...)
+	}
+	return events
+}
+
+// TODO It is weird that we create an entirely new Event slice
+// with updated Time field. Think about making this a method of
+// recorder.Record?
+
+func diffEventsTimes(events []recorder.Event) []recorder.Event {
+	diffed := make([]recorder.Event, len(events))
+	for i, event := range events {
+		switch i {
+		case 0:
+			diffed[i] = event
+		default:
+			diffed[i] = recorder.Event{Name: event.Name, Time: diff(event.Time, events[i-1].Time)}
 		}
 	}
-	return allEventsWithTime
+	return diffed
+}
+
+// diff returns the time.Duration difference between a and b.
+// a and b need not to be passed in specific order. The difference
+// is expressed in absolute value.
+func diff(a, b time.Duration) time.Duration {
+	return (b - a).Abs()
 }
