@@ -20,6 +20,7 @@ func main() {
 	addr := ":" + port
 	fmt.Println("http://localhost" + addr)
 
+	//#nosec G114 -- Ignored for convenience
 	log.Fatal(http.ListenAndServe(addr, http.HandlerFunc(handleStream)))
 }
 
