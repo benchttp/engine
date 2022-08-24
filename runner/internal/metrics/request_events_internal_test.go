@@ -1,10 +1,9 @@
-package metrics_test
+package metrics
 
 import (
 	"testing"
 	"time"
 
-	"github.com/benchttp/engine/runner/internal/metrics"
 	"github.com/benchttp/engine/runner/internal/recorder"
 	"github.com/benchttp/engine/runner/internal/timestats"
 )
@@ -59,7 +58,7 @@ func TestComputeRequestEventTimes(t *testing.T) {
 			Median: 175,
 		}
 
-		got := metrics.ComputeRequestEventTimes(validRecordsWithEvents)
+		got := computeRequestEventTimes(validRecordsWithEvents)
 
 		for event := range got {
 			for _, stat := range []struct {
