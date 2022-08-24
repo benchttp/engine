@@ -12,68 +12,77 @@ type TimeStats struct {
 	Deciles                       [10]time.Duration
 }
 
-func Compute(times []time.Duration) (timeStats TimeStats) {
-	n := len(times)
-	if n == 0 {
-		return
+func Compute(times []time.Duration) TimeStats {
+	l := len(times)
+	if l == 0 {
+		return TimeStats{}
 	}
 
-	var sum, avg time.Duration
-	comparableDurations := make(comparableDurations, n)
-	for i, time := range times {
-		comparableDurations[i] = time
-		sum += time
-	}
+	// Measures computing functions works on sorted data.
+	// Sort once and compute upon the result.
+	sort.Sort(byFastest(times))
 
-	sort.Sort(comparableDurations)
-	avg = sum / time.Duration(n)
+	// Reused statistics measures.
+	sum := computeSum(times)
+	avg := computeAverage(sum, l)
 
 	return TimeStats{
-		Min:       comparableDurations[0],
-		Max:       comparableDurations[len(comparableDurations)-1],
+		Min:       times[0],
+		Max:       times[len(times)-1],
 		Avg:       avg,
-		Median:    calculateMedian(comparableDurations),
-		StdDev:    time.Duration(calculateStdDev(times, avg)),
-		Quartiles: calculateQuartiles(comparableDurations),
-		Deciles:   calculateDeciles(comparableDurations),
+		Median:    computeMedian(times),
+		StdDev:    computeStdDev(times, avg),
+		Quartiles: computeQuartiles(times),
+		Deciles:   computeDeciles(times),
 	}
 }
 
-func calculateMedian(sorted []time.Duration) time.Duration {
-	n := len(sorted)
-	if n%2 != 0 {
-		return sorted[(n/2)-1]
+func computeSum(values []time.Duration) time.Duration {
+	var sum time.Duration
+	for _, time := range values {
+		sum += time
 	}
-	return (sorted[(n/2)-1] + sorted[(n/2)]) / 2
+	return sum
 }
 
-func calculateStdDev(values []time.Duration, avg time.Duration) time.Duration {
-	n := len(values)
+func computeAverage(sum time.Duration, length int) time.Duration {
+	return sum / time.Duration(length)
+}
+
+func computeMedian(sorted []time.Duration) time.Duration {
+	l := len(sorted)
+	if l%2 != 0 {
+		return sorted[(l/2)-1]
+	}
+	return (sorted[(l/2)-1] + sorted[(l/2)]) / 2
+}
+
+func computeStdDev(values []time.Duration, avg time.Duration) time.Duration {
 	sum := time.Duration(0)
 	for _, v := range values {
 		dev := v - avg
 		sum += dev * dev
 	}
-	return time.Duration(math.Sqrt(float64(sum / time.Duration(n))))
+	return time.Duration(math.Sqrt(float64(sum / time.Duration(len(values)))))
 }
 
-func calculateDeciles(sorted []time.Duration) [10]time.Duration {
+func computeDeciles(sorted []time.Duration) [10]time.Duration {
 	const numDecile = 10
 	if len(sorted) < numDecile {
 		return [10]time.Duration{0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 	}
-	return *(*[10]time.Duration)(calculateQuantiles(sorted, numDecile))
+	return *(*[10]time.Duration)(computeQuantiles(sorted, numDecile))
 }
 
-func calculateQuartiles(sorted []time.Duration) [4]time.Duration {
+func computeQuartiles(sorted []time.Duration) [4]time.Duration {
 	const numQuartile = 4
 	if len(sorted) < numQuartile {
 		return [4]time.Duration{0, 0, 0, 0}
 	}
-	return *(*[4]time.Duration)(calculateQuantiles(sorted, numQuartile))
+	return *(*[4]time.Duration)(computeQuantiles(sorted, numQuartile))
 }
 
-func calculateQuantiles(sorted []time.Duration, numQuantile int) []time.Duration {
+func computeQuantiles(sorted []time.Duration, numQuantile int) []time.Duration {
 	numValues := len(sorted)
 	step := (numValues + 1) / numQuantile
 
@@ -87,18 +96,4 @@ func calculateQuantiles(sorted []time.Duration, numQuantile int) []time.Duration
 		quantiles[i] = sorted[qtlIndex]
 	}
 	return quantiles
-}
-
-type comparableDurations []time.Duration
-
-func (s comparableDurations) Len() int {
-	return len(s)
-}
-
-func (s comparableDurations) Less(i, j int) bool {
-	return s[i] < s[j]
-}
-
-func (s comparableDurations) Swap(i, j int) {
-	s[i], s[j] = s[j], s[i]
 }
