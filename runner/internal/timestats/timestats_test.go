@@ -14,7 +14,7 @@ func TestCompute(t *testing.T) {
 		want := timestats.TimeStats{
 			Min:     100,
 			Max:     400,
-			Avg:     230,
+			Mean:    230,
 			Median:  200,
 			StdDev:  110,
 			Deciles: [10]time.Duration{100, 100, 200, 200, 200, 300, 300, 400, 400, 400},
@@ -29,7 +29,7 @@ func TestCompute(t *testing.T) {
 		}{
 			{"min", want.Min, got.Min},
 			{"max", want.Max, got.Max},
-			{"avg", want.Avg, got.Avg},
+			{"mean", want.Mean, got.Mean},
 			{"median", want.Median, got.Median},
 			{"stdDev", want.StdDev, got.StdDev},
 		} {

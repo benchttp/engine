@@ -49,13 +49,13 @@ func TestComputeRequestEventTimes(t *testing.T) {
 		want["DNSDone"] = timestats.TimeStats{
 			Min:    100,
 			Max:    100,
-			Avg:    100,
+			Mean:   100,
 			Median: 100,
 		}
 		want["ConnectDone"] = timestats.TimeStats{
 			Min:    150,
 			Max:    200,
-			Avg:    175,
+			Mean:   175,
 			Median: 175,
 		}
 
@@ -69,7 +69,7 @@ func TestComputeRequestEventTimes(t *testing.T) {
 			}{
 				{"min", want[event].Min, got[event].Min},
 				{"max", want[event].Max, got[event].Max},
-				{"avg", want[event].Avg, got[event].Avg},
+				{"mean", want[event].Mean, got[event].Mean},
 				{"median", want[event].Median, got[event].Median},
 			} {
 				if !approxEqualTime(stat.got, stat.want, 1) {

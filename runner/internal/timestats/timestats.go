@@ -7,9 +7,9 @@ import (
 )
 
 type TimeStats struct {
-	Min, Max, Avg, Median, StdDev time.Duration
-	Quartiles                     [4]time.Duration
-	Deciles                       [10]time.Duration
+	Min, Max, Mean, Median, StdDev time.Duration
+	Quartiles                      [4]time.Duration
+	Deciles                        [10]time.Duration
 }
 
 func Compute(times []time.Duration) TimeStats {
@@ -24,14 +24,14 @@ func Compute(times []time.Duration) TimeStats {
 
 	// Reused statistics measures.
 	sum := computeSum(times)
-	avg := computeAverage(sum, l)
+	mean := computeMean(sum, l)
 
 	return TimeStats{
 		Min:       times[0],
 		Max:       times[len(times)-1],
-		Avg:       avg,
+		Mean:      mean,
 		Median:    computeMedian(times),
-		StdDev:    computeStdDev(times, avg),
+		StdDev:    computeStdDev(times, mean),
 		Quartiles: computeQuartiles(times),
 		Deciles:   computeDeciles(times),
 	}
@@ -45,7 +45,7 @@ func computeSum(values []time.Duration) time.Duration {
 	return sum
 }
 
-func computeAverage(sum time.Duration, length int) time.Duration {
+func computeMean(sum time.Duration, length int) time.Duration {
 	return sum / time.Duration(length)
 }
 
@@ -57,10 +57,10 @@ func computeMedian(sorted []time.Duration) time.Duration {
 	return (sorted[(l/2)-1] + sorted[(l/2)]) / 2
 }
 
-func computeStdDev(values []time.Duration, avg time.Duration) time.Duration {
+func computeStdDev(values []time.Duration, mean time.Duration) time.Duration {
 	sum := time.Duration(0)
 	for _, v := range values {
-		dev := v - avg
+		dev := v - mean
 		sum += dev * dev
 	}
 	return time.Duration(math.Sqrt(float64(sum / time.Duration(len(values)))))
