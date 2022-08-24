@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"math"
 	"time"
 
 	"github.com/benchttp/engine/runner/internal/recorder"
@@ -54,5 +55,13 @@ func diffEventsTimes(events []recorder.Event) []recorder.Event {
 // a and b need not to be passed in specific order. The difference
 // is expressed in absolute value.
 func diff(a, b time.Duration) time.Duration {
-	return (b - a).Abs()
+	d := a - b
+	switch {
+	case d >= 0:
+		return d
+	case d == math.MinInt64:
+		return math.MaxInt64
+	default:
+		return -d
+	}
 }
