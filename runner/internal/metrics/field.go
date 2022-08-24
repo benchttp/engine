@@ -62,8 +62,9 @@ const (
 // String returns a human-readable representation of the field.
 //
 // Example:
-// 	TypeDuration.String() == "time.Duration"
-// 	Type(123).String() == "[unknown type]"
+//
+//	TypeDuration.String() == "time.Duration"
+//	Type(123).String() == "[unknown type]"
 func (typ Type) String() string {
 	switch typ {
 	case TypeInt:

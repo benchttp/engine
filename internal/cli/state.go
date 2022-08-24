@@ -18,7 +18,8 @@ func WriteRecordingProgress(w io.Writer, s runner.RecordingProgress) (int, error
 
 // renderProgress returns a string representation of runner.RecordingProgress
 // for a fancy display in a CLI:
-// 	RUNNING ◼︎◼︎◼︎◼︎◼︎◼︎◼︎◼︎◼︎◼︎ 50% | 50/100 requests | 27s timeout
+//
+//	RUNNING ◼︎◼︎◼︎◼︎◼︎◼︎◼︎◼︎◼︎◼︎ 50% | 50/100 requests | 27s timeout
 func renderProgress(s runner.RecordingProgress) string {
 	var (
 		countdown = s.Timeout - s.Elapsed
@@ -51,7 +52,8 @@ var (
 )
 
 // renderTimeline returns a colored representation of the progress as a string:
-// 	◼︎◼︎◼︎◼︎◼︎◼︎◼︎◼︎◼︎◼︎
+//
+//	◼︎◼︎◼︎◼︎◼︎◼︎◼︎◼︎◼︎◼︎
 func renderTimeline(pctdone int) string {
 	tl := strings.Repeat(tlBlockGrey, tlLen)
 	for i := 0; i < tlLen; i++ {

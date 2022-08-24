@@ -20,17 +20,17 @@ type Metric struct {
 //
 // Examples:
 //
-// 	receiver := Metric{Value: 120}
-// 	comparer := Metric{Value: 100}
-// 	receiver.Compare(comparer) == SUP
+//	receiver := Metric{Value: 120}
+//	comparer := Metric{Value: 100}
+//	receiver.Compare(comparer) == SUP
 //
-// 	receiver := Metric{Value: 120 * time.Millisecond}
-// 	comparer := Metric{Value: 100}
-// 	receiver.Compare(comparer) // panics!
+//	receiver := Metric{Value: 120 * time.Millisecond}
+//	comparer := Metric{Value: 100}
+//	receiver.Compare(comparer) // panics!
 //
-// 	receiver := Metric{Value: http.Header{}}
-// 	comparer := Metric{Value: http.Header{}}
-// 	receiver.Compare(comparer) // panics!
+//	receiver := Metric{Value: http.Header{}}
+//	comparer := Metric{Value: http.Header{}}
+//	receiver.Compare(comparer) // panics!
 func (m Metric) Compare(to Metric) ComparisonResult {
 	return compareMetrics(to, m)
 }
