@@ -96,7 +96,7 @@ func (rep *Report) writeDefaultSummary(w io.StringWriter) {
 	w.WriteString(line("Errors", len(m.RequestFailures)))
 	w.WriteString(line("Min response time", msString(m.ResponseTimes.Min)))
 	w.WriteString(line("Max response time", msString(m.ResponseTimes.Max)))
-	w.WriteString(line("Mean response time", msString(m.ResponseTimes.Avg)))
+	w.WriteString(line("Mean response time", msString(m.ResponseTimes.Mean)))
 	w.WriteString(line("Total duration", msString(rep.Metadata.TotalDuration)))
 }
 

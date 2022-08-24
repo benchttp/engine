@@ -31,9 +31,9 @@ func metricsStub() (agg metrics.Aggregate, total time.Duration) {
 		}, 1),
 		Records: make([]struct{ ResponseTime time.Duration }, 3),
 		ResponseTimes: timestats.TimeStats{
-			Min: 4 * time.Second,
-			Max: 6 * time.Second,
-			Avg: 5 * time.Second,
+			Min:  4 * time.Second,
+			Max:  6 * time.Second,
+			Mean: 5 * time.Second,
 		},
 	}, 15 * time.Second
 }

@@ -16,7 +16,7 @@ var ErrUnknownField = errors.New("metrics: unknown field")
 type Field string
 
 const (
-	ResponseTimeAvg     Field = "AVG"
+	ResponseTimeMean    Field = "MEAN"
 	ResponseTimeMin     Field = "MIN"
 	ResponseTimeMax     Field = "MAX"
 	RequestFailCount    Field = "FAILURE_COUNT"
@@ -39,7 +39,7 @@ type fieldDefinition struct {
 // fieldDefinitions is a table of truth for fields.
 // It maps all Field references to their intrinsic fieldDefinition.
 var fieldDefinitions = map[Field]fieldDefinition{
-	ResponseTimeAvg:     {TypeDuration, func(a Aggregate) Value { return a.ResponseTimes.Avg }},
+	ResponseTimeMean:    {TypeDuration, func(a Aggregate) Value { return a.ResponseTimes.Mean }},
 	ResponseTimeMin:     {TypeDuration, func(a Aggregate) Value { return a.ResponseTimes.Min }},
 	ResponseTimeMax:     {TypeDuration, func(a Aggregate) Value { return a.ResponseTimes.Max }},
 	RequestFailCount:    {TypeInt, func(a Aggregate) Value { return len(a.RequestFailures) }},
