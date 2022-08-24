@@ -6,15 +6,15 @@ import (
 	"github.com/benchttp/engine/runner/internal/recorder"
 )
 
-func computeStatusCodesDistribution(records []recorder.Record) (statusCodesDistribution map[string]int) {
-	statusCodesDistribution = map[string]int{}
+func computeStatusCodesDistribution(records []recorder.Record) map[string]int {
+	statuses := map[string]int{}
 	for _, rec := range records {
-		stringCode := strconv.Itoa(rec.Code)
-		if _, ok := statusCodesDistribution[stringCode]; ok {
-			statusCodesDistribution[stringCode]++
+		s := strconv.Itoa(rec.Code)
+		if _, ok := statuses[s]; ok {
+			statuses[s]++
 		} else {
-			statusCodesDistribution[stringCode] = 1
+			statuses[s] = 1
 		}
 	}
-	return statusCodesDistribution
+	return statuses
 }
