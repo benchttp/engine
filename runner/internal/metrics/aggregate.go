@@ -19,7 +19,6 @@ type Aggregate struct {
 	RequestFailures []struct {
 		Reason string
 	}
-	RequestEventsDistribution map[string]int
 }
 
 // MetricOf returns the Metric for the given field in Aggregate.
