@@ -111,7 +111,7 @@ linters-settings:
     extra-rules: true
 
   goimports:
-    local-prefixes: github.com/benchttp/runner
+    local-prefixes: github.com/benchttp/engine
 
   misspell:
     locale: US

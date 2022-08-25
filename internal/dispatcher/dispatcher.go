@@ -33,9 +33,11 @@ func New(numWorker int) Dispatcher {
 // or canceled. Concurrency is handled leveraging the semaphore pattern, which
 // ensures at most Dispatcher.numWorkers goroutines are spawned at the same time.
 // It returns an early ErrInvalidValue if any of the following conditions is met:
-// 	maxIter < 1 and maxIter != -1
-// 	maxIter > numWorker
-// 	callback == nil
+//
+//	maxIter < 1 and maxIter != -1
+//	maxIter > numWorker
+//	callback == nil
+//
 // Else it returns the context error if any or nil.
 func (d dispatcher) Do(ctx context.Context, maxIter int, callback func()) error {
 	if err := d.validate(maxIter, callback); err != nil {
