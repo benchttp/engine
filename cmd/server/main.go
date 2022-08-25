@@ -11,9 +11,10 @@ import (
 	"os"
 	"time"
 
+	"github.com/joho/godotenv"
+
 	"github.com/benchttp/engine/internal/configparse"
 	"github.com/benchttp/engine/runner"
-	"github.com/joho/godotenv"
 )
 
 func main() {
