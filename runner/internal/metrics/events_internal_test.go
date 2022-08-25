@@ -1,34 +1,12 @@
 package metrics
 
 import (
-	"reflect"
 	"testing"
 	"time"
 
 	"github.com/benchttp/engine/runner/internal/recorder"
 	"github.com/benchttp/engine/runner/internal/timestats"
 )
-
-func TestDiff(t *testing.T) {
-	if diff(100, 200) != diff(200, 100) {
-		t.Error("expected duration difference to be indifferent of arguments order")
-	}
-}
-
-func TestDiffEventsTimes(t *testing.T) {
-	e := []recorder.Event{
-		{Time: 0},
-		{Time: 100},
-		{Time: 110},
-		{Time: 200},
-	}
-
-	got := diffEventsTimes(e)
-	want := []recorder.Event{{Time: 0}, {Time: 100}, {Time: 10}, {Time: 90}}
-	if !reflect.DeepEqual(want, got) {
-		t.Errorf("incorrect diff: want %v, got %v", want, got)
-	}
-}
 
 func TestComputeRequestEventTimes(t *testing.T) {
 	t.Run("happy path", func(t *testing.T) {
