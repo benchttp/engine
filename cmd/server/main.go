@@ -23,7 +23,7 @@ const (
 
 var (
 	stdout = log.New(os.Stdout, "", 0)
-	stderr = log.New(os.Stderr, "", 0)
+	stderr = log.New(os.Stderr, "", log.LstdFlags)
 )
 
 func main() {
