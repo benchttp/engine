@@ -130,6 +130,15 @@ type Record struct {
 	Events []Event       `json:"events"`
 }
 
+// RelativeTimeEvents returns a copy of the Record.Events
+// with each Event.Time as a duration relative to the previous
+// Event. For example, if the first Event.Time is 100ms and the
+// second Event.Time is 150ms, RelativeTimeEvents evaluates the
+// second Event.Time to 50ms.
+func (r Record) RelativeTimeEvents() []Event {
+	return RelativeTimeEvents(r.Events).Get()
+}
+
 func (r *Recorder) recordSingle(req *http.Request, interval time.Duration) func() {
 	return func() {
 		// We need new client and request instances each call to this function
