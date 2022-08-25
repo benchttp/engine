@@ -17,6 +17,11 @@ import (
 	"github.com/benchttp/engine/runner"
 )
 
+var (
+	stdout = log.New(os.Stdout, "", 0)
+	stderr = log.New(os.Stderr, "", 0)
+)
+
 func main() {
 	useAnyPort := flag.Bool("any-port", true, "use any available port allocated by the os")
 	flag.Parse()
@@ -25,7 +30,7 @@ func main() {
 	if !*useAnyPort {
 		err := godotenv.Load("./.env.development")
 		if err != nil {
-			log.Fatal(err)
+			log.Println(err)
 		}
 		p = os.Getenv("VITE_ENGINE_PORT")
 	} else {
@@ -62,11 +67,12 @@ func main() {
 	}()
 
 	<-readyChan
+	// From now we communicate with the parent process via stdout and stderr.
 	// Notify server is ready.
-	fmt.Println("port:" + fmt.Sprint(port))
-	fmt.Println("http://localhost:" + fmt.Sprint(port))
+	stdout.Println("port:" + fmt.Sprint(port))
+	stdout.Println("http://localhost:" + fmt.Sprint(port))
 
-	log.Fatal(<-closeChan)
+	stderr.Fatal(<-closeChan)
 }
 
 func handleStream(w http.ResponseWriter, r *http.Request) {
@@ -112,7 +118,7 @@ func streamProgress(w http.ResponseWriter) func(runner.RecordingProgress) {
 }
 
 func internalError(w http.ResponseWriter, err error) {
-	log.Println(err.Error())
+	stderr.Println(err.Error())
 
 	w.WriteHeader(http.StatusInternalServerError)
 
