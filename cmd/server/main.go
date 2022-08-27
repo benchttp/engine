@@ -29,24 +29,24 @@ func main() {
 	flag.Parse()
 
 	var p string
-	if !*useAnyPort {
+	if *useAnyPort {
+		p = "0"
+	} else {
 		err := godotenv.Load("./.env.development")
 		if err != nil {
-			log.Println(err)
+			stderr.Fatalf("could not load .env file: %s", err.Error())
 		}
 		p = os.Getenv("SERVER_PORT")
-	} else {
-		p = "0"
 	}
 
 	addr, err := net.ResolveTCPAddr("tcp", "localhost:"+p)
 	if err != nil {
-		log.Fatal(err)
+		stderr.Fatal(err)
 	}
 
 	l, err := net.ListenTCP("tcp", addr)
 	if err != nil {
-		log.Fatal(err)
+		stderr.Fatal(err)
 	}
 
 	port := l.Addr().(*net.TCPAddr).Port
