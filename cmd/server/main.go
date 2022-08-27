@@ -20,7 +20,12 @@ import (
 const readySignal = "READY"
 
 var (
+	// stdout is used to send messages to the parent process.
+	// Use stdout to send info and debug level messages.
 	stdout = log.New(os.Stdout, "", 0)
+	// stderr is used to send messages to the parent process.
+	// Use stderr to send error level messages or to notify
+	// any action which are followed by os.Exit.
 	stderr = log.New(os.Stderr, "", log.LstdFlags)
 )
 
@@ -65,7 +70,6 @@ func main() {
 		closeChan <- s.Serve(listener)
 	}()
 
-	// From now we communicate with the parent process via stdout and stderr.
 	// Notify server is ready.
 	stdout.Println(readyString(port))
 
