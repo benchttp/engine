@@ -44,12 +44,12 @@ func main() {
 		stderr.Fatal(err)
 	}
 
-	l, err := net.ListenTCP("tcp", addr)
+	listener, err := net.ListenTCP("tcp", addr)
 	if err != nil {
 		stderr.Fatal(err)
 	}
 
-	port := l.Addr().(*net.TCPAddr).Port
+	port := listener.Addr().(*net.TCPAddr).Port
 
 	s := &http.Server{
 		Addr:    ":" + fmt.Sprint(port),
@@ -59,15 +59,12 @@ func main() {
 		ReadHeaderTimeout: 0,
 	}
 
-	readyChan := make(chan struct{}, 1)
 	closeChan := make(chan error, 1)
 
 	go func() {
-		readyChan <- struct{}{}
-		closeChan <- (s.Serve(l))
+		closeChan <- s.Serve(listener)
 	}()
 
-	<-readyChan
 	// From now we communicate with the parent process via stdout and stderr.
 	// Notify server is ready.
 	stdout.Println(readyString(port))
