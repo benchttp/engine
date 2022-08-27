@@ -125,10 +125,9 @@ func internalError(w http.ResponseWriter, err error) {
 	stderr.Println(err.Error())
 
 	w.WriteHeader(http.StatusInternalServerError)
+	e := struct{ Error string }{err.Error()}
 
-	if err := json.NewEncoder(w).Encode(&struct {
-		Error string
-	}{Error: err.Error()}); err != nil {
+	if err := json.NewEncoder(w).Encode(e); err != nil {
 		// Fallback to plain text encoding.
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
