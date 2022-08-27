@@ -53,13 +53,12 @@ func main() {
 
 	port := l.Addr().(*net.TCPAddr).Port
 
-	//#nosec G112 -- Potential Slowloris Attack because
-	// ReadHeaderTimeout is not configured in the http.Server.
-	// Ignored because the end user runs both the client and
-	// the server on their machine, which makes it irrelevant.
 	s := &http.Server{
 		Addr:    ":" + fmt.Sprint(port),
 		Handler: http.HandlerFunc(handleStream),
+		// No timeout because the end user runs both the client and
+		// the server on their machine, which makes it irrelevant.
+		ReadHeaderTimeout: 0,
 	}
 
 	readyChan := make(chan struct{}, 1)
