@@ -36,7 +36,7 @@ func main() {
 		if err != nil {
 			log.Println(err)
 		}
-		p = os.Getenv("VITE_ENGINE_PORT")
+		p = os.Getenv("SERVER_PORT")
 	} else {
 		p = "0"
 	}
