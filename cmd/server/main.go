@@ -17,9 +17,7 @@ import (
 	"github.com/benchttp/engine/runner"
 )
 
-const (
-	ReadySignal = "READY"
-)
+const readySignal = "READY"
 
 var (
 	stdout = log.New(os.Stdout, "", 0)
@@ -72,13 +70,13 @@ func main() {
 	<-readyChan
 	// From now we communicate with the parent process via stdout and stderr.
 	// Notify server is ready.
-	stdout.Println(sprintReadySignal(port))
+	stdout.Println(readyString(port))
 
 	stderr.Fatal(<-closeChan)
 }
 
-func sprintReadySignal(port int) string {
-	return fmt.Sprintf("%s at http://localhost:%d", ReadySignal, port)
+func readyString(port int) string {
+	return fmt.Sprintf("%s at http://localhost:%d", readySignal, port)
 }
 
 func handleStream(w http.ResponseWriter, r *http.Request) {
