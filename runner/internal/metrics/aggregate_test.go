@@ -69,6 +69,34 @@ func TestNewAggregate(t *testing.T) {
 			t.Errorf("StatusCodesDistribution: want %v, got %v", want, got)
 		}
 	})
+
+	t.Run("records", func(t *testing.T) {
+		input := []recorder.Record{
+			{Time: 100}, {Time: 50}, {Time: 100}, {Time: 200}, {Time: 150},
+		}
+
+		want := []struct{ ResponseTime time.Duration }{{100}, {50}, {100}, {200}, {150}}
+
+		got := metrics.NewAggregate(input).Records
+
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("Records: want %v, got %v", want, got)
+		}
+	})
+
+	t.Run("request failures", func(t *testing.T) {
+		input := []recorder.Record{
+			{Error: "something"}, {Error: "went"}, {Error: "wrong"},
+		}
+
+		want := []struct{ Reason string }{{"something"}, {"went"}, {"wrong"}}
+
+		got := metrics.NewAggregate(input).RequestFailures
+
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("RequestFailures: want %v, got %v", want, got)
+		}
+	})
 }
 
 // approxEqual returns true if val is equal to target with a margin of error.
