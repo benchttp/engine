@@ -8,7 +8,7 @@ import (
 )
 
 func computeRequestEventTimes(records []recorder.Record) map[string]timestats.TimeStats {
-	events := getUnnestedRelativeTimeEvents(records)
+	events := getFlatRelativeTimeEvents(records)
 
 	timesByEvent := map[string][]time.Duration{}
 
@@ -25,7 +25,7 @@ func computeRequestEventTimes(records []recorder.Record) map[string]timestats.Ti
 	return statsByEvent
 }
 
-func getUnnestedRelativeTimeEvents(records []recorder.Record) []recorder.Event {
+func getFlatRelativeTimeEvents(records []recorder.Record) []recorder.Event {
 	events := []recorder.Event{}
 	for _, record := range records {
 		events = append(events, record.RelativeTimeEvents()...)
