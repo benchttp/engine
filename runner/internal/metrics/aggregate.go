@@ -7,15 +7,28 @@ import (
 	"github.com/benchttp/engine/runner/internal/timestats"
 )
 
-// Aggregate is an aggregate of metrics resulting from
-// from recorded requests.
+// Aggregate is an aggregate of metrics computed from
+// a slice of recorder.Record.
 type Aggregate struct {
-	ResponseTimes           timestats.TimeStats
+	// ResponseTimes is the common statistics computed from a
+	// slice recorder.Record. It offers statistics about the
+	// recorder.Record.Time of the records.
+	ResponseTimes timestats.TimeStats
+	// StatusCodesDistribution maps each status code received to
+	// its number of occurrence.
 	StatusCodesDistribution map[string]int
-	RequestEventTimes       map[string]timestats.TimeStats
-	Records                 []struct {
+	// RequestEventTimes is the common statistics computed from
+	// the combination of all recorder.Record.Events of a slice
+	// of recorder.Record. It offers statistics about the
+	// recorder.Events.Time of the records.
+	RequestEventTimes map[string]timestats.TimeStats
+	// Records lists each response time received during the run.
+	// It offers raw informarion.
+	Records []struct {
 		ResponseTime time.Duration
 	}
+	// Records lists each request error received during the run.
+	// It offers raw informarion.
 	RequestFailures []struct {
 		Reason string
 	}
@@ -28,9 +41,8 @@ func (agg Aggregate) MetricOf(field Field) Metric {
 	return Metric{Field: field, Value: field.valueIn(agg)}
 }
 
-// Compute computes and aggregates metrics from the given
-// requests records.
-func Compute(records []recorder.Record) (agg Aggregate) {
+// NewAggregate computes and aggregates metrics from the given records.
+func NewAggregate(records []recorder.Record) (agg Aggregate) {
 	if len(records) == 0 {
 		return
 	}
