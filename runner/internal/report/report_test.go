@@ -17,7 +17,7 @@ func TestReport_String(t *testing.T) {
 		agg, d := metricsStub()
 		cfg := configStub()
 
-		rep := report.New(agg, cfg, d, tests.SuiteResult{})
+		rep := report.New(cfg, d, agg, tests.SuiteResult{})
 		checkSummary(t, rep.String())
 	})
 }

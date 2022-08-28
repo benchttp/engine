@@ -98,7 +98,7 @@ func (r *Runner) Run(ctx context.Context, cfg config.Global) (*Report, error) {
 
 	testResults := tests.Run(agg, cfg.Tests)
 
-	return report.New(agg, cfg, duration, testResults), nil
+	return report.New(cfg, duration, agg, testResults), nil
 }
 
 // Progress returns the current progress of the recording.
