@@ -3,8 +3,8 @@ package metrics
 import (
 	"time"
 
+	"github.com/benchttp/engine/internal/timestats"
 	"github.com/benchttp/engine/runner/internal/recorder"
-	"github.com/benchttp/engine/runner/internal/timestats"
 )
 
 func computeRequestEventTimes(records []recorder.Record) map[string]timestats.TimeStats {
