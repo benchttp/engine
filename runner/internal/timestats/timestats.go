@@ -12,7 +12,7 @@ type TimeStats struct {
 	Deciles                        [10]time.Duration
 }
 
-func Compute(times []time.Duration) TimeStats {
+func New(times []time.Duration) TimeStats {
 	n := len(times)
 	if n == 0 {
 		return TimeStats{}
