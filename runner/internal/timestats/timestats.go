@@ -13,8 +13,8 @@ type TimeStats struct {
 }
 
 func Compute(times []time.Duration) TimeStats {
-	l := len(times)
-	if l == 0 {
+	n := len(times)
+	if n == 0 {
 		return TimeStats{}
 	}
 
@@ -24,7 +24,7 @@ func Compute(times []time.Duration) TimeStats {
 
 	// Reused statistics measures.
 	sum := computeSum(times)
-	mean := computeMean(sum, l)
+	mean := computeMean(sum, n)
 
 	return TimeStats{
 		Min:       times[0],
@@ -50,11 +50,11 @@ func computeMean(sum time.Duration, length int) time.Duration {
 }
 
 func computeMedian(sorted []time.Duration) time.Duration {
-	l := len(sorted)
-	if l%2 != 0 {
-		return sorted[l/2]
+	n := len(sorted)
+	if n%2 != 0 {
+		return sorted[n/2]
 	}
-	return computeMean(sorted[l/2-1]+sorted[l/2+1], 2)
+	return computeMean(sorted[n/2-1]+sorted[n/2+1], 2)
 }
 
 func computeStdDev(values []time.Duration, mean time.Duration) time.Duration {
@@ -63,33 +63,34 @@ func computeStdDev(values []time.Duration, mean time.Duration) time.Duration {
 		dev := v - mean
 		sum += dev * dev
 	}
-	return time.Duration(math.Sqrt(float64(sum / time.Duration(len(values)))))
+	n := len(values)
+	return time.Duration(math.Sqrt(float64(sum / time.Duration(n))))
 }
 
 func computeDeciles(sorted []time.Duration) [10]time.Duration {
-	const numDecile = 10
-	if len(sorted) < numDecile {
-		return [10]time.Duration{0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+	const nDeciles = 10
+	if len(sorted) < nDeciles {
+		return [10]time.Duration{}
 	}
-	return *(*[10]time.Duration)(computeQuantiles(sorted, numDecile))
+	return *(*[10]time.Duration)(computeQuantiles(sorted, nDeciles))
 }
 
 func computeQuartiles(sorted []time.Duration) [4]time.Duration {
-	const numQuartile = 4
-	if len(sorted) < numQuartile {
-		return [4]time.Duration{0, 0, 0, 0}
+	const nQuartiles = 4
+	if len(sorted) < nQuartiles {
+		return [4]time.Duration{}
 	}
-	return *(*[4]time.Duration)(computeQuantiles(sorted, numQuartile))
+	return *(*[4]time.Duration)(computeQuantiles(sorted, nQuartiles))
 }
 
-func computeQuantiles(sorted []time.Duration, numQuantile int) []time.Duration {
-	numValues := len(sorted)
-	step := (numValues + 1) / numQuantile
+func computeQuantiles(sorted []time.Duration, nQuantiles int) []time.Duration {
+	n := len(sorted)
+	step := (n + 1) / nQuantiles
 
-	quantiles := make([]time.Duration, numQuantile)
-	for i := 0; i < numQuantile; i++ {
+	quantiles := make([]time.Duration, nQuantiles)
+	for i := 0; i < nQuantiles; i++ {
 		qtlIndex := (i + 1) * step
-		maxIndex := numValues - 1
+		maxIndex := n - 1
 		if qtlIndex > maxIndex {
 			qtlIndex = maxIndex
 		}
