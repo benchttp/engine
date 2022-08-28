@@ -94,7 +94,7 @@ func (r *Runner) Run(ctx context.Context, cfg config.Global) (*Report, error) {
 
 	duration := time.Since(startTime)
 
-	agg := metrics.Compute(records)
+	agg := metrics.NewAggregate(records)
 
 	testResults := tests.Run(agg, cfg.Tests)
 
