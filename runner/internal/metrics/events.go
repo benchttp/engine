@@ -19,7 +19,7 @@ func computeRequestEventTimes(records []recorder.Record) map[string]timestats.Ti
 	statsByEvent := map[string]timestats.TimeStats{}
 
 	for e, times := range timesByEvent {
-		statsByEvent[e] = timestats.Compute(times)
+		statsByEvent[e] = timestats.New(times)
 	}
 
 	return statsByEvent

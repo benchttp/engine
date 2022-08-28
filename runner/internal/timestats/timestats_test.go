@@ -20,7 +20,7 @@ func TestCompute(t *testing.T) {
 			Deciles: [10]time.Duration{100, 100, 200, 200, 200, 300, 300, 400, 400, 400},
 		}
 
-		got := timestats.Compute(validTimes)
+		got := timestats.New(validTimes)
 
 		for _, stat := range []struct {
 			name string

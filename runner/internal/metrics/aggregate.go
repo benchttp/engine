@@ -56,7 +56,7 @@ func NewAggregate(records []recorder.Record) (agg Aggregate) {
 		}
 	}
 
-	agg.ResponseTimes = timestats.Compute(times)
+	agg.ResponseTimes = timestats.New(times)
 
 	agg.StatusCodesDistribution = computeStatusCodesDistribution(records)
 
