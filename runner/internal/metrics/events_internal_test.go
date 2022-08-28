@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/benchttp/engine/internal/timestats"
 	"github.com/benchttp/engine/runner/internal/recorder"
-	"github.com/benchttp/engine/runner/internal/timestats"
 )
 
 func TestComputeRequestEventTimes(t *testing.T) {

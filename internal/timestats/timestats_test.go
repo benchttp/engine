@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/benchttp/engine/runner/internal/timestats"
+	"github.com/benchttp/engine/internal/timestats"
 )
 
 var validTimes = []time.Duration{100, 100, 200, 300, 400, 200, 100, 200, 300, 400, 100, 100, 200, 300, 400, 200, 100, 200, 300, 400}
