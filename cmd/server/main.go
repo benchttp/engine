@@ -64,16 +64,10 @@ func main() {
 		ReadHeaderTimeout: 0,
 	}
 
-	closeChan := make(chan error, 1)
-
-	go func() {
-		closeChan <- s.Serve(listener)
-	}()
-
 	// Notify server is ready.
 	stdout.Println(readyString(port))
 
-	stderr.Fatal(<-closeChan)
+	stderr.Fatal(s.Serve(listener))
 }
 
 func readyString(port int) string {
