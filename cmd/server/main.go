@@ -65,13 +65,13 @@ func main() {
 	}
 
 	// Notify server is ready.
-	stdout.Println(readyString(port))
+	stdout.Println(readySignalString(port))
 
 	stderr.Fatal(s.Serve(listener))
 }
 
-func readyString(port int) string {
-	return fmt.Sprintf("%s at http://localhost:%d", readySignal, port)
+func readySignalString(port int) string {
+	return fmt.Sprintf("%s http://localhost:%d", readySignal, port)
 }
 
 func handleStream(w http.ResponseWriter, r *http.Request) {
