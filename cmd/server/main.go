@@ -30,11 +30,11 @@ var (
 )
 
 func main() {
-	useAnyPort := flag.Bool("any-port", true, "use any available port allocated by the os")
+	useAutoPort := flag.Bool("auto-port", true, "automatically find and use an available port")
 	flag.Parse()
 
 	var p string
-	if *useAnyPort {
+	if *useAutoPort {
 		p = "0"
 	} else {
 		err := godotenv.Load("./.env.development")
