@@ -2,26 +2,76 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"net/http"
+	"os"
 	"time"
+
+	"github.com/joho/godotenv"
 
 	"github.com/benchttp/engine/internal/configparse"
 	"github.com/benchttp/engine/runner"
 )
 
-const (
-	port = "8080"
+const readySignal = "READY"
+
+var (
+	// stdout is used to send messages to the parent process.
+	// Use stdout to send info and debug level messages.
+	stdout = log.New(os.Stdout, "", 0)
+	// stderr is used to send messages to the parent process.
+	// Use stderr to send error level messages or to notify
+	// any action which are followed by os.Exit.
+	stderr = log.New(os.Stderr, "", log.LstdFlags)
 )
 
 func main() {
-	addr := ":" + port
-	fmt.Println("http://localhost" + addr)
+	useAutoPort := flag.Bool("auto-port", true, "automatically find and use an available port")
+	flag.Parse()
 
-	//#nosec G114 -- Ignored for convenience
-	log.Fatal(http.ListenAndServe(addr, http.HandlerFunc(handleStream)))
+	var p string
+	if *useAutoPort {
+		p = "0"
+	} else {
+		err := godotenv.Load("./.env.development")
+		if err != nil {
+			stderr.Fatalf("could not load .env file: %s", err.Error())
+		}
+		p = os.Getenv("SERVER_PORT")
+	}
+
+	addr, err := net.ResolveTCPAddr("tcp", "localhost:"+p)
+	if err != nil {
+		stderr.Fatal(err)
+	}
+
+	listener, err := net.ListenTCP("tcp", addr)
+	if err != nil {
+		stderr.Fatal(err)
+	}
+
+	port := listener.Addr().(*net.TCPAddr).Port
+
+	s := &http.Server{
+		Addr:    ":" + fmt.Sprint(port),
+		Handler: http.HandlerFunc(handleStream),
+		// No timeout because the end user runs both the client and
+		// the server on their machine, which makes it irrelevant.
+		ReadHeaderTimeout: 0,
+	}
+
+	// Notify server is ready.
+	stdout.Println(readySignalString(port))
+
+	stderr.Fatal(s.Serve(listener))
+}
+
+func readySignalString(port int) string {
+	return fmt.Sprintf("%s http://localhost:%d", readySignal, port)
 }
 
 func handleStream(w http.ResponseWriter, r *http.Request) {
@@ -67,13 +117,12 @@ func streamProgress(w http.ResponseWriter) func(runner.RecordingProgress) {
 }
 
 func internalError(w http.ResponseWriter, err error) {
-	log.Println(err.Error())
+	stderr.Println(err.Error())
 
 	w.WriteHeader(http.StatusInternalServerError)
+	e := struct{ Error string }{err.Error()}
 
-	if err := json.NewEncoder(w).Encode(&struct {
-		Error string
-	}{Error: err.Error()}); err != nil {
+	if err := json.NewEncoder(w).Encode(e); err != nil {
 		// Fallback to plain text encoding.
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
