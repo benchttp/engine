@@ -92,13 +92,13 @@ func (r *Runner) Run(ctx context.Context, cfg config.Global) (*Report, error) {
 		return nil, err
 	}
 
-	agg := metrics.Compute(records)
-
 	duration := time.Since(startTime)
+
+	agg := metrics.NewAggregate(records)
 
 	testResults := tests.Run(agg, cfg.Tests)
 
-	return report.New(agg, cfg, duration, testResults), nil
+	return report.New(cfg, duration, agg, testResults), nil
 }
 
 // Progress returns the current progress of the recording.

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/benchttp/engine/runner/internal/metrics"
+	"github.com/benchttp/engine/runner/internal/metrics/timestats"
 	"github.com/benchttp/engine/runner/internal/tests"
 )
 
@@ -19,48 +20,48 @@ func TestRun(t *testing.T) {
 	}{
 		{
 			label:    "pass if all cases pass",
-			inputAgg: metrics.Aggregate{Avg: 100 * time.Millisecond},
+			inputAgg: metrics.Aggregate{ResponseTimes: timestats.TimeStats{Mean: 100 * time.Millisecond}},
 			inputCases: []tests.Case{
 				{
 					Name:      "average response time below 120ms (pass)",
 					Predicate: tests.LT,
-					Field:     metrics.ResponseTimeAvg,
+					Field:     metrics.ResponseTimeMean,
 					Target:    120 * time.Millisecond,
 				},
 				{
 					Name:      "average response time is above 80ms (pass)",
 					Predicate: tests.GT,
-					Field:     metrics.ResponseTimeAvg,
+					Field:     metrics.ResponseTimeMean,
 					Target:    80 * time.Millisecond,
 				},
 			},
 			expGlobalPass: true,
 			expCaseResults: []tests.CaseResult{
-				{Pass: true, Summary: "want AVG < 120ms, got 100ms"},
-				{Pass: true, Summary: "want AVG > 80ms, got 100ms"},
+				{Pass: true, Summary: "want MEAN < 120ms, got 100ms"},
+				{Pass: true, Summary: "want MEAN > 80ms, got 100ms"},
 			},
 		},
 		{
 			label:    "fail if at least one case fails",
-			inputAgg: metrics.Aggregate{Avg: 200 * time.Millisecond},
+			inputAgg: metrics.Aggregate{ResponseTimes: timestats.TimeStats{Mean: 200 * time.Millisecond}},
 			inputCases: []tests.Case{
 				{
 					Name:      "average response time below 120ms (fail)",
 					Predicate: tests.LT,
-					Field:     metrics.ResponseTimeAvg,
+					Field:     metrics.ResponseTimeMean,
 					Target:    120 * time.Millisecond,
 				},
 				{
 					Name:      "average response time is above 80ms (pass)",
 					Predicate: tests.GT,
-					Field:     metrics.ResponseTimeAvg,
+					Field:     metrics.ResponseTimeMean,
 					Target:    80 * time.Millisecond,
 				},
 			},
 			expGlobalPass: false,
 			expCaseResults: []tests.CaseResult{
-				{Pass: false, Summary: "want AVG < 120ms, got 200ms"},
-				{Pass: true, Summary: "want AVG > 80ms, got 200ms"},
+				{Pass: false, Summary: "want MEAN < 120ms, got 200ms"},
+				{Pass: true, Summary: "want MEAN > 80ms, got 200ms"},
 			},
 		},
 	}

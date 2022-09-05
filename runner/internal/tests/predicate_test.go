@@ -2,6 +2,7 @@ package tests_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/benchttp/engine/runner/internal/metrics"
 	"github.com/benchttp/engine/runner/internal/tests"
@@ -92,7 +93,9 @@ func expectPredicateResult(
 	t.Helper()
 
 	agg := metrics.Aggregate{
-		TotalCount: src,
+		Records: make([]struct {
+			ResponseTime time.Duration
+		}, src),
 	}
 
 	result := tests.Run(agg, []tests.Case{{

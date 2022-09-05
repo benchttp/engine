@@ -3,18 +3,35 @@ package metrics
 import (
 	"time"
 
+	"github.com/benchttp/engine/runner/internal/metrics/timestats"
 	"github.com/benchttp/engine/runner/internal/recorder"
 )
 
-// Aggregate is an aggregate of metrics resulting from
-// from recorded requests.
+// Aggregate is an aggregate of metrics computed from
+// a slice of recorder.Record.
 type Aggregate struct {
-	Min, Max, Avg                          time.Duration
-	SuccessCount, FailureCount, TotalCount int
-	// Median, StdDev            time.Duration
-	// Deciles                   map[int]float64
-	// StatusCodeDistribution    map[string]int
-	// RequestEventsDistribution map[recorder.Event]int
+	// ResponseTimes is the common statistics computed from a
+	// slice recorder.Record. It offers statistics about the
+	// recorder.Record.Time of the records.
+	ResponseTimes timestats.TimeStats
+	// StatusCodesDistribution maps each status code received to
+	// its number of occurrence.
+	StatusCodesDistribution map[int]int
+	// RequestEventTimes is the common statistics computed from
+	// the combination of all recorder.Record.Events of a slice
+	// of recorder.Record. It offers statistics about the
+	// recorder.Events.Time of the records.
+	RequestEventTimes map[string]timestats.TimeStats
+	// Records lists each response time received during the run.
+	// It offers raw informarion.
+	Records []struct {
+		ResponseTime time.Duration
+	}
+	// Records lists each request error received during the run.
+	// It offers raw informarion.
+	RequestFailures []struct {
+		Reason string
+	}
 }
 
 // MetricOf returns the Metric for the given field in Aggregate.
@@ -24,27 +41,62 @@ func (agg Aggregate) MetricOf(field Field) Metric {
 	return Metric{Field: field, Value: field.valueIn(agg)}
 }
 
-// Compute computes and aggregates metrics from the given
-// requests records.
-func Compute(records []recorder.Record) (agg Aggregate) {
+// NewAggregate computes and aggregates metrics from the given records.
+func NewAggregate(records []recorder.Record) (agg Aggregate) {
 	if len(records) == 0 {
 		return
 	}
 
-	agg.TotalCount = len(records)
-	agg.Min, agg.Max = records[0].Time, records[0].Time
-	for _, rec := range records {
+	times := make([]time.Duration, len(records))
+	for i, rec := range records {
+		agg.Records = append(agg.Records, struct{ ResponseTime time.Duration }{rec.Time})
+		times[i] = rec.Time
 		if rec.Error != "" {
-			agg.FailureCount++
+			agg.RequestFailures = append(agg.RequestFailures, struct{ Reason string }{rec.Error})
 		}
-		if rec.Time < agg.Min {
-			agg.Min = rec.Time
-		}
-		if rec.Time > agg.Max {
-			agg.Max = rec.Time
-		}
-		agg.Avg += rec.Time / time.Duration(len(records))
 	}
-	agg.SuccessCount = agg.TotalCount - agg.FailureCount
-	return
+
+	agg.ResponseTimes = timestats.New(times)
+
+	agg.StatusCodesDistribution = computeStatusCodesDistribution(records)
+
+	agg.RequestEventTimes = computeRequestEventTimes(records)
+
+	return agg
+}
+
+// Special compute helpers.
+
+func computeRequestEventTimes(records []recorder.Record) map[string]timestats.TimeStats {
+	events := flattenRelativeTimeEvents(records)
+
+	timesByEvent := map[string][]time.Duration{}
+
+	for _, e := range events {
+		timesByEvent[e.Name] = append(timesByEvent[e.Name], e.Time)
+	}
+
+	statsByEvent := map[string]timestats.TimeStats{}
+
+	for e, times := range timesByEvent {
+		statsByEvent[e] = timestats.New(times)
+	}
+
+	return statsByEvent
+}
+
+func flattenRelativeTimeEvents(records []recorder.Record) []recorder.Event {
+	events := []recorder.Event{}
+	for _, record := range records {
+		events = append(events, record.Events...)
+	}
+	return events
+}
+
+func computeStatusCodesDistribution(records []recorder.Record) map[int]int {
+	statuses := map[int]int{}
+	for _, rec := range records {
+		statuses[rec.Code]++
+	}
+	return statuses
 }
