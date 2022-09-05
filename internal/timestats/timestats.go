@@ -13,8 +13,8 @@ const (
 
 type TimeStats struct {
 	Min, Max, Mean, Median, StdDev time.Duration
-	Quartiles                      [4]time.Duration
-	Deciles                        [10]time.Duration
+	Quartiles                      []time.Duration
+	Deciles                        []time.Duration
 }
 
 func New(times []time.Duration) TimeStats {
@@ -72,18 +72,18 @@ func computeStdDev(values []time.Duration, mean time.Duration) time.Duration {
 	return time.Duration(math.Sqrt(float64(sum / time.Duration(n))))
 }
 
-func computeDeciles(sorted []time.Duration) [10]time.Duration {
+func computeDeciles(sorted []time.Duration) []time.Duration {
 	if len(sorted) < numDecile {
-		return [10]time.Duration{}
+		return nil
 	}
-	return *(*[10]time.Duration)(computeQuantiles(sorted, numDecile))
+	return computeQuantiles(sorted, numDecile)
 }
 
-func computeQuartiles(sorted []time.Duration) [4]time.Duration {
+func computeQuartiles(sorted []time.Duration) []time.Duration {
 	if len(sorted) < numQuartile {
-		return [4]time.Duration{}
+		return nil
 	}
-	return *(*[4]time.Duration)(computeQuantiles(sorted, numQuartile))
+	return computeQuantiles(sorted, numQuartile)
 }
 
 func computeQuantiles(sorted []time.Duration, nQuantiles int) []time.Duration {
