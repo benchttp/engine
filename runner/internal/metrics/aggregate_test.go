@@ -57,7 +57,7 @@ func TestNewAggregate(t *testing.T) {
 			{Code: 200}, {Code: 200}, {Code: 200}, {Code: 400}, {Code: 400}, {Code: 500},
 		}
 
-		want := map[string]int{"200": 3, "400": 2, "500": 1}
+		want := map[int]int{200: 3, 400: 2, 500: 1}
 
 		got := metrics.NewAggregate(input).StatusCodesDistribution
 
