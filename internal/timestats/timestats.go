@@ -6,6 +6,11 @@ import (
 	"time"
 )
 
+const (
+	numDecile   = 10
+	numQuartile = 4
+)
+
 type TimeStats struct {
 	Min, Max, Mean, Median, StdDev time.Duration
 	Quartiles                      [4]time.Duration
@@ -68,19 +73,17 @@ func computeStdDev(values []time.Duration, mean time.Duration) time.Duration {
 }
 
 func computeDeciles(sorted []time.Duration) [10]time.Duration {
-	const nDeciles = 10
-	if len(sorted) < nDeciles {
+	if len(sorted) < numDecile {
 		return [10]time.Duration{}
 	}
-	return *(*[10]time.Duration)(computeQuantiles(sorted, nDeciles))
+	return *(*[10]time.Duration)(computeQuantiles(sorted, numDecile))
 }
 
 func computeQuartiles(sorted []time.Duration) [4]time.Duration {
-	const nQuartiles = 4
-	if len(sorted) < nQuartiles {
+	if len(sorted) < numQuartile {
 		return [4]time.Duration{}
 	}
-	return *(*[4]time.Duration)(computeQuantiles(sorted, nQuartiles))
+	return *(*[4]time.Duration)(computeQuantiles(sorted, numQuartile))
 }
 
 func computeQuantiles(sorted []time.Duration, nQuantiles int) []time.Duration {
