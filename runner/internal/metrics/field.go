@@ -16,12 +16,12 @@ var ErrUnknownField = errors.New("metrics: unknown field")
 type Field string
 
 const (
-	ResponseTimeMean    Field = "MEAN"
-	ResponseTimeMin     Field = "MIN"
-	ResponseTimeMax     Field = "MAX"
-	RequestFailCount    Field = "FAILURE_COUNT"
-	RequestSuccessCount Field = "SUCCESS_COUNT"
-	RequestCount        Field = "TOTAL_COUNT"
+	ResponseTimeMean    Field = "responseTimes.mean"
+	ResponseTimeMin     Field = "responseTimes.min"
+	ResponseTimeMax     Field = "responseTimes.max"
+	RequestFailCount    Field = "requests.failureCount"
+	RequestSuccessCount Field = "requests.successCount"
+	RequestCount        Field = "requests.totalCount"
 )
 
 // fieldDefinition holds the necessary values to identify
