@@ -19,7 +19,7 @@ const (
 	ResponseTimeMean    Field = "responseTimes.mean"
 	ResponseTimeMin     Field = "responseTimes.min"
 	ResponseTimeMax     Field = "responseTimes.max"
-	RequestFailCount    Field = "requests.failureCount"
+	RequestFailureCount Field = "requests.failureCount"
 	RequestSuccessCount Field = "requests.successCount"
 	RequestCount        Field = "requests.totalCount"
 )
@@ -42,7 +42,7 @@ var fieldDefinitions = map[Field]fieldDefinition{
 	ResponseTimeMean:    {TypeDuration, func(a Aggregate) Value { return a.ResponseTimes.Mean }},
 	ResponseTimeMin:     {TypeDuration, func(a Aggregate) Value { return a.ResponseTimes.Min }},
 	ResponseTimeMax:     {TypeDuration, func(a Aggregate) Value { return a.ResponseTimes.Max }},
-	RequestFailCount:    {TypeInt, func(a Aggregate) Value { return len(a.RequestFailures) }},
+	RequestFailureCount: {TypeInt, func(a Aggregate) Value { return len(a.RequestFailures) }},
 	RequestSuccessCount: {TypeInt, func(a Aggregate) Value { return len(a.Records) - len(a.RequestFailures) }},
 	RequestCount:        {TypeInt, func(a Aggregate) Value { return len(a.Records) }},
 }
