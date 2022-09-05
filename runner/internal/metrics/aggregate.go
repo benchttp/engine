@@ -1,7 +1,6 @@
 package metrics
 
 import (
-	"strconv"
 	"time"
 
 	"github.com/benchttp/engine/internal/timestats"
@@ -17,7 +16,7 @@ type Aggregate struct {
 	ResponseTimes timestats.TimeStats
 	// StatusCodesDistribution maps each status code received to
 	// its number of occurrence.
-	StatusCodesDistribution map[string]int
+	StatusCodesDistribution map[int]int
 	// RequestEventTimes is the common statistics computed from
 	// the combination of all recorder.Record.Events of a slice
 	// of recorder.Record. It offers statistics about the
@@ -94,10 +93,10 @@ func flattenRelativeTimeEvents(records []recorder.Record) []recorder.Event {
 	return events
 }
 
-func computeStatusCodesDistribution(records []recorder.Record) map[string]int {
-	statuses := map[string]int{}
+func computeStatusCodesDistribution(records []recorder.Record) map[int]int {
+	statuses := map[int]int{}
 	for _, rec := range records {
-		statuses[strconv.Itoa(rec.Code)]++
+		statuses[rec.Code]++
 	}
 	return statuses
 }
