@@ -69,7 +69,7 @@ func NewAggregate(records []recorder.Record) (agg Aggregate) {
 // Special compute helpers.
 
 func computeRequestEventTimes(records []recorder.Record) map[string]timestats.TimeStats {
-	events := getFlatRelativeTimeEvents(records)
+	events := flattenRelativeTimeEvents(records)
 
 	timesByEvent := map[string][]time.Duration{}
 
@@ -86,10 +86,10 @@ func computeRequestEventTimes(records []recorder.Record) map[string]timestats.Ti
 	return statsByEvent
 }
 
-func getFlatRelativeTimeEvents(records []recorder.Record) []recorder.Event {
+func flattenRelativeTimeEvents(records []recorder.Record) []recorder.Event {
 	events := []recorder.Event{}
 	for _, record := range records {
-		events = append(events, record.RelativeTimeEvents()...)
+		events = append(events, record.Events...)
 	}
 	return events
 }

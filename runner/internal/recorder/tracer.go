@@ -8,6 +8,12 @@ import (
 	"time"
 )
 
+// Event is a stage of an outgoing HTTP request associated with a timestamp.
+type Event struct {
+	Name string        `json:"name"`
+	Time time.Duration `json:"time"`
+}
+
 // tracer is a http.RoundTripper to be used as a http.Transport
 // that records the events of an outgoing HTTP request.
 type tracer struct {
