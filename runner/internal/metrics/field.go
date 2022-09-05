@@ -16,12 +16,21 @@ var ErrUnknownField = errors.New("metrics: unknown field")
 type Field string
 
 const (
-	ResponseTimeMean    Field = "responseTimes.mean"
-	ResponseTimeMin     Field = "responseTimes.min"
-	ResponseTimeMax     Field = "responseTimes.max"
-	RequestFailureCount Field = "requests.failureCount"
-	RequestSuccessCount Field = "requests.successCount"
-	RequestCount        Field = "requests.totalCount"
+	ResponseTimeMin          Field = "responseTimes.min"
+	ResponseTimeMax          Field = "responseTimes.max"
+	ResponseTimeMean         Field = "responseTimes.mean"
+	EventTimeBodyReadMin     Field = "eventTimes.bodyRead.min"
+	EventTimeBodyReadMax     Field = "eventTimes.bodyRead.max"
+	EventTimeBodyReadMean    Field = "eventTimes.bodyRead.mean"
+	EventTimeFirstByteMin    Field = "eventTimes.firstByte.min"
+	EventTimeFirstByteMax    Field = "eventTimes.firstByte.max"
+	EventTimeFirstByteMean   Field = "eventTimes.firstByte.mean"
+	EventTimeConnectDoneMin  Field = "eventTimes.connectDone.min"
+	EventTimeConnectDoneMax  Field = "eventTimes.connectDone.max"
+	EventTimeConnectDoneMean Field = "eventTimes.connectDone.mean"
+	RequestFailureCount      Field = "requests.failureCount"
+	RequestSuccessCount      Field = "requests.successCount"
+	RequestCount             Field = "requests.totalCount"
 )
 
 // fieldDefinition holds the necessary values to identify
@@ -39,12 +48,21 @@ type fieldDefinition struct {
 // fieldDefinitions is a table of truth for fields.
 // It maps all Field references to their intrinsic fieldDefinition.
 var fieldDefinitions = map[Field]fieldDefinition{
-	ResponseTimeMean:    {TypeDuration, func(a Aggregate) Value { return a.ResponseTimes.Mean }},
-	ResponseTimeMin:     {TypeDuration, func(a Aggregate) Value { return a.ResponseTimes.Min }},
-	ResponseTimeMax:     {TypeDuration, func(a Aggregate) Value { return a.ResponseTimes.Max }},
-	RequestFailureCount: {TypeInt, func(a Aggregate) Value { return len(a.RequestFailures) }},
-	RequestSuccessCount: {TypeInt, func(a Aggregate) Value { return len(a.Records) - len(a.RequestFailures) }},
-	RequestCount:        {TypeInt, func(a Aggregate) Value { return len(a.Records) }},
+	ResponseTimeMin:          {TypeDuration, func(a Aggregate) Value { return a.ResponseTimes.Min }},
+	ResponseTimeMax:          {TypeDuration, func(a Aggregate) Value { return a.ResponseTimes.Max }},
+	ResponseTimeMean:         {TypeDuration, func(a Aggregate) Value { return a.ResponseTimes.Mean }},
+	EventTimeConnectDoneMin:  {TypeDuration, func(a Aggregate) Value { return a.RequestEventTimes["ConnectDone"].Min }},
+	EventTimeConnectDoneMax:  {TypeDuration, func(a Aggregate) Value { return a.RequestEventTimes["ConnectDone"].Max }},
+	EventTimeConnectDoneMean: {TypeDuration, func(a Aggregate) Value { return a.RequestEventTimes["ConnectDone"].Mean }},
+	EventTimeFirstByteMin:    {TypeDuration, func(a Aggregate) Value { return a.RequestEventTimes["FirstByte"].Min }},
+	EventTimeFirstByteMax:    {TypeDuration, func(a Aggregate) Value { return a.RequestEventTimes["FirstByte"].Max }},
+	EventTimeFirstByteMean:   {TypeDuration, func(a Aggregate) Value { return a.RequestEventTimes["FirstByte"].Mean }},
+	EventTimeBodyReadMin:     {TypeDuration, func(a Aggregate) Value { return a.RequestEventTimes["BodyRead"].Min }},
+	EventTimeBodyReadMax:     {TypeDuration, func(a Aggregate) Value { return a.RequestEventTimes["BodyRead"].Max }},
+	EventTimeBodyReadMean:    {TypeDuration, func(a Aggregate) Value { return a.RequestEventTimes["BodyRead"].Mean }},
+	RequestFailureCount:      {TypeInt, func(a Aggregate) Value { return len(a.RequestFailures) }},
+	RequestSuccessCount:      {TypeInt, func(a Aggregate) Value { return len(a.Records) - len(a.RequestFailures) }},
+	RequestCount:             {TypeInt, func(a Aggregate) Value { return len(a.Records) }},
 }
 
 // Type represents the underlying type of a Value.
