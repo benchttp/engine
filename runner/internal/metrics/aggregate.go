@@ -3,7 +3,7 @@ package metrics
 import (
 	"time"
 
-	"github.com/benchttp/engine/internal/timestats"
+	"github.com/benchttp/engine/runner/internal/metrics/timestats"
 	"github.com/benchttp/engine/runner/internal/recorder"
 )
 
