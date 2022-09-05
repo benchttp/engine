@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/benchttp/engine/internal/cli/ansi"
-	"github.com/benchttp/engine/internal/timestats"
 	"github.com/benchttp/engine/runner/internal/config"
 	"github.com/benchttp/engine/runner/internal/metrics"
+	"github.com/benchttp/engine/runner/internal/metrics/timestats"
 	"github.com/benchttp/engine/runner/internal/report"
 	"github.com/benchttp/engine/runner/internal/tests"
 )
