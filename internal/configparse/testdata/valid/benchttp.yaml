@@ -25,14 +25,14 @@ output:
 
 tests:
   - name: minimum response time
-    field: MIN
+    field: responseTimes.min
     predicate: GT
     target: 80ms
   - name: maximum response time
-    field: MAX
+    field: responseTimes.max
     predicate: LTE
     target: 120ms
   - name: 100% availability
-    field: FAILURE_COUNT
+    field: requests.failureCount
     predicate: EQ
     target: 0
