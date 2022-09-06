@@ -26,6 +26,15 @@ func TestAggregate_Get(t *testing.T) {
 			exp: 100 * time.Millisecond,
 		},
 		{
+			name:    "get metrics from methods",
+			fieldID: "RequestSuccessCount",
+			agg: metrics.Aggregate{
+				Records:         []struct{ ResponseTime time.Duration }{{}, {}, {}},
+				RequestFailures: []struct{ Reason string }{{}},
+			},
+			exp: 2,
+		},
+		{
 			name:    "case insensitive",
 			fieldID: "responsetimes.MEAN",
 			agg: metrics.Aggregate{

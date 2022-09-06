@@ -54,9 +54,7 @@ func resolveProperty(host reflect.Value, name string, matchFunc MatchFunc) refle
 	match := safeMatchFunc(matchFunc, name)
 	switch host.Kind() {
 	case reflect.Struct:
-		if fieldMatch := host.FieldByNameFunc(match); fieldMatch.IsValid() {
-			return fieldMatch
-		}
+		return propertyByNameFunc(host, match)
 	}
 	return reflect.Value{}
 }
@@ -70,4 +68,25 @@ func safeMatchFunc(matchFunc MatchFunc, pathname string) func(string) bool {
 	return func(key string) bool {
 		return key == pathname
 	}
+}
+
+func propertyByNameFunc(host reflect.Value, match func(string) bool) reflect.Value {
+	if fieldMatch := host.FieldByNameFunc(match); fieldMatch.IsValid() {
+		return fieldMatch
+	}
+	if methodMatch := methodByNameFunc(host, match); methodMatch.IsValid() {
+		return methodMatch.Call([]reflect.Value{})[0]
+	}
+	return reflect.Value{}
+}
+
+func methodByNameFunc(host reflect.Value, match func(string) bool) reflect.Value {
+	n := host.NumMethod()
+	for i := 0; i < n; i++ {
+		methodType := host.Type().Method(i)
+		if methodType.IsExported() && match(methodType.Name) {
+			return host.Method(i)
+		}
+	}
+	return reflect.Value{}
 }

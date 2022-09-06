@@ -65,6 +65,21 @@ func NewAggregate(records []recorder.Record) (agg Aggregate) {
 	return agg
 }
 
+// RequestCount returns the total count of requests done.
+func (agg Aggregate) RequestCount() int {
+	return len(agg.Records)
+}
+
+// RequestFailureCount returns the count of failing requests.
+func (agg Aggregate) RequestFailureCount() int {
+	return len(agg.RequestFailures)
+}
+
+// RequestSuccessCount returns the count of successful requests.
+func (agg Aggregate) RequestSuccessCount() int {
+	return agg.RequestCount() - agg.RequestFailureCount()
+}
+
 // Special compute helpers.
 
 func computeRequestEventTimes(records []recorder.Record) map[string]timestats.TimeStats {
