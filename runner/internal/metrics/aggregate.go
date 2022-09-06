@@ -34,13 +34,6 @@ type Aggregate struct {
 	}
 }
 
-// MetricOf returns the Metric for the given field in Aggregate.
-//
-// It panics if field is not a known field.
-func (agg Aggregate) MetricOf(field Field) Metric {
-	return Metric{Field: field, Value: field.valueIn(agg)}
-}
-
 // NewAggregate computes and aggregates metrics from the given records.
 func NewAggregate(records []recorder.Record) (agg Aggregate) {
 	if len(records) == 0 {

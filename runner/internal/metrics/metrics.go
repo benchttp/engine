@@ -1,9 +1,15 @@
 package metrics
 
+import (
+	"strings"
+
+	"github.com/benchttp/engine/runner/internal/reflectutil"
+)
+
 // Value is a concrete metric value, e.g. 120 or 3 * time.Second.
 type Value interface{}
 
-// Metric represents an Aggregate metric. It links together a Field
+// Metric represents an Aggregate metric. It links together a field id
 // and its Value from the Aggregate.
 // It exposes a method Compare that compares its Value to another.
 type Metric struct {
@@ -33,4 +39,16 @@ type Metric struct {
 //	receiver.Compare(comparer) // panics!
 func (m Metric) Compare(to Metric) ComparisonResult {
 	return compareMetrics(to, m)
+}
+
+// MetricOf returns the Metric for the given field id in Aggregate.
+func (agg Aggregate) MetricOf(fieldID Field) Metric {
+	resolvedValue := reflectutil.ResolvePathFunc(agg, string(fieldID), strings.EqualFold)
+	if !resolvedValue.IsValid() {
+		return Metric{}
+	}
+	return Metric{
+		Field: fieldID,
+		Value: resolvedValue.Interface(),
+	}
 }

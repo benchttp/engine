@@ -3,34 +3,35 @@ package metrics
 import (
 	"errors"
 	"reflect"
+	"time"
 
 	"github.com/benchttp/engine/internal/errorutil"
 )
 
 var ErrUnknownField = errors.New("metrics: unknown field")
 
-// Field is the name of an Aggregate field.
+// LegacyField is the name of an Aggregate field.
 // It exposes a method Type that returns its intrisic type.
 // It can be used to retrieve a Metric from an Aggregate
 // via Aggregate.MetricOf(field).
-type Field string
+type LegacyField string
 
 const (
-	ResponseTimeMin          Field = "responseTimes.min"
-	ResponseTimeMax          Field = "responseTimes.max"
-	ResponseTimeMean         Field = "responseTimes.mean"
-	EventTimeBodyReadMin     Field = "eventTimes.bodyRead.min"
-	EventTimeBodyReadMax     Field = "eventTimes.bodyRead.max"
-	EventTimeBodyReadMean    Field = "eventTimes.bodyRead.mean"
-	EventTimeFirstByteMin    Field = "eventTimes.firstByte.min"
-	EventTimeFirstByteMax    Field = "eventTimes.firstByte.max"
-	EventTimeFirstByteMean   Field = "eventTimes.firstByte.mean"
-	EventTimeConnectDoneMin  Field = "eventTimes.connectDone.min"
-	EventTimeConnectDoneMax  Field = "eventTimes.connectDone.max"
-	EventTimeConnectDoneMean Field = "eventTimes.connectDone.mean"
-	RequestFailureCount      Field = "requests.failureCount"
-	RequestSuccessCount      Field = "requests.successCount"
-	RequestCount             Field = "requests.totalCount"
+	ResponseTimeMin          LegacyField = "responseTimes.min"
+	ResponseTimeMax          LegacyField = "responseTimes.max"
+	ResponseTimeMean         LegacyField = "responseTimes.mean"
+	EventTimeBodyReadMin     LegacyField = "eventTimes.bodyRead.min"
+	EventTimeBodyReadMax     LegacyField = "eventTimes.bodyRead.max"
+	EventTimeBodyReadMean    LegacyField = "eventTimes.bodyRead.mean"
+	EventTimeFirstByteMin    LegacyField = "eventTimes.firstByte.min"
+	EventTimeFirstByteMax    LegacyField = "eventTimes.firstByte.max"
+	EventTimeFirstByteMean   LegacyField = "eventTimes.firstByte.mean"
+	EventTimeConnectDoneMin  LegacyField = "eventTimes.connectDone.min"
+	EventTimeConnectDoneMax  LegacyField = "eventTimes.connectDone.max"
+	EventTimeConnectDoneMean LegacyField = "eventTimes.connectDone.mean"
+	RequestFailureCount      LegacyField = "requests.failureCount"
+	RequestSuccessCount      LegacyField = "requests.successCount"
+	RequestCount             LegacyField = "requests.totalCount"
 )
 
 // fieldDefinition holds the necessary values to identify
@@ -47,7 +48,7 @@ type fieldDefinition struct {
 
 // fieldDefinitions is a table of truth for fields.
 // It maps all Field references to their intrinsic fieldDefinition.
-var fieldDefinitions = map[Field]fieldDefinition{
+var fieldDefinitions = map[LegacyField]fieldDefinition{
 	ResponseTimeMin:          {TypeDuration, func(a Aggregate) Value { return a.ResponseTimes.Min }},
 	ResponseTimeMax:          {TypeDuration, func(a Aggregate) Value { return a.ResponseTimes.Max }},
 	ResponseTimeMean:         {TypeDuration, func(a Aggregate) Value { return a.ResponseTimes.Mean }},
@@ -71,6 +72,8 @@ type Type uint8
 const (
 	lastGoReflectKind = reflect.UnsafePointer
 
+	// TypeInvalid corresponds to an invalid type.
+	TypeInvalid = Type(reflect.Invalid)
 	// TypeInt corresponds to type int.
 	TypeInt = Type(reflect.Int)
 	// TypeDuration corresponds to type time.Duration.
@@ -96,12 +99,12 @@ func (typ Type) String() string {
 
 // Type returns the field's intrisic type.
 // It panics if field is not defined in fieldDefinitions.
-func (field Field) Type() Type {
+func (field LegacyField) Type() Type {
 	return field.mustRetrieve().typ
 }
 
 // Validate returns ErrUnknownField if field is not a know Field, else nil.
-func (field Field) Validate() error {
+func (field LegacyField) Validate() error {
 	if !field.exists() {
 		return errorutil.WithDetails(ErrUnknownField, field)
 	}
@@ -112,23 +115,23 @@ func (field Field) Validate() error {
 
 // valueIn returns the field's bound value in the given Aggregate.
 // It panics if field is not defined in fieldDefinitions.
-func (field Field) valueIn(agg Aggregate) Value {
+func (field LegacyField) valueIn(agg Aggregate) Value {
 	return field.mustRetrieve().boundValue(agg)
 }
 
-func (field Field) retrieve() (fieldDefinition, bool) {
+func (field LegacyField) retrieve() (fieldDefinition, bool) {
 	fieldData, exists := fieldDefinitions[field]
 	return fieldData, exists
 }
 
-func (field Field) exists() bool {
+func (field LegacyField) exists() bool {
 	_, exists := fieldDefinitions[field]
 	return exists
 }
 
 // mustRetrieve retrieves the fieldDefinition for the given field
 // from fieldDefinitions, or panics if not found.
-func (field Field) mustRetrieve() fieldDefinition {
+func (field LegacyField) mustRetrieve() fieldDefinition {
 	fieldData, exists := field.retrieve()
 	if !exists {
 		panic(badField(field))
@@ -136,6 +139,30 @@ func (field Field) mustRetrieve() fieldDefinition {
 	return fieldData
 }
 
-func badField(field Field) string {
+func badField(field LegacyField) string {
 	return "metrics: unknown field: " + string(field)
+}
+
+func (m Metric) Type() Type {
+	switch m.Value.(type) {
+	case int:
+		return TypeInt
+	case time.Duration:
+		return TypeDuration
+	default:
+		return TypeInvalid
+	}
+}
+
+type Field string
+
+func (f Field) Type() Type {
+	return Aggregate{}.MetricOf(f).Type()
+}
+
+func (f Field) Validate() error {
+	if (Aggregate{}).MetricOf(f).Type() == TypeInvalid {
+		return errorutil.WithDetails(ErrUnknownField, f)
+	}
+	return nil
 }

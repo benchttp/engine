@@ -100,7 +100,7 @@ func expectPredicateResult(
 
 	result := tests.Run(agg, []tests.Case{{
 		Predicate: p,
-		Field:     metrics.RequestCount,
+		Field:     "RequestCount",
 		Target:    tar,
 	}})
 

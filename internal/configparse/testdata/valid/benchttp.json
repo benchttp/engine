@@ -27,19 +27,19 @@
   "tests": [
     {
       "name": "minimum response time",
-      "field": "responseTimes.min",
+      "field": "ResponseTimes.Min",
       "predicate": "GT",
       "target": "80ms"
     },
     {
       "name": "maximum response time",
-      "field": "responseTimes.max",
+      "field": "ResponseTimes.Max",
       "predicate": "LTE",
       "target": "120ms"
     },
     {
       "name": "100% availability",
-      "field": "requests.failureCount",
+      "field": "RequestFailureCount",
       "predicate": "EQ",
       "target": "0"
     }

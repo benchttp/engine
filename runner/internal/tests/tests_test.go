@@ -25,20 +25,20 @@ func TestRun(t *testing.T) {
 				{
 					Name:      "average response time below 120ms (pass)",
 					Predicate: tests.LT,
-					Field:     metrics.ResponseTimeMean,
+					Field:     "ResponseTimes.Mean",
 					Target:    ms(120),
 				},
 				{
 					Name:      "average response time is above 80ms (pass)",
 					Predicate: tests.GT,
-					Field:     metrics.ResponseTimeMean,
+					Field:     "ResponseTimes.Mean",
 					Target:    ms(80),
 				},
 			},
 			expGlobalPass: true,
 			expCaseResults: []tests.CaseResult{
-				{Pass: true, Summary: "want responseTimes.mean < 120ms, got 100ms"},
-				{Pass: true, Summary: "want responseTimes.mean > 80ms, got 100ms"},
+				{Pass: true, Summary: "want ResponseTimes.Mean < 120ms, got 100ms"},
+				{Pass: true, Summary: "want ResponseTimes.Mean > 80ms, got 100ms"},
 			},
 		},
 		{
@@ -48,20 +48,20 @@ func TestRun(t *testing.T) {
 				{
 					Name:      "average response time below 120ms (fail)",
 					Predicate: tests.LT,
-					Field:     metrics.ResponseTimeMean,
+					Field:     "ResponseTimes.Mean",
 					Target:    ms(120),
 				},
 				{
 					Name:      "average response time is above 80ms (pass)",
 					Predicate: tests.GT,
-					Field:     metrics.ResponseTimeMean,
+					Field:     "ResponseTimes.Mean",
 					Target:    ms(80),
 				},
 			},
 			expGlobalPass: false,
 			expCaseResults: []tests.CaseResult{
-				{Pass: false, Summary: "want responseTimes.mean < 120ms, got 200ms"},
-				{Pass: true, Summary: "want responseTimes.mean > 80ms, got 200ms"},
+				{Pass: false, Summary: "want ResponseTimes.Mean < 120ms, got 200ms"},
+				{Pass: true, Summary: "want ResponseTimes.Mean > 80ms, got 200ms"},
 			},
 		},
 	}
