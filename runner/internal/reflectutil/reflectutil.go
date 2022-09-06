@@ -58,6 +58,8 @@ func resolveProperty(host reflect.Value, name string, matchFunc MatchFunc) refle
 		return propertyByNameFunc(host, match)
 	case reflect.Map:
 		return mapIndexFunc(host, match)
+	case reflect.Slice:
+		return sliceIndex(host, name)
 	}
 	return reflect.Value{}
 }
@@ -107,6 +109,17 @@ func mapIndexFunc(host reflect.Value, match func(string) bool) reflect.Value {
 				return iter.Value()
 			}
 		}
+	}
+	return reflect.Value{}
+}
+
+func sliceIndex(host reflect.Value, istr string) reflect.Value {
+	i, err := strconv.Atoi(istr)
+	if err != nil || i >= host.Len() {
+		return reflect.Value{}
+	}
+	if elemMatch := host.Index(i); elemMatch.IsValid() {
+		return elemMatch
 	}
 	return reflect.Value{}
 }

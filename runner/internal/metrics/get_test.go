@@ -53,6 +53,14 @@ func TestAggregate_Get(t *testing.T) {
 			exp: 100 * time.Millisecond,
 		},
 		{
+			name:    "get metrics from slice",
+			fieldID: "RequestFailures.1.Reason",
+			agg: metrics.Aggregate{
+				RequestFailures: []struct{ Reason string }{{"abc"}, {"def"}},
+			},
+			exp: "def",
+		},
+		{
 			name:    "case insensitive",
 			fieldID: "responsetimes.MEAN",
 			agg: metrics.Aggregate{
