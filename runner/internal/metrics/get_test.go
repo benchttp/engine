@@ -25,6 +25,16 @@ func TestAggregate_Get(t *testing.T) {
 			},
 			exp: 100 * time.Millisecond,
 		},
+		{
+			name:    "case insensitive",
+			fieldID: "responsetimes.MEAN",
+			agg: metrics.Aggregate{
+				ResponseTimes: timestats.TimeStats{
+					Mean: 100 * time.Millisecond,
+				},
+			},
+			exp: 100 * time.Millisecond,
+		},
 	}
 
 	for _, c := range cases {
