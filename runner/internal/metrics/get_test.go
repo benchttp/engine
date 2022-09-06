@@ -35,6 +35,24 @@ func TestAggregate_Get(t *testing.T) {
 			exp: 2,
 		},
 		{
+			name:    "get metrics from int map",
+			fieldID: "StatusCodesDistribution.404",
+			agg: metrics.Aggregate{
+				StatusCodesDistribution: map[int]int{200: 10, 404: 5},
+			},
+			exp: 5,
+		},
+		{
+			name:    "get metrics from string map",
+			fieldID: "RequestEventTimes.FirstResponseByte.Mean",
+			agg: metrics.Aggregate{
+				RequestEventTimes: map[string]timestats.TimeStats{
+					"FirstResponseByte": {Mean: 100 * time.Millisecond},
+				},
+			},
+			exp: 100 * time.Millisecond,
+		},
+		{
 			name:    "case insensitive",
 			fieldID: "responsetimes.MEAN",
 			agg: metrics.Aggregate{

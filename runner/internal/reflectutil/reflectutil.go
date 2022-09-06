@@ -2,6 +2,7 @@ package reflectutil
 
 import (
 	"reflect"
+	"strconv"
 	"strings"
 )
 
@@ -55,6 +56,8 @@ func resolveProperty(host reflect.Value, name string, matchFunc MatchFunc) refle
 	switch host.Kind() {
 	case reflect.Struct:
 		return propertyByNameFunc(host, match)
+	case reflect.Map:
+		return mapIndexFunc(host, match)
 	}
 	return reflect.Value{}
 }
@@ -86,6 +89,23 @@ func methodByNameFunc(host reflect.Value, match func(string) bool) reflect.Value
 		methodType := host.Type().Method(i)
 		if methodType.IsExported() && match(methodType.Name) {
 			return host.Method(i)
+		}
+	}
+	return reflect.Value{}
+}
+
+func mapIndexFunc(host reflect.Value, match func(string) bool) reflect.Value {
+	iter := host.MapRange()
+	for iter.Next() {
+		switch key := iter.Key(); key.Kind() {
+		case reflect.String:
+			if match(key.String()) {
+				return iter.Value()
+			}
+		case reflect.Int:
+			if match(strconv.Itoa(int(key.Int()))) {
+				return iter.Value()
+			}
 		}
 	}
 	return reflect.Value{}
