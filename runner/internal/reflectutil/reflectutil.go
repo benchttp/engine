@@ -42,7 +42,8 @@ func (r PathResolver) resolveRecursive(
 
 func (r PathResolver) resolveProperty(host reflect.Value, name string) reflect.Value {
 	match := r.safeMatchFunc(name)
-	switch host.Kind() {
+	kind := host.Kind()
+	switch kind {
 	case reflect.Struct:
 		return propertyByNameFunc(host, match)
 	case reflect.Map:
@@ -50,7 +51,7 @@ func (r PathResolver) resolveProperty(host reflect.Value, name string) reflect.V
 	case reflect.Slice:
 		return sliceIndex(host, name)
 	}
-	return reflect.Value{}
+	panic(fmt.Sprintf("unhandled kind: %s", kind))
 }
 
 func (r PathResolver) safeMatchFunc(pathname string) func(string) bool {
@@ -86,9 +87,11 @@ func methodByNameFunc(host reflect.Value, match func(string) bool) reflect.Value
 }
 
 func mapIndexFunc(host reflect.Value, match func(string) bool) reflect.Value {
+	keyKind := host.Type().Key().Kind()
 	iter := host.MapRange()
 	for iter.Next() {
-		switch key := iter.Key(); key.Kind() {
+		key := iter.Key()
+		switch keyKind {
 		case reflect.String:
 			if match(key.String()) {
 				return iter.Value()
@@ -99,7 +102,7 @@ func mapIndexFunc(host reflect.Value, match func(string) bool) reflect.Value {
 			}
 		}
 	}
-	return reflect.Value{}
+	panic(fmt.Sprintf("unhandled key kind: %s", keyKind))
 }
 
 func sliceIndex(host reflect.Value, istr string) reflect.Value {
