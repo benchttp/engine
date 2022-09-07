@@ -131,7 +131,7 @@ func (r PathResolver) resolveTypeRecursive(
 		return current
 	}
 	next := r.resolvePropertyType(current, pathStack[0])
-	if len(pathStack) == 1 {
+	if len(pathStack) == 1 || next == nil {
 		return next
 	}
 	return r.resolveTypeRecursive(next, pathStack[1:])
