@@ -1,6 +1,7 @@
 package reflectutil
 
 import (
+	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
@@ -114,4 +115,57 @@ func sliceIndex(host reflect.Value, istr string) reflect.Value {
 		return elemMatch
 	}
 	return reflect.Value{}
+}
+
+func (r PathResolver) ResolvePathType(host interface{}, pathRepr string) reflect.Type {
+	hostValue := reflect.TypeOf(host)
+	pathStack := strings.Split(pathRepr, ".")
+	return r.resolveTypeRecursive(hostValue, pathStack)
+}
+
+func (r PathResolver) resolveTypeRecursive(
+	current reflect.Type,
+	pathStack []string,
+) reflect.Type {
+	if len(pathStack) == 0 {
+		return current
+	}
+	next := r.resolvePropertyType(current, pathStack[0])
+	if len(pathStack) == 1 {
+		return next
+	}
+	return r.resolveTypeRecursive(next, pathStack[1:])
+}
+
+func (r PathResolver) resolvePropertyType(host reflect.Type, name string) reflect.Type {
+	match := r.safeMatchFunc(name)
+	kind := host.Kind()
+	switch kind {
+	case reflect.Struct:
+		return propertyTypeByNameFunc(host, match)
+	case reflect.Map, reflect.Slice:
+		return host.Elem()
+	}
+	panic(fmt.Sprintf("unhandled kind: %s", kind))
+}
+
+func propertyTypeByNameFunc(host reflect.Type, match func(string) bool) reflect.Type {
+	if fieldType, ok := host.FieldByNameFunc(match); ok {
+		return fieldType.Type
+	}
+	if methodType, ok := methodTypeByNameFunc(host, match); ok {
+		return methodType.Type.Out(0)
+	}
+	return nil
+}
+
+func methodTypeByNameFunc(host reflect.Type, match func(string) bool) (reflect.Method, bool) {
+	n := host.NumMethod()
+	for i := 0; i < n; i++ {
+		methodType := host.Method(i)
+		if methodType.IsExported() && match(methodType.Name) {
+			return methodType, true
+		}
+	}
+	return reflect.Method{}, false
 }

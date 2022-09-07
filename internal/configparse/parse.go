@@ -352,9 +352,9 @@ func parseMetricValue(
 		return v, nil
 	}
 	switch fieldType {
-	case runner.MetricsTypeInt:
+	case "int":
 		return handleError(strconv.Atoi(inputValue))
-	case runner.MetricsTypeDuration:
+	case "time.Duration":
 		return handleError(time.ParseDuration(inputValue))
 	default:
 		return nil, fmt.Errorf("unknown field: %s", field)

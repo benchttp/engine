@@ -18,14 +18,14 @@ type Field string
 
 // Type returns the intrinsic Type of the metric targeted
 // by the Field receiver.
-func (f Field) Type() Type {
-	return Aggregate{}.MetricOf(f).Type()
+func (f Field) Type() string {
+	return Aggregate{}.TypeOf(f)
 }
 
 // Validate returns an ErrUnknownField if it does not correspond
 // to a valid path from an Aggregate.
 func (f Field) Validate() error {
-	if (Aggregate{}).MetricOf(f).Type() == TypeInvalid {
+	if f.Type() == "" {
 		return errorutil.WithDetails(ErrUnknownField, f)
 	}
 	return nil

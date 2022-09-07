@@ -55,3 +55,11 @@ func (agg Aggregate) MetricOf(fieldID Field) Metric {
 		Value: resolvedValue.Interface(),
 	}
 }
+
+// TypeOf returns the Metric for the given field id in Aggregate.
+func (agg Aggregate) TypeOf(fieldID Field) string {
+	resolver := reflectutil.PathResolver{
+		KeyMatcher: strings.EqualFold,
+	}
+	return resolver.ResolvePathType(agg, string(fieldID)).String()
+}
