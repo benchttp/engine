@@ -6,53 +6,42 @@ import (
 	"strings"
 )
 
-// MatchFunc is a function that determines whether a property name
+// KeyMatcher is a function that determines whether a property name
 // matches the current path value.
-type MatchFunc func(key, pathname string) bool
+type KeyMatcher func(key, pathname string) bool
 
-// ResolvePath resolves pathRepr starting from host and returns
-// the corresponding value.
-// It uses string comparison to determine whether the current path value
-// matches a property name.
-func ResolvePath(host interface{}, pathRepr string) reflect.Value {
-	return resolvePath(host, pathRepr, nil)
+// PathResolver exposes a method ResolvePath that resolves a path
+// representation from a host structure.
+type PathResolver struct {
+	// KeyMatcher determines whether a structure key matches the current
+	// path value. If not set, regular string comparison is used.
+	KeyMatcher KeyMatcher
 }
 
 // ResolvePath resolves pathRepr starting from host and returns
 // the corresponding value.
-// It uses the result of matchFunc to determine whether the current path value
-// matches a property name.
-func ResolvePathFunc(host interface{}, pathRepr string, matchFunc MatchFunc) reflect.Value {
-	return resolvePath(host, pathRepr, matchFunc)
-}
-
-func resolvePath(
-	host interface{},
-	pathRepr string,
-	matchFunc MatchFunc,
-) reflect.Value {
+func (r PathResolver) ResolvePath(host interface{}, pathRepr string) reflect.Value {
 	hostValue := reflect.ValueOf(host)
 	pathStack := strings.Split(pathRepr, ".")
-	return resolveRecursive(hostValue, pathStack, matchFunc)
+	return r.resolveRecursive(hostValue, pathStack)
 }
 
-func resolveRecursive(
+func (r PathResolver) resolveRecursive(
 	current reflect.Value,
 	pathStack []string,
-	matchFunc MatchFunc,
 ) reflect.Value {
 	if len(pathStack) == 0 {
 		return current
 	}
-	next := resolveProperty(current, pathStack[0], matchFunc)
+	next := r.resolveProperty(current, pathStack[0])
 	if len(pathStack) == 1 {
 		return next
 	}
-	return resolveRecursive(next, pathStack[1:], matchFunc)
+	return r.resolveRecursive(next, pathStack[1:])
 }
 
-func resolveProperty(host reflect.Value, name string, matchFunc MatchFunc) reflect.Value {
-	match := safeMatchFunc(matchFunc, name)
+func (r PathResolver) resolveProperty(host reflect.Value, name string) reflect.Value {
+	match := r.safeMatchFunc(name)
 	switch host.Kind() {
 	case reflect.Struct:
 		return propertyByNameFunc(host, match)
@@ -64,10 +53,10 @@ func resolveProperty(host reflect.Value, name string, matchFunc MatchFunc) refle
 	return reflect.Value{}
 }
 
-func safeMatchFunc(matchFunc MatchFunc, pathname string) func(string) bool {
-	if matchFunc != nil {
+func (r PathResolver) safeMatchFunc(pathname string) func(string) bool {
+	if r.KeyMatcher != nil {
 		return func(key string) bool {
-			return matchFunc(key, pathname)
+			return r.KeyMatcher(key, pathname)
 		}
 	}
 	return func(key string) bool {

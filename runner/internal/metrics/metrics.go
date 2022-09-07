@@ -43,7 +43,10 @@ func (m Metric) Compare(to Metric) ComparisonResult {
 
 // MetricOf returns the Metric for the given field id in Aggregate.
 func (agg Aggregate) MetricOf(fieldID Field) Metric {
-	resolvedValue := reflectutil.ResolvePathFunc(agg, string(fieldID), strings.EqualFold)
+	resolver := reflectutil.PathResolver{
+		KeyMatcher: strings.EqualFold,
+	}
+	resolvedValue := resolver.ResolvePath(agg, string(fieldID))
 	if !resolvedValue.IsValid() {
 		return Metric{}
 	}
