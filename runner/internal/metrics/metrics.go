@@ -42,27 +42,27 @@ func (m Metric) Compare(to Metric) ComparisonResult {
 }
 
 // MetricOf returns the Metric for the given field id in Aggregate.
-func (agg Aggregate) MetricOf(fieldID Field) Metric {
+func (agg Aggregate) MetricOf(field Field) Metric {
 	resolver := reflectutil.PathResolver{
 		KeyMatcher: strings.EqualFold,
 	}
-	resolvedValue := resolver.ResolvePath(agg, string(fieldID))
+	resolvedValue := resolver.ResolvePath(agg, string(field))
 	if !resolvedValue.IsValid() {
 		return Metric{}
 	}
 	return Metric{
-		Field: fieldID,
+		Field: field,
 		Value: resolvedValue.Interface(),
 	}
 }
 
-// TypeOf returns a string representation of the metric's type
-// represented by fieldID.
-func (agg Aggregate) TypeOf(fieldID Field) string {
+// typeOf returns a string representation of the metric's type
+// represented by a field path.
+func (agg Aggregate) typeOf(field Field) string {
 	resolver := reflectutil.PathResolver{
 		KeyMatcher: strings.EqualFold,
 	}
-	if typ := resolver.ResolvePathType(agg, string(fieldID)); typ != nil {
+	if typ := resolver.ResolvePathType(agg, string(field)); typ != nil {
 		return typ.String()
 	}
 	return ""

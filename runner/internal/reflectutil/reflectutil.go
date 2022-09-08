@@ -150,11 +150,11 @@ func (r PathResolver) resolvePropertyType(host reflect.Type, name string) reflec
 }
 
 func propertyTypeByNameFunc(host reflect.Type, match func(string) bool) reflect.Type {
-	if fieldType, ok := host.FieldByNameFunc(match); ok {
-		return fieldType.Type
+	if field, ok := host.FieldByNameFunc(match); ok {
+		return field.Type
 	}
-	if methodType, ok := methodTypeByNameFunc(host, match); ok {
-		return methodType.Type.Out(0)
+	if method, ok := methodTypeByNameFunc(host, match); ok {
+		return method.Type.Out(0)
 	}
 	return nil
 }

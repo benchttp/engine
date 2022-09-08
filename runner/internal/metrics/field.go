@@ -19,7 +19,7 @@ type Field string
 // Type returns the intrinsic Type of the metric targeted
 // by the Field receiver.
 func (f Field) Type() string {
-	return Aggregate{}.TypeOf(f)
+	return Aggregate{}.typeOf(f)
 }
 
 // Validate returns an ErrUnknownField if it does not correspond
