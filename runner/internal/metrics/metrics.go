@@ -3,7 +3,7 @@ package metrics
 import (
 	"strings"
 
-	"github.com/benchttp/engine/runner/internal/reflectutil"
+	"github.com/benchttp/engine/runner/internal/reflectpath"
 )
 
 // Value is a concrete metric value, e.g. 120 or 3 * time.Second.
@@ -43,7 +43,7 @@ func (m Metric) Compare(to Metric) ComparisonResult {
 
 // MetricOf returns the Metric for the given field id in Aggregate.
 func (agg Aggregate) MetricOf(field Field) Metric {
-	resolvedValue := pathResolver().ResolvePath(agg, string(field))
+	resolvedValue := pathResolver().ResolveValue(agg, string(field))
 	if !resolvedValue.IsValid() {
 		return Metric{}
 	}
@@ -56,7 +56,7 @@ func (agg Aggregate) MetricOf(field Field) Metric {
 // typeOf returns a string representation of the metric's type
 // represented by a field path.
 func (agg Aggregate) typeOf(field Field) string {
-	if typ := pathResolver().ResolvePathType(agg, string(field)); typ != nil {
+	if typ := pathResolver().ResolveType(agg, string(field)); typ != nil {
 		return typ.String()
 	}
 	return ""
@@ -71,8 +71,8 @@ var exposedPathPatterns = []string{
 	"(?i)Request(Failure|Success)?Count",
 }
 
-func pathResolver() reflectutil.PathResolver {
-	return reflectutil.PathResolver{
+func pathResolver() reflectpath.Resolver {
+	return reflectpath.Resolver{
 		KeyMatcher:      strings.EqualFold,
 		AllowedPatterns: exposedPathPatterns,
 	}
