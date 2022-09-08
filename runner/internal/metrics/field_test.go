@@ -37,7 +37,7 @@ func TestField_Type(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			if got := metrics.Field(c.fieldID).Type(); got != c.exp {
-				t.Errorf("bad type: exp %s, got %s", c.exp, got)
+				t.Errorf("bad type: exp %q, got %q", c.exp, got)
 			}
 		})
 	}

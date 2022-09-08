@@ -43,10 +43,7 @@ func (m Metric) Compare(to Metric) ComparisonResult {
 
 // MetricOf returns the Metric for the given field id in Aggregate.
 func (agg Aggregate) MetricOf(field Field) Metric {
-	resolver := reflectutil.PathResolver{
-		KeyMatcher: strings.EqualFold,
-	}
-	resolvedValue := resolver.ResolvePath(agg, string(field))
+	resolvedValue := pathResolver().ResolvePath(agg, string(field))
 	if !resolvedValue.IsValid() {
 		return Metric{}
 	}
@@ -59,11 +56,24 @@ func (agg Aggregate) MetricOf(field Field) Metric {
 // typeOf returns a string representation of the metric's type
 // represented by a field path.
 func (agg Aggregate) typeOf(field Field) string {
-	resolver := reflectutil.PathResolver{
-		KeyMatcher: strings.EqualFold,
-	}
-	if typ := resolver.ResolvePathType(agg, string(field)); typ != nil {
+	if typ := pathResolver().ResolvePathType(agg, string(field)); typ != nil {
 		return typ.String()
 	}
 	return ""
+}
+
+var exposedPathPatterns = []string{
+	"(?i)ResponseTimes.*",
+	"(?i)StatusCodesDistribution.*",
+	"(?i)RequestEventTimes.*",
+	"(?i)Records.*",
+	"(?i)RequestFailures.*",
+	"(?i)Request(Failure|Success)?Count",
+}
+
+func pathResolver() reflectutil.PathResolver {
+	return reflectutil.PathResolver{
+		KeyMatcher:      strings.EqualFold,
+		AllowedPatterns: exposedPathPatterns,
+	}
 }

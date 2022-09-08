@@ -3,6 +3,7 @@ package reflectutil
 import (
 	"fmt"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -16,12 +17,16 @@ type KeyMatcher func(key, pathname string) bool
 type PathResolver struct {
 	// KeyMatcher determines whether a structure key matches the current
 	// path value. If not set, regular string comparison is used.
-	KeyMatcher KeyMatcher
+	KeyMatcher      KeyMatcher
+	AllowedPatterns []string
 }
 
 // ResolvePath resolves pathRepr starting from host and returns
 // the corresponding value.
 func (r PathResolver) ResolvePath(host interface{}, pathRepr string) reflect.Value {
+	if !r.isPathAllowed(pathRepr) {
+		return reflect.Value{}
+	}
 	hostValue := reflect.ValueOf(host)
 	pathStack := strings.Split(pathRepr, ".")
 	return r.resolveRecursive(hostValue, pathStack)
@@ -118,6 +123,9 @@ func sliceIndex(host reflect.Value, istr string) reflect.Value {
 }
 
 func (r PathResolver) ResolvePathType(host interface{}, pathRepr string) reflect.Type {
+	if !r.isPathAllowed(pathRepr) {
+		return nil
+	}
 	hostValue := reflect.TypeOf(host)
 	pathStack := strings.Split(pathRepr, ".")
 	return r.resolveTypeRecursive(hostValue, pathStack)
@@ -147,6 +155,16 @@ func (r PathResolver) resolvePropertyType(host reflect.Type, name string) reflec
 		return host.Elem()
 	}
 	panic(fmt.Sprintf("unhandled kind: %s", kind))
+}
+
+func (r PathResolver) isPathAllowed(pathRepr string) bool {
+	for _, pattern := range r.AllowedPatterns {
+		rgx := regexp.MustCompile(pattern)
+		if rgx.MatchString(pathRepr) {
+			return true
+		}
+	}
+	return len(r.AllowedPatterns) == 0
 }
 
 func propertyTypeByNameFunc(host reflect.Type, match func(string) bool) reflect.Type {
