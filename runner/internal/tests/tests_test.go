@@ -20,48 +20,48 @@ func TestRun(t *testing.T) {
 	}{
 		{
 			label:    "pass if all cases pass",
-			inputAgg: metrics.Aggregate{ResponseTimes: timestats.TimeStats{Mean: 100 * time.Millisecond}},
+			inputAgg: metricsWithMeanResponseTime(ms(100)),
 			inputCases: []tests.Case{
 				{
 					Name:      "average response time below 120ms (pass)",
 					Predicate: tests.LT,
-					Field:     metrics.ResponseTimeMean,
-					Target:    120 * time.Millisecond,
+					Field:     "ResponseTimes.Mean",
+					Target:    ms(120),
 				},
 				{
 					Name:      "average response time is above 80ms (pass)",
 					Predicate: tests.GT,
-					Field:     metrics.ResponseTimeMean,
-					Target:    80 * time.Millisecond,
+					Field:     "ResponseTimes.Mean",
+					Target:    ms(80),
 				},
 			},
 			expGlobalPass: true,
 			expCaseResults: []tests.CaseResult{
-				{Pass: true, Summary: "want MEAN < 120ms, got 100ms"},
-				{Pass: true, Summary: "want MEAN > 80ms, got 100ms"},
+				{Pass: true, Summary: "want ResponseTimes.Mean < 120ms, got 100ms"},
+				{Pass: true, Summary: "want ResponseTimes.Mean > 80ms, got 100ms"},
 			},
 		},
 		{
 			label:    "fail if at least one case fails",
-			inputAgg: metrics.Aggregate{ResponseTimes: timestats.TimeStats{Mean: 200 * time.Millisecond}},
+			inputAgg: metricsWithMeanResponseTime(ms(200)),
 			inputCases: []tests.Case{
 				{
 					Name:      "average response time below 120ms (fail)",
 					Predicate: tests.LT,
-					Field:     metrics.ResponseTimeMean,
-					Target:    120 * time.Millisecond,
+					Field:     "ResponseTimes.Mean",
+					Target:    ms(120),
 				},
 				{
 					Name:      "average response time is above 80ms (pass)",
 					Predicate: tests.GT,
-					Field:     metrics.ResponseTimeMean,
-					Target:    80 * time.Millisecond,
+					Field:     "ResponseTimes.Mean",
+					Target:    ms(80),
 				},
 			},
 			expGlobalPass: false,
 			expCaseResults: []tests.CaseResult{
-				{Pass: false, Summary: "want MEAN < 120ms, got 200ms"},
-				{Pass: true, Summary: "want MEAN > 80ms, got 200ms"},
+				{Pass: false, Summary: "want ResponseTimes.Mean < 120ms, got 200ms"},
+				{Pass: true, Summary: "want ResponseTimes.Mean > 80ms, got 200ms"},
 			},
 		},
 	}
@@ -110,6 +110,17 @@ func assertEqualCaseResults(t *testing.T, exp, got []tests.CaseResult) {
 				)
 			}
 		})
-
 	}
+}
+
+func metricsWithMeanResponseTime(d time.Duration) metrics.Aggregate {
+	return metrics.Aggregate{
+		ResponseTimes: timestats.TimeStats{
+			Mean: d,
+		},
+	}
+}
+
+func ms(n int) time.Duration {
+	return time.Duration(n) * time.Millisecond
 }

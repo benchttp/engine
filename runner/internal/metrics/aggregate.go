@@ -34,13 +34,6 @@ type Aggregate struct {
 	}
 }
 
-// MetricOf returns the Metric for the given field in Aggregate.
-//
-// It panics if field is not a known field.
-func (agg Aggregate) MetricOf(field Field) Metric {
-	return Metric{Field: field, Value: field.valueIn(agg)}
-}
-
 // NewAggregate computes and aggregates metrics from the given records.
 func NewAggregate(records []recorder.Record) (agg Aggregate) {
 	if len(records) == 0 {
@@ -63,6 +56,21 @@ func NewAggregate(records []recorder.Record) (agg Aggregate) {
 	agg.RequestEventTimes = computeRequestEventTimes(records)
 
 	return agg
+}
+
+// RequestCount returns the total count of requests done.
+func (agg Aggregate) RequestCount() int {
+	return len(agg.Records)
+}
+
+// RequestFailureCount returns the count of failing requests.
+func (agg Aggregate) RequestFailureCount() int {
+	return len(agg.RequestFailures)
+}
+
+// RequestSuccessCount returns the count of successful requests.
+func (agg Aggregate) RequestSuccessCount() int {
+	return agg.RequestCount() - agg.RequestFailureCount()
 }
 
 // Special compute helpers.

@@ -337,23 +337,27 @@ func parseOptionalDuration(raw string) (time.Duration, error) {
 	return time.ParseDuration(raw)
 }
 
-func parseMetricValue(field runner.MetricsField, in string) (runner.MetricsValue, error) {
+func parseMetricValue(
+	field runner.MetricsField,
+	inputValue string,
+) (runner.MetricsValue, error) {
+	fieldType := field.Type()
 	handleError := func(v interface{}, err error) (runner.MetricsValue, error) {
 		if err != nil {
 			return nil, fmt.Errorf(
 				"value %q is incompatible with field %s (want %s)",
-				in, field, field.Type(),
+				inputValue, field, fieldType,
 			)
 		}
 		return v, nil
 	}
-	switch typ := field.Type(); typ {
-	case runner.MetricsTypeInt:
-		return handleError(strconv.Atoi(in))
-	case runner.MetricsTypeDuration:
-		return handleError(time.ParseDuration(in))
+	switch fieldType {
+	case "int":
+		return handleError(strconv.Atoi(inputValue))
+	case "time.Duration":
+		return handleError(time.ParseDuration(inputValue))
 	default:
-		return nil, fmt.Errorf("unknown field: %v", field)
+		return nil, fmt.Errorf("unknown field: %s", field)
 	}
 }
 

@@ -1,9 +1,15 @@
 package metrics
 
+import (
+	"strings"
+
+	"github.com/benchttp/engine/runner/internal/reflectpath"
+)
+
 // Value is a concrete metric value, e.g. 120 or 3 * time.Second.
 type Value interface{}
 
-// Metric represents an Aggregate metric. It links together a Field
+// Metric represents an Aggregate metric. It links together a field id
 // and its Value from the Aggregate.
 // It exposes a method Compare that compares its Value to another.
 type Metric struct {
@@ -33,4 +39,41 @@ type Metric struct {
 //	receiver.Compare(comparer) // panics!
 func (m Metric) Compare(to Metric) ComparisonResult {
 	return compareMetrics(to, m)
+}
+
+// MetricOf returns the Metric for the given field id in Aggregate.
+func (agg Aggregate) MetricOf(field Field) Metric {
+	resolvedValue := pathResolver().ResolveValue(agg, string(field))
+	if !resolvedValue.IsValid() {
+		return Metric{}
+	}
+	return Metric{
+		Field: field,
+		Value: resolvedValue.Interface(),
+	}
+}
+
+// typeOf returns a string representation of the metric's type
+// represented by a field path.
+func (agg Aggregate) typeOf(field Field) string {
+	if typ := pathResolver().ResolveType(agg, string(field)); typ != nil {
+		return typ.String()
+	}
+	return ""
+}
+
+var exposedPathPatterns = []string{
+	"(?i)ResponseTimes.*",
+	"(?i)StatusCodesDistribution.*",
+	"(?i)RequestEventTimes.*",
+	"(?i)Records.*",
+	"(?i)RequestFailures.*",
+	"(?i)Request(Failure|Success)?Count",
+}
+
+func pathResolver() reflectpath.Resolver {
+	return reflectpath.Resolver{
+		KeyMatcher:      strings.EqualFold,
+		AllowedPatterns: exposedPathPatterns,
+	}
 }
