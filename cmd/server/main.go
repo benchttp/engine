@@ -12,6 +12,7 @@ import (
 
 	"github.com/joho/godotenv"
 
+	"github.com/benchttp/engine/cmd/server/response"
 	"github.com/benchttp/engine/internal/configparse"
 	"github.com/benchttp/engine/runner"
 )
@@ -99,7 +100,7 @@ func handleStream(w http.ResponseWriter, r *http.Request) {
 	// The issue is likely on the read side (front-end), but this is
 	// the easiest fix for now.
 	time.Sleep(10 * time.Millisecond)
-	if err := toReportResponse(rep).EncodeJSON(w); err != nil {
+	if err := response.Report(rep).EncodeJSON(w); err != nil {
 		internalError(w, err)
 		return
 	}
@@ -107,7 +108,7 @@ func handleStream(w http.ResponseWriter, r *http.Request) {
 
 func streamProgress(w http.ResponseWriter) func(runner.RecordingProgress) {
 	return func(progress runner.RecordingProgress) {
-		if err := toProgressResponse(progress).EncodeJSON(w); err != nil {
+		if err := response.Progress(progress).EncodeJSON(w); err != nil {
 			internalError(w, err)
 		}
 		w.(http.Flusher).Flush()
@@ -119,7 +120,7 @@ func internalError(w http.ResponseWriter, e error) {
 
 	w.WriteHeader(http.StatusInternalServerError)
 
-	if err := toErrorResponse(e).EncodeJSON(w); err != nil {
+	if err := response.Error(e).EncodeJSON(w); err != nil {
 		// Fallback to plain text encoding.
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}

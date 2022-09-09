@@ -1,4 +1,4 @@
-package main
+package response
 
 import (
 	"encoding/json"
@@ -8,13 +8,13 @@ import (
 	"github.com/benchttp/engine/runner"
 )
 
-type reportResponse struct {
+type ReportResponse struct {
 	Metadata metadataResponse `json:"metadata"`
 	Metrics  metricsResponse  `json:"metrics"`
 	Tests    testsResponse    `json:"tests"`
 }
 
-func (resp reportResponse) EncodeJSON(w io.Writer) error {
+func (resp ReportResponse) EncodeJSON(w io.Writer) error {
 	return json.NewEncoder(w).Encode(resp)
 }
 
@@ -70,8 +70,8 @@ type requestFailureResponse struct {
 	Reason string `json:"reason"`
 }
 
-func toReportResponse(rep *runner.Report) reportResponse {
-	return reportResponse{
+func Report(rep *runner.Report) ReportResponse {
+	return ReportResponse{
 		Metadata: metadataResponse{
 			FinishedAt:    rep.Metadata.FinishedAt,
 			TotalDuration: rep.Metadata.TotalDuration,
@@ -144,42 +144,4 @@ func toRequestFailuresResponse(in []struct{ Reason string }) []requestFailureRes
 		resp[i] = requestFailureResponse{Reason: v.Reason}
 	}
 	return resp
-}
-
-type progressResponse struct {
-	ID        int           `json:"id"`
-	Done      bool          `json:"done"`
-	Error     error         `json:"error"`
-	DoneCount int           `json:"doneCount"`
-	MaxCount  int           `json:"maxCount"`
-	Timeout   time.Duration `json:"timeout"`
-	Elapsed   time.Duration `json:"elapsed"`
-}
-
-func (resp progressResponse) EncodeJSON(w io.Writer) error {
-	return json.NewEncoder(w).Encode(resp)
-}
-
-func toProgressResponse(in runner.RecordingProgress) progressResponse {
-	return progressResponse{
-		ID:        in.ID,
-		Done:      in.Done,
-		Error:     in.Error,
-		DoneCount: in.DoneCount,
-		MaxCount:  in.MaxCount,
-		Timeout:   in.Timeout,
-		Elapsed:   in.Elapsed,
-	}
-}
-
-type errorResponse struct {
-	Error error `json:"error"`
-}
-
-func (resp errorResponse) EncodeJSON(w io.Writer) error {
-	return json.NewEncoder(w).Encode(resp)
-}
-
-func toErrorResponse(err error) errorResponse {
-	return errorResponse{Error: err}
 }
