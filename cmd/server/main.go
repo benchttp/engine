@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
@@ -115,13 +114,12 @@ func streamProgress(w http.ResponseWriter) func(runner.RecordingProgress) {
 	}
 }
 
-func internalError(w http.ResponseWriter, err error) {
-	stderr.Println(err.Error())
+func internalError(w http.ResponseWriter, e error) {
+	stderr.Println(e)
 
 	w.WriteHeader(http.StatusInternalServerError)
-	e := struct{ Error string }{err.Error()}
 
-	if err := json.NewEncoder(w).Encode(e); err != nil {
+	if err := toErrorResponse(e).EncodeJSON(w); err != nil {
 		// Fallback to plain text encoding.
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}

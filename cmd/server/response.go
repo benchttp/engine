@@ -171,3 +171,15 @@ func toProgressResponse(in runner.RecordingProgress) progressResponse {
 		Elapsed:   in.Elapsed,
 	}
 }
+
+type errorResponse struct {
+	Error error `json:"error"`
+}
+
+func (resp errorResponse) EncodeJSON(w io.Writer) error {
+	return json.NewEncoder(w).Encode(resp)
+}
+
+func toErrorResponse(err error) errorResponse {
+	return errorResponse{Error: err}
+}
