@@ -1,21 +1,38 @@
 package response
 
 import (
-	"encoding/json"
-	"io"
 	"time"
 
 	"github.com/benchttp/engine/runner"
 )
 
-type ReportResponse struct {
+func Report(rep *runner.Report) Response {
+	return newResponse(reportResponse{
+		Metadata: metadataResponse{
+			FinishedAt:    rep.Metadata.FinishedAt,
+			TotalDuration: rep.Metadata.TotalDuration,
+		},
+		Tests: testsResponse{
+			Pass:    rep.Tests.Pass,
+			Results: toTestResultsResponse(rep.Tests.Results),
+		},
+		Metrics: metricsResponse{
+			ResponseTimes:           toTimeStatsResponse(rep.Metrics.ResponseTimes),
+			StatusCodesDistribution: rep.Metrics.StatusCodesDistribution,
+			RequestEventTimes:       toRequestEventTimesResponse(rep.Metrics.RequestEventTimes),
+			Records:                 toRecordsResponse(rep.Metrics.Records),
+			RequestFailures:         toRequestFailuresResponse(rep.Metrics.RequestFailures),
+			RequestCount:            rep.Metrics.RequestCount(),
+			RequestSuccessCount:     rep.Metrics.RequestSuccessCount(),
+			RequestFailureCount:     rep.Metrics.RequestFailureCount(),
+		},
+	})
+}
+
+type reportResponse struct {
 	Metadata metadataResponse `json:"metadata"`
 	Metrics  metricsResponse  `json:"metrics"`
 	Tests    testsResponse    `json:"tests"`
-}
-
-func (resp ReportResponse) EncodeJSON(w io.Writer) error {
-	return json.NewEncoder(w).Encode(resp)
 }
 
 type metadataResponse struct {
@@ -68,29 +85,6 @@ type recordReponse struct {
 
 type requestFailureResponse struct {
 	Reason string `json:"reason"`
-}
-
-func Report(rep *runner.Report) ReportResponse {
-	return ReportResponse{
-		Metadata: metadataResponse{
-			FinishedAt:    rep.Metadata.FinishedAt,
-			TotalDuration: rep.Metadata.TotalDuration,
-		},
-		Tests: testsResponse{
-			Pass:    rep.Tests.Pass,
-			Results: toTestResultsResponse(rep.Tests.Results),
-		},
-		Metrics: metricsResponse{
-			ResponseTimes:           toTimeStatsResponse(rep.Metrics.ResponseTimes),
-			StatusCodesDistribution: rep.Metrics.StatusCodesDistribution,
-			RequestEventTimes:       toRequestEventTimesResponse(rep.Metrics.RequestEventTimes),
-			Records:                 toRecordsResponse(rep.Metrics.Records),
-			RequestFailures:         toRequestFailuresResponse(rep.Metrics.RequestFailures),
-			RequestCount:            rep.Metrics.RequestCount(),
-			RequestSuccessCount:     rep.Metrics.RequestSuccessCount(),
-			RequestFailureCount:     rep.Metrics.RequestFailureCount(),
-		},
-	}
 }
 
 func toTestResultsResponse(testResults []runner.TestCaseResult) []testResultResponse {

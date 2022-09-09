@@ -1,18 +1,9 @@
 package response
 
-import (
-	"encoding/json"
-	"io"
-)
+func Error(err error) Response {
+	return newResponse(errorResponse{Error: err})
+}
 
-type ErrorResponse struct {
+type errorResponse struct {
 	Error error `json:"error"`
-}
-
-func (resp ErrorResponse) EncodeJSON(w io.Writer) error {
-	return json.NewEncoder(w).Encode(resp)
-}
-
-func Error(err error) ErrorResponse {
-	return ErrorResponse{Error: err}
 }
