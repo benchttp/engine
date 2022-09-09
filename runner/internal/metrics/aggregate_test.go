@@ -27,8 +27,8 @@ func TestNewAggregate(t *testing.T) {
 		}
 
 		want := map[string]timestats.TimeStats{
-			"1": {Min: 100, Max: 400, Mean: 250, Median: 300},
-			"2": {Min: 200, Max: 500, Mean: 325, Median: 350},
+			"1": {Min: 100, Max: 400, Mean: 250, Median: 250},
+			"2": {Min: 200, Max: 500, Mean: 325, Median: 300},
 		}
 
 		got := metrics.NewAggregate(input).RequestEventTimes
