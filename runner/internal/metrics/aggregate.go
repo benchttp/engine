@@ -7,6 +7,8 @@ import (
 	"github.com/benchttp/engine/runner/internal/recorder"
 )
 
+type TimeStats = timestats.TimeStats
+
 // Aggregate is an aggregate of metrics computed from
 // a slice of recorder.Record.
 type Aggregate struct {
