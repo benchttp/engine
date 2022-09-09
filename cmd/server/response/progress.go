@@ -8,7 +8,6 @@ import (
 
 func Progress(in runner.RecordingProgress) Response {
 	return newResponse(progressResponse{
-		ID:        in.ID,
 		Done:      in.Done,
 		Error:     in.Error,
 		DoneCount: in.DoneCount,
@@ -19,7 +18,6 @@ func Progress(in runner.RecordingProgress) Response {
 }
 
 type progressResponse struct {
-	ID        int           `json:"id"`
 	Done      bool          `json:"done"`
 	Error     error         `json:"error"`
 	DoneCount int           `json:"doneCount"`
