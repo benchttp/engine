@@ -145,3 +145,29 @@ func toRequestFailuresResponse(in []struct{ Reason string }) []requestFailureRes
 	}
 	return resp
 }
+
+type progressResponse struct {
+	ID        int           `json:"id"`
+	Done      bool          `json:"done"`
+	Error     error         `json:"error"`
+	DoneCount int           `json:"doneCount"`
+	MaxCount  int           `json:"maxCount"`
+	Timeout   time.Duration `json:"timeout"`
+	Elapsed   time.Duration `json:"elapsed"`
+}
+
+func (resp progressResponse) EncodeJSON(w io.Writer) error {
+	return json.NewEncoder(w).Encode(resp)
+}
+
+func toProgressResponse(in runner.RecordingProgress) progressResponse {
+	return progressResponse{
+		ID:        in.ID,
+		Done:      in.Done,
+		Error:     in.Error,
+		DoneCount: in.DoneCount,
+		MaxCount:  in.MaxCount,
+		Timeout:   in.Timeout,
+		Elapsed:   in.Elapsed,
+	}
+}

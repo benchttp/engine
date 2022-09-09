@@ -107,9 +107,8 @@ func handleStream(w http.ResponseWriter, r *http.Request) {
 }
 
 func streamProgress(w http.ResponseWriter) func(runner.RecordingProgress) {
-	enc := json.NewEncoder(w)
 	return func(progress runner.RecordingProgress) {
-		if err := enc.Encode(progress); err != nil {
+		if err := toProgressResponse(progress).EncodeJSON(w); err != nil {
 			internalError(w, err)
 		}
 		w.(http.Flusher).Flush()
