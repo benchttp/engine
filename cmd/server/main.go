@@ -100,7 +100,7 @@ func handleStream(w http.ResponseWriter, r *http.Request) {
 	// The issue is likely on the read side (front-end), but this is
 	// the easiest fix for now.
 	time.Sleep(10 * time.Millisecond)
-	if err := json.NewEncoder(w).Encode(rep); err != nil {
+	if err := toReportResponse(rep).EncodeJSON(w); err != nil {
 		internalError(w, err)
 		return
 	}
