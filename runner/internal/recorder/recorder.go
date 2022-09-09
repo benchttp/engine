@@ -123,11 +123,11 @@ func (r *Recorder) ping(req *http.Request) error {
 // to decoding the response body. In that cas invalidating the entire response,
 // as it is not a remote server error.
 type Record struct {
-	Time   time.Duration `json:"time"`
-	Code   int           `json:"code"`
-	Bytes  int           `json:"bytes"`
-	Error  string        `json:"error,omitempty"`
-	Events []Event       `json:"events"`
+	Time   time.Duration
+	Code   int
+	Bytes  int
+	Error  string
+	Events []Event
 }
 
 func (r *Recorder) recordSingle(req *http.Request, interval time.Duration) func() {
