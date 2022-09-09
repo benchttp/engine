@@ -56,10 +56,13 @@ func computeMean(sum time.Duration, length int) time.Duration {
 
 func computeMedian(sorted []time.Duration) time.Duration {
 	n := len(sorted)
-	if n%2 != 0 {
-		return sorted[n/2]
+	mid := n / 2
+	if odd := n&1 == 1; odd {
+		return sorted[mid]
 	}
-	return computeMean(sorted[n/2-1]+sorted[n/2], 2)
+	himid := mid
+	lomid := himid - 1
+	return computeMean(sorted[lomid]+sorted[himid], 2)
 }
 
 func computeStdDev(values []time.Duration, mean time.Duration) time.Duration {
