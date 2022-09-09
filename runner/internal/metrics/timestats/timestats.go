@@ -59,7 +59,7 @@ func computeMedian(sorted []time.Duration) time.Duration {
 	if n%2 != 0 {
 		return sorted[n/2]
 	}
-	return computeMean(sorted[n/2-1]+sorted[n/2+1], 2)
+	return computeMean(sorted[n/2-1]+sorted[n/2], 2)
 }
 
 func computeStdDev(values []time.Duration, mean time.Duration) time.Duration {
