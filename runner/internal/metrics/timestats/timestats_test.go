@@ -60,8 +60,8 @@ func TestCompute(t *testing.T) {
 		}
 	})
 
-	t.Run("not enough values for quartiles and deciles", func(t *testing.T) {
-		data := []time.Duration{100, 300, 400}
+	t.Run("few values", func(t *testing.T) {
+		data := []time.Duration{100, 300}
 		got := timestats.New(data)
 
 		if got.Deciles != nil {
@@ -70,6 +70,10 @@ func TestCompute(t *testing.T) {
 
 		if got.Quartiles != nil {
 			t.Errorf("quartiles: want nil, got %v", got.Quartiles)
+		}
+
+		if got.Median != 200 {
+			t.Errorf("median: want 200ns, got %v", got.Median)
 		}
 	})
 }
