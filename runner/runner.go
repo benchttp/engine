@@ -23,11 +23,17 @@ type (
 
 	Report = report.Report
 
-	MetricsField = metrics.Field
-	MetricsValue = metrics.Value
+	MetricsAggregate = metrics.Aggregate
+	MetricsField     = metrics.Field
+	MetricsValue     = metrics.Value
+	MetricsTimeStats = metrics.TimeStats
 
-	TestCase      = tests.Case
-	TestPredicate = tests.Predicate
+	TestCase         = tests.Case
+	TestPredicate    = tests.Predicate
+	TestSuiteResults = tests.SuiteResult
+	TestCaseResult   = tests.CaseResult
+
+	ReportMetadata = report.Metadata
 )
 
 const (

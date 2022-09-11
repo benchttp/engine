@@ -17,7 +17,6 @@ const (
 
 // Progress represents the progression of a recording at a given time.
 type Progress struct {
-	ID                  int
 	Done                bool
 	Error               error
 	DoneCount, MaxCount int

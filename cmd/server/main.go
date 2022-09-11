@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
@@ -13,6 +12,7 @@ import (
 
 	"github.com/joho/godotenv"
 
+	"github.com/benchttp/engine/cmd/server/response"
 	"github.com/benchttp/engine/internal/configparse"
 	"github.com/benchttp/engine/runner"
 )
@@ -100,29 +100,27 @@ func handleStream(w http.ResponseWriter, r *http.Request) {
 	// The issue is likely on the read side (front-end), but this is
 	// the easiest fix for now.
 	time.Sleep(10 * time.Millisecond)
-	if err := json.NewEncoder(w).Encode(rep); err != nil {
+	if err := response.Report(rep).EncodeJSON(w); err != nil {
 		internalError(w, err)
 		return
 	}
 }
 
 func streamProgress(w http.ResponseWriter) func(runner.RecordingProgress) {
-	enc := json.NewEncoder(w)
 	return func(progress runner.RecordingProgress) {
-		if err := enc.Encode(progress); err != nil {
+		if err := response.Progress(progress).EncodeJSON(w); err != nil {
 			internalError(w, err)
 		}
 		w.(http.Flusher).Flush()
 	}
 }
 
-func internalError(w http.ResponseWriter, err error) {
-	stderr.Println(err.Error())
+func internalError(w http.ResponseWriter, e error) {
+	stderr.Println(e)
 
 	w.WriteHeader(http.StatusInternalServerError)
-	e := struct{ Error string }{err.Error()}
 
-	if err := json.NewEncoder(w).Encode(e); err != nil {
+	if err := response.Error(e).EncodeJSON(w); err != nil {
 		// Fallback to plain text encoding.
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
