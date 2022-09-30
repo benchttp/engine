@@ -81,9 +81,11 @@ func mapIndexFunc(host reflect.Value, match func(string) bool) reflect.Value {
 			if match(strconv.Itoa(int(key.Int()))) {
 				return iter.Value()
 			}
+		default:
+			panic(fmt.Sprintf("unhandled key kind: %s", keyKind))
 		}
 	}
-	panic(fmt.Sprintf("unhandled key kind: %s", keyKind))
+	return reflect.Value{}
 }
 
 func sliceIndex(host reflect.Value, istr string) reflect.Value {
