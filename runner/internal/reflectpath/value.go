@@ -81,18 +81,26 @@ func mapIndexFunc(host reflect.Value, match func(string) bool) reflect.Value {
 			if match(strconv.Itoa(int(key.Int()))) {
 				return iter.Value()
 			}
+		default:
+			panic(fmt.Sprintf("unhandled key kind: %s", keyKind))
 		}
 	}
-	panic(fmt.Sprintf("unhandled key kind: %s", keyKind))
+	return zeroValueElemOf(host)
 }
 
 func sliceIndex(host reflect.Value, istr string) reflect.Value {
 	i, err := strconv.Atoi(istr)
 	if err != nil || i >= host.Len() {
-		return reflect.Value{}
+		return zeroValueElemOf(host)
 	}
 	if elemMatch := host.Index(i); elemMatch.IsValid() {
 		return elemMatch
 	}
-	return reflect.Value{}
+	return zeroValueElemOf(host)
+}
+
+// zeroValueOfElem returns the zero value of the element type of host.
+// It panics if host is not a slice or map.
+func zeroValueElemOf(host reflect.Value) reflect.Value {
+	return reflect.Zero(host.Elem().Type())
 }
