@@ -46,9 +46,9 @@ type testsResponse struct {
 }
 
 type testResultResponse struct {
-	Pass    bool              `json:"pass"`
-	Summary string            `json:"summary"`
-	Input   testInputResponse `json:"input"`
+	Pass  bool              `json:"pass"`
+	Got   interface{}       `json:"got"`
+	Input testInputResponse `json:"input"`
 }
 
 type testInputResponse struct {
@@ -91,8 +91,8 @@ func toTestResultsResponse(testResults []runner.TestCaseResult) []testResultResp
 	resp := make([]testResultResponse, len(testResults))
 	for i, r := range testResults {
 		resp[i] = testResultResponse{
-			Pass:    r.Pass,
-			Summary: r.Summary,
+			Pass: r.Pass,
+			Got:  r.Got,
 			Input: testInputResponse{
 				Name:      r.Input.Name,
 				Field:     string(r.Input.Field),
