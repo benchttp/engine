@@ -37,8 +37,8 @@ func TestRun(t *testing.T) {
 			},
 			expGlobalPass: true,
 			expCaseResults: []tests.CaseResult{
-				{Pass: true, Summary: "want ResponseTimes.Mean < 120ms, got 100ms"},
-				{Pass: true, Summary: "want ResponseTimes.Mean > 80ms, got 100ms"},
+				{Pass: true, Got: ms(100), Summary: "want ResponseTimes.Mean < 120ms, got 100ms"},
+				{Pass: true, Got: ms(100), Summary: "want ResponseTimes.Mean > 80ms, got 100ms"},
 			},
 		},
 		{
@@ -60,8 +60,8 @@ func TestRun(t *testing.T) {
 			},
 			expGlobalPass: false,
 			expCaseResults: []tests.CaseResult{
-				{Pass: false, Summary: "want ResponseTimes.Mean < 120ms, got 200ms"},
-				{Pass: true, Summary: "want ResponseTimes.Mean > 80ms, got 200ms"},
+				{Pass: false, Got: ms(200), Summary: "want ResponseTimes.Mean < 120ms, got 200ms"},
+				{Pass: true, Got: ms(200), Summary: "want ResponseTimes.Mean > 80ms, got 200ms"},
 			},
 		},
 	}
@@ -98,6 +98,15 @@ func assertEqualCaseResults(t *testing.T, exp, got []tests.CaseResult) {
 				t.Errorf(
 					"\n%s:\nexp %v, got %v",
 					caseDesc, expResult.Pass, gotResult.Pass,
+				)
+			}
+		})
+
+		t.Run(fmt.Sprintf("cases[%d].Got", i), func(t *testing.T) {
+			if gotResult.Got != expResult.Got {
+				t.Errorf(
+					"\n%s:\nexp %v, got %v",
+					caseDesc, expResult.Got, gotResult.Got,
 				)
 			}
 		})
