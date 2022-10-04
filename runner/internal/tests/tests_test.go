@@ -70,16 +70,23 @@ func TestRun(t *testing.T) {
 		t.Run(tc.label, func(t *testing.T) {
 			suiteResult := tests.Run(tc.inputAgg, tc.inputCases)
 
-			if gotGlobalPass := suiteResult.Pass; gotGlobalPass != tc.expGlobalPass {
-				t.Errorf(
-					"exp global pass == %v, got %v",
-					gotGlobalPass, tc.expGlobalPass,
-				)
-			}
-
+			assertGlobalPass(t, suiteResult.Pass, tc.expGlobalPass)
 			assertEqualCaseResults(t, tc.expCaseResults, suiteResult.Results)
 		})
 	}
+}
+
+func assertGlobalPass(t *testing.T, got, exp bool) {
+	t.Helper()
+
+	t.Run("global pass", func(t *testing.T) {
+		if exp != got {
+			t.Errorf(
+				"exp global pass == %v, got %v",
+				exp, got,
+			)
+		}
+	})
 }
 
 func assertEqualCaseResults(t *testing.T, exp, got []tests.CaseResult) {
