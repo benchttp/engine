@@ -21,6 +21,7 @@ type SuiteResult struct {
 type CaseResult struct {
 	Input   Case
 	Pass    bool
+	Got     metrics.Value
 	Summary string
 }
 
@@ -48,6 +49,7 @@ func runTestCase(agg metrics.Aggregate, c Case) CaseResult {
 	return CaseResult{
 		Input: c,
 		Pass:  c.Predicate.match(comparisonResult),
+		Got:   gotMetric.Value,
 		Summary: fmt.Sprintf(
 			"want %s %s %v, got %v",
 			c.Field, c.Predicate.symbol(), c.Target, gotMetric.Value,
