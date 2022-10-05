@@ -1,4 +1,4 @@
-name: Dispatch update-engine to benchttp/desktop
+name: Dispatch update to benchttp/desktop
 
 on:
   push:
@@ -10,6 +10,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Create workflow_dispatch event
-        run: echo ${{ env.PAYLOAD }} | gh workflow run --repo benchttp/desktop update-engine.yml
-        env:
-          PAYLOAD: '{"sha": "${{ github.sha }}"}'
+        run: gh workflow run --repo benchttp/desktop update-engine.yml --ref main -f sha=${{ github.sha }}
