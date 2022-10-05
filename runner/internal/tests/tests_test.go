@@ -37,8 +37,8 @@ func TestRun(t *testing.T) {
 			},
 			expGlobalPass: true,
 			expCaseResults: []tests.CaseResult{
-				{Pass: true, Summary: "want ResponseTimes.Mean < 120ms, got 100ms"},
-				{Pass: true, Summary: "want ResponseTimes.Mean > 80ms, got 100ms"},
+				{Pass: true, Got: ms(100), Summary: "want ResponseTimes.Mean < 120ms, got 100ms"},
+				{Pass: true, Got: ms(100), Summary: "want ResponseTimes.Mean > 80ms, got 100ms"},
 			},
 		},
 		{
@@ -60,8 +60,8 @@ func TestRun(t *testing.T) {
 			},
 			expGlobalPass: false,
 			expCaseResults: []tests.CaseResult{
-				{Pass: false, Summary: "want ResponseTimes.Mean < 120ms, got 200ms"},
-				{Pass: true, Summary: "want ResponseTimes.Mean > 80ms, got 200ms"},
+				{Pass: false, Got: ms(200), Summary: "want ResponseTimes.Mean < 120ms, got 200ms"},
+				{Pass: true, Got: ms(200), Summary: "want ResponseTimes.Mean > 80ms, got 200ms"},
 			},
 		},
 	}
@@ -70,16 +70,23 @@ func TestRun(t *testing.T) {
 		t.Run(tc.label, func(t *testing.T) {
 			suiteResult := tests.Run(tc.inputAgg, tc.inputCases)
 
-			if gotGlobalPass := suiteResult.Pass; gotGlobalPass != tc.expGlobalPass {
-				t.Errorf(
-					"exp global pass == %v, got %v",
-					gotGlobalPass, tc.expGlobalPass,
-				)
-			}
-
+			assertGlobalPass(t, suiteResult.Pass, tc.expGlobalPass)
 			assertEqualCaseResults(t, tc.expCaseResults, suiteResult.Results)
 		})
 	}
+}
+
+func assertGlobalPass(t *testing.T, got, exp bool) {
+	t.Helper()
+
+	t.Run("global pass", func(t *testing.T) {
+		if exp != got {
+			t.Errorf(
+				"exp global pass == %v, got %v",
+				exp, got,
+			)
+		}
+	})
 }
 
 func assertEqualCaseResults(t *testing.T, exp, got []tests.CaseResult) {
@@ -98,6 +105,15 @@ func assertEqualCaseResults(t *testing.T, exp, got []tests.CaseResult) {
 				t.Errorf(
 					"\n%s:\nexp %v, got %v",
 					caseDesc, expResult.Pass, gotResult.Pass,
+				)
+			}
+		})
+
+		t.Run(fmt.Sprintf("cases[%d].Got", i), func(t *testing.T) {
+			if gotResult.Got != expResult.Got {
+				t.Errorf(
+					"\n%s:\nexp %v, got %v",
+					caseDesc, expResult.Got, gotResult.Got,
 				)
 			}
 		})
