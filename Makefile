@@ -51,5 +51,5 @@ clear:
 
 .PHONY: docs
 docs:
-	@echo "\033[4mhttp://localhost:9995/pkg/github.com/benchttp/runner/\033[0m"
+	@echo "\033[4mhttp://localhost:9995/pkg/github.com/benchttp/engine/\033[0m"
 	@godoc -http=localhost:9995
