@@ -73,7 +73,7 @@ func TestGlobal_Validate(t *testing.T) {
 func TestGlobal_Override(t *testing.T) {
 	t.Run("do not override unspecified fields", func(t *testing.T) {
 		baseCfg := config.Global{}
-		newCfg := config.Global{
+		nextCfg := config.Global{
 			Request: config.Request{
 				Body: config.RequestBody{},
 			}.WithURL("http://a.b?p=2"),
@@ -83,19 +83,26 @@ func TestGlobal_Override(t *testing.T) {
 				RequestTimeout: 3 * time.Second,
 				GlobalTimeout:  4 * time.Second,
 			},
-			Output: config.Output{
-				Silent: true,
-			},
 		}
 
-		if gotCfg := baseCfg.Override(newCfg); !reflect.DeepEqual(gotCfg, baseCfg) {
+		if gotCfg := nextCfg.Override(baseCfg); !gotCfg.Equal(baseCfg) {
 			t.Errorf("overrode unexpected fields:\nexp %#v\ngot %#v", baseCfg, gotCfg)
 		}
 	})
 
 	t.Run("override specified fields", func(t *testing.T) {
+		fields := []string{
+			config.FieldMethod,
+			config.FieldURL,
+			config.FieldRequests,
+			config.FieldConcurrency,
+			config.FieldRequestTimeout,
+			config.FieldGlobalTimeout,
+			config.FieldBody,
+		}
+
 		baseCfg := config.Global{}
-		newCfg := config.Global{
+		nextCfg := config.Global{
 			Request: config.Request{
 				Body: validBody,
 			}.WithURL("http://a.b?p=2"),
@@ -105,23 +112,10 @@ func TestGlobal_Override(t *testing.T) {
 				RequestTimeout: 3 * time.Second,
 				GlobalTimeout:  4 * time.Second,
 			},
-			Output: config.Output{
-				Silent: true,
-			},
-		}
-		fields := []string{
-			config.FieldMethod,
-			config.FieldURL,
-			config.FieldRequests,
-			config.FieldConcurrency,
-			config.FieldRequestTimeout,
-			config.FieldGlobalTimeout,
-			config.FieldBody,
-			config.FieldSilent,
-		}
+		}.WithFields(fields...)
 
-		if gotCfg := baseCfg.Override(newCfg, fields...); !reflect.DeepEqual(gotCfg, newCfg) {
-			t.Errorf("did not override expected fields:\nexp %v\ngot %v", baseCfg, gotCfg)
+		if gotCfg := nextCfg.Override(baseCfg); !gotCfg.Equal(nextCfg) {
+			t.Errorf("did not override expected fields:\nexp %v\ngot %v", nextCfg, gotCfg)
 			t.Log(fields)
 		}
 	})
@@ -192,19 +186,19 @@ func TestGlobal_Override(t *testing.T) {
 
 		for _, tc := range testcases {
 			t.Run(tc.label, func(t *testing.T) {
-				oldCfg := config.Global{
+				baseCfg := config.Global{
 					Request: config.Request{
 						Header: tc.oldHeader,
 					},
 				}
 
-				newCfg := config.Global{
+				nextCfg := config.Global{
 					Request: config.Request{
 						Header: tc.newHeader,
 					},
-				}
+				}.WithFields(config.FieldHeader)
 
-				gotCfg := oldCfg.Override(newCfg, config.FieldHeader)
+				gotCfg := nextCfg.Override(baseCfg)
 
 				if gotHeader := gotCfg.Request.Header; !reflect.DeepEqual(gotHeader, tc.expHeader) {
 					t.Errorf("\nexp %#v\ngot %#v", tc.expHeader, gotHeader)
@@ -299,6 +293,43 @@ func TestRequest_Value(t *testing.T) {
 
 		if !sameRequests(gotReq, expReq) {
 			t.Errorf("\nexp %#v\ngot %#v", expReq, gotReq)
+		}
+	})
+}
+
+func TestGlobal_Equal(t *testing.T) {
+	t.Run("returns false for different configs", func(t *testing.T) {
+		base := config.Default()
+		diff := base
+		diff.Runner.Requests = base.Runner.Requests + 1
+
+		if base.Equal(diff) {
+			t.Error("exp unequal configs")
+		}
+	})
+
+	t.Run("ignores set fields", func(t *testing.T) {
+		base := config.Default()
+		same := base.WithFields(config.FieldRequests)
+
+		if !base.Equal(same) {
+			t.Error("exp equal configs")
+		}
+	})
+
+	t.Run("does not alter configs", func(t *testing.T) {
+		baseA := config.Default().WithFields(config.FieldRequests)
+		copyA := config.Default().WithFields(config.FieldRequests)
+		baseB := config.Default().WithFields(config.FieldURL)
+		copyB := config.Default().WithFields(config.FieldURL)
+
+		baseA.Equal(baseB)
+
+		if !reflect.DeepEqual(baseA, copyA) {
+			t.Error("altered receiver config")
+		}
+		if !reflect.DeepEqual(baseB, copyB) {
+			t.Error("altered parameter config")
 		}
 	})
 }

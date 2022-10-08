@@ -20,9 +20,6 @@ var defaultConfig = Global{
 		RequestTimeout: 5 * time.Second,
 		GlobalTimeout:  30 * time.Second,
 	},
-	Output: Output{
-		Silent: false,
-	},
 }
 
 // Default returns a default config that is safe to use.

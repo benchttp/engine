@@ -2,7 +2,6 @@ package configparse
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"regexp"
@@ -10,12 +9,12 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// yamlParser implements configParser.
-type yamlParser struct{}
+// YAMLParser implements configParser.
+type YAMLParser struct{}
 
-// parse decodes a raw yaml input in strict mode (unknown fields disallowed)
+// Parse decodes a raw yaml input in strict mode (unknown fields disallowed)
 // and stores the resulting value into dst.
-func (p yamlParser) parse(in []byte, dst *UnmarshaledConfig) error {
+func (p YAMLParser) Parse(in []byte, dst *Representation) error {
 	decoder := yaml.NewDecoder(bytes.NewReader(in))
 	decoder.KnownFields(true)
 	return p.handleError(decoder.Decode(dst))
@@ -23,7 +22,7 @@ func (p yamlParser) parse(in []byte, dst *UnmarshaledConfig) error {
 
 // handleError handles a raw yaml decoder.Decode error, filters it,
 // and return the resulting error.
-func (p yamlParser) handleError(err error) error {
+func (p YAMLParser) handleError(err error) error {
 	// yaml.TypeError errors require special handling, other errors
 	// (nil included) can be returned as is.
 	var typeError *yaml.TypeError
@@ -54,7 +53,7 @@ func (p yamlParser) handleError(err error) error {
 
 // isCustomFieldError returns true if the raw error message is due
 // to an allowed custom field.
-func (p yamlParser) isCustomFieldError(raw string) bool {
+func (p YAMLParser) isCustomFieldError(raw string) bool {
 	customFieldRgx := regexp.MustCompile(
 		// raw output example:
 		// 	line 9: field x-my-alias not found in type struct { ... }
@@ -66,7 +65,7 @@ func (p yamlParser) isCustomFieldError(raw string) bool {
 // prettyErrorMessage transforms a raw Decode error message into a more
 // user-friendly one by removing noisy information and returns the resulting
 // value.
-func (p yamlParser) prettyErrorMessage(raw string) string {
+func (p YAMLParser) prettyErrorMessage(raw string) string {
 	// field not found error
 	fieldNotFoundRgx := regexp.MustCompile(
 		// raw output example (type unmarshaledConfig is entirely exposed):
@@ -95,60 +94,4 @@ func (p yamlParser) prettyErrorMessage(raw string) string {
 
 	// we may not have covered all cases, return raw output in this case
 	return raw
-}
-
-// jsonParser implements configParser.
-type jsonParser struct{}
-
-// parse decodes a raw JSON input in strict mode (unknown fields disallowed)
-// and stores the resulting value into dst.
-func (p jsonParser) parse(in []byte, dst *UnmarshaledConfig) error {
-	decoder := json.NewDecoder(bytes.NewReader(in))
-	decoder.DisallowUnknownFields()
-	return p.handleError(decoder.Decode(dst))
-}
-
-// handleError handle a json raw error, transforms it into a user-friendly
-// standardized format and returns the resulting error.
-func (p jsonParser) handleError(err error) error {
-	if err == nil {
-		return nil
-	}
-
-	// handle syntax error
-	var errSyntax *json.SyntaxError
-	if errors.As(err, &errSyntax) {
-		return fmt.Errorf("syntax error near %d: %w", errSyntax.Offset, err)
-	}
-
-	// handle type error
-	var errType *json.UnmarshalTypeError
-	if errors.As(err, &errType) {
-		return fmt.Errorf(
-			"wrong type for field %s: want %s, got %s",
-			errType.Field, errType.Type, errType.Value,
-		)
-	}
-
-	// handle unknown field error
-	if field := p.parseUnknownFieldError(err.Error()); field != "" {
-		return fmt.Errorf(`invalid field ("%s"): does not exist`, field)
-	}
-
-	return err
-}
-
-// parseUnknownFieldError parses the raw string as a json error
-// from an unknown field and returns the field name.
-// If the raw string is not an unknown field error, it returns "".
-func (p jsonParser) parseUnknownFieldError(raw string) (field string) {
-	unknownFieldRgx := regexp.MustCompile(
-		// raw output example:
-		// 	json: unknown field "notafield"
-		`json: unknown field "(\S+)"`,
-	)
-	if matches := unknownFieldRgx.FindStringSubmatch(raw); len(matches) >= 2 {
-		return matches[1]
-	}
-	return ""
 }

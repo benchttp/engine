@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"reflect"
 	"time"
 
 	"github.com/benchttp/engine/runner/internal/tests"
@@ -78,9 +79,12 @@ type Runner struct {
 	GlobalTimeout  time.Duration
 }
 
-// Output contains options relative to the output.
-type Output struct {
-	Silent bool
+type set map[string]struct{}
+
+func (set set) add(values ...string) {
+	for _, v := range values {
+		set[v] = struct{}{}
+	}
 }
 
 // Global represents the global configuration of the runner.
@@ -88,48 +92,80 @@ type Output struct {
 type Global struct {
 	Request Request
 	Runner  Runner
-	Output  Output
-	Tests   []tests.Case
+
+	Tests []tests.Case
+
+	assignedFields set
 }
 
-// String returns an indented JSON representation of Config
-// for debugging purposes.
+// WithField returns a new Global with the input fields marked as set.
+// Accepted options are limited to existing Fields, other values are
+// silently ignored.
+func (cfg Global) WithFields(fields ...string) Global {
+	if cfg.assignedFields == nil {
+		cfg.assignedFields = set{}
+	}
+	cfg.assignedFields.add(fields...)
+	return cfg
+}
+
+// String implements fmt.Stringer. It returns an indented JSON representation
+// of Config for debugging purposes.
 func (cfg Global) String() string {
 	b, _ := json.MarshalIndent(cfg, "", "  ")
 	return string(b)
 }
 
-// Override returns a new Config based on cfg with overridden values from c.
-// Only fields specified in options are replaced. Accepted options are limited
-// to existing Fields, other values are silently ignored.
-func (cfg Global) Override(c Global, fields ...string) Global {
-	for _, field := range fields {
+// Equal returns true if cfg and c are equal configurations.
+func (cfg Global) Equal(c Global) bool {
+	cfg.assignedFields = nil
+	c.assignedFields = nil
+	return reflect.DeepEqual(cfg, c)
+}
+
+// Override returns a new Config by overriding the values of base
+// with the values from the Config receiver.
+// Only fields previously specified by the receiver via Config.WithFields
+// are replaced.
+// All other values from base are preserved.
+//
+// The following example is equivalent to defaultConfig with the concurrency
+// value from myConfig:
+//
+// 	myConfig.
+// 		WithFields(FieldConcurrency).
+// 		Override(defaultConfig)
+//
+// The following example is equivalent to defaultConfig, as no field as been
+// tagged via WithFields by the receiver:
+//
+// 	myConfig.Override(defaultConfig)
+func (cfg Global) Override(base Global) Global {
+	for field := range cfg.assignedFields {
 		switch field {
 		case FieldMethod:
-			cfg.Request.Method = c.Request.Method
+			base.Request.Method = cfg.Request.Method
 		case FieldURL:
-			cfg.Request.URL = c.Request.URL
+			base.Request.URL = cfg.Request.URL
 		case FieldHeader:
-			cfg.overrideHeader(c.Request.Header)
+			base.overrideHeader(cfg.Request.Header)
 		case FieldBody:
-			cfg.Request.Body = c.Request.Body
+			base.Request.Body = cfg.Request.Body
 		case FieldRequests:
-			cfg.Runner.Requests = c.Runner.Requests
+			base.Runner.Requests = cfg.Runner.Requests
 		case FieldConcurrency:
-			cfg.Runner.Concurrency = c.Runner.Concurrency
+			base.Runner.Concurrency = cfg.Runner.Concurrency
 		case FieldInterval:
-			cfg.Runner.Interval = c.Runner.Interval
+			base.Runner.Interval = cfg.Runner.Interval
 		case FieldRequestTimeout:
-			cfg.Runner.RequestTimeout = c.Runner.RequestTimeout
+			base.Runner.RequestTimeout = cfg.Runner.RequestTimeout
 		case FieldGlobalTimeout:
-			cfg.Runner.GlobalTimeout = c.Runner.GlobalTimeout
-		case FieldSilent:
-			cfg.Output.Silent = c.Output.Silent
+			base.Runner.GlobalTimeout = cfg.Runner.GlobalTimeout
 		case FieldTests:
-			cfg.Tests = c.Tests
+			base.Tests = cfg.Tests
 		}
 	}
-	return cfg
+	return base
 }
 
 // overrideHeader overrides cfg's Request.Header with the values from newHeader.

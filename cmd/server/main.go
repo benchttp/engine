@@ -13,7 +13,7 @@ import (
 	"github.com/joho/godotenv"
 
 	"github.com/benchttp/engine/cmd/server/response"
-	"github.com/benchttp/engine/internal/configparse"
+	"github.com/benchttp/engine/configparse"
 	"github.com/benchttp/engine/runner"
 )
 

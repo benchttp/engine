@@ -10,7 +10,6 @@ const (
 	FieldInterval       = "interval"
 	FieldRequestTimeout = "requestTimeout"
 	FieldGlobalTimeout  = "globalTimeout"
-	FieldSilent         = "silent"
 	FieldTests          = "tests"
 )
 
@@ -25,7 +24,6 @@ var FieldsUsage = map[string]string{
 	FieldInterval:       "Minimum duration between two non concurrent requests",
 	FieldRequestTimeout: "Timeout for each HTTP request",
 	FieldGlobalTimeout:  "Max duration of test",
-	FieldSilent:         "Silent mode (no write to stdout)",
 	FieldTests:          "Test suite",
 }
 

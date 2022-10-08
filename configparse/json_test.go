@@ -4,10 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"net/url"
-	"reflect"
 	"testing"
 
-	"github.com/benchttp/engine/internal/configparse"
+	"github.com/benchttp/engine/configparse"
 	"github.com/benchttp/engine/runner"
 )
 
@@ -47,18 +46,16 @@ func TestJSON(t *testing.T) {
 			input: baseInput.assign(object{
 				"runner": object{"concurrency": 3},
 			}).json(),
-			expConfig: runner.DefaultConfig().Override(
-				runner.Config{
-					Request: runner.RequestConfig{
-						URL: mustParseURL("https://example.com"),
-					},
-					Runner: runner.RecorderConfig{
-						Concurrency: 3,
-					},
+			expConfig: runner.Config{
+				Request: runner.RequestConfig{
+					URL: mustParseURL("https://example.com"),
 				},
-				"url",
-				"concurrency",
-			),
+				Runner: runner.RecorderConfig{
+					Concurrency: 3,
+				},
+			}.
+				WithFields("url", "concurrency").
+				Override(runner.DefaultConfig()),
 			expError: nil,
 		},
 	}
@@ -66,7 +63,7 @@ func TestJSON(t *testing.T) {
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
 			gotConfig, gotError := configparse.JSON(tc.input)
-			if !reflect.DeepEqual(gotConfig, tc.expConfig) {
+			if !gotConfig.Equal(tc.expConfig) {
 				t.Errorf("unexpected config:\nexp %+v\ngot %+v", tc.expConfig, gotConfig)
 			}
 

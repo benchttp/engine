@@ -6,17 +6,17 @@ import (
 
 // JSON reads input bytes as JSON and unmarshals it into a runner.ConfigGlobal.
 func JSON(in []byte) (runner.Config, error) {
-	parser := jsonParser{}
+	parser := JSONParser{}
 
-	var uconf UnmarshaledConfig
-	if err := parser.parse(in, &uconf); err != nil {
+	var repr Representation
+	if err := parser.Parse(in, &repr); err != nil {
 		return runner.Config{}, err
 	}
 
-	pconf, err := newParsedConfig(uconf)
+	cfg, err := ParseRepresentation(repr)
 	if err != nil {
 		return runner.Config{}, err
 	}
 
-	return runner.DefaultConfig().Override(pconf.config, pconf.fields...), nil
+	return cfg.Override(runner.DefaultConfig()), nil
 }
