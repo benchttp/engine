@@ -10,11 +10,11 @@ import (
 	"github.com/benchttp/engine/runner"
 )
 
-// UnmarshaledConfig is a raw data model for runner config files.
+// Representation is a raw data model for runner config files.
 // It serves as a receiver for unmarshaling processes and for that reason
 // its types are kept simple (certain types are incompatible with certain
 // unmarshalers).
-type UnmarshaledConfig struct {
+type Representation struct {
 	Extends *string `yaml:"extends" json:"extends"`
 
 	Request struct {
@@ -50,7 +50,7 @@ type UnmarshaledConfig struct {
 
 // newParsedConfig parses an input raw config as a runner.ConfigGlobal and returns
 // a parsed Config or the first non-nil error occurring in the process.
-func newParsedConfig(uconf UnmarshaledConfig) (runner.Config, error) { //nolint:gocognit // acceptable complexity for a parsing func
+func newParsedConfig(repr Representation) (runner.Config, error) { //nolint:gocognit // acceptable complexity for a parsing func
 	cfg := runner.Config{}
 	fieldsSet := []string{}
 
@@ -62,13 +62,13 @@ func newParsedConfig(uconf UnmarshaledConfig) (runner.Config, error) { //nolint:
 		return runner.Config{}, err
 	}
 
-	if method := uconf.Request.Method; method != nil {
+	if method := repr.Request.Method; method != nil {
 		cfg.Request.Method = *method
 		addField(runner.ConfigFieldMethod)
 	}
 
-	if rawURL := uconf.Request.URL; rawURL != nil {
-		parsedURL, err := parseAndBuildURL(*uconf.Request.URL, uconf.Request.QueryParams)
+	if rawURL := repr.Request.URL; rawURL != nil {
+		parsedURL, err := parseAndBuildURL(*repr.Request.URL, repr.Request.QueryParams)
 		if err != nil {
 			return abort(err)
 		}
@@ -76,7 +76,7 @@ func newParsedConfig(uconf UnmarshaledConfig) (runner.Config, error) { //nolint:
 		addField(runner.ConfigFieldURL)
 	}
 
-	if header := uconf.Request.Header; header != nil {
+	if header := repr.Request.Header; header != nil {
 		httpHeader := http.Header{}
 		for key, val := range header {
 			httpHeader[key] = val
@@ -85,7 +85,7 @@ func newParsedConfig(uconf UnmarshaledConfig) (runner.Config, error) { //nolint:
 		addField(runner.ConfigFieldHeader)
 	}
 
-	if body := uconf.Request.Body; body != nil {
+	if body := repr.Request.Body; body != nil {
 		cfg.Request.Body = runner.RequestBody{
 			Type:    body.Type,
 			Content: []byte(body.Content),
@@ -93,17 +93,17 @@ func newParsedConfig(uconf UnmarshaledConfig) (runner.Config, error) { //nolint:
 		addField(runner.ConfigFieldBody)
 	}
 
-	if requests := uconf.Runner.Requests; requests != nil {
+	if requests := repr.Runner.Requests; requests != nil {
 		cfg.Runner.Requests = *requests
 		addField(runner.ConfigFieldRequests)
 	}
 
-	if concurrency := uconf.Runner.Concurrency; concurrency != nil {
+	if concurrency := repr.Runner.Concurrency; concurrency != nil {
 		cfg.Runner.Concurrency = *concurrency
 		addField(runner.ConfigFieldConcurrency)
 	}
 
-	if interval := uconf.Runner.Interval; interval != nil {
+	if interval := repr.Runner.Interval; interval != nil {
 		parsedInterval, err := parseOptionalDuration(*interval)
 		if err != nil {
 			return abort(err)
@@ -112,7 +112,7 @@ func newParsedConfig(uconf UnmarshaledConfig) (runner.Config, error) { //nolint:
 		addField(runner.ConfigFieldInterval)
 	}
 
-	if requestTimeout := uconf.Runner.RequestTimeout; requestTimeout != nil {
+	if requestTimeout := repr.Runner.RequestTimeout; requestTimeout != nil {
 		parsedTimeout, err := parseOptionalDuration(*requestTimeout)
 		if err != nil {
 			return abort(err)
@@ -121,7 +121,7 @@ func newParsedConfig(uconf UnmarshaledConfig) (runner.Config, error) { //nolint:
 		addField(runner.ConfigFieldRequestTimeout)
 	}
 
-	if globalTimeout := uconf.Runner.GlobalTimeout; globalTimeout != nil {
+	if globalTimeout := repr.Runner.GlobalTimeout; globalTimeout != nil {
 		parsedGlobalTimeout, err := parseOptionalDuration(*globalTimeout)
 		if err != nil {
 			return abort(err)
@@ -130,12 +130,12 @@ func newParsedConfig(uconf UnmarshaledConfig) (runner.Config, error) { //nolint:
 		addField(runner.ConfigFieldGlobalTimeout)
 	}
 
-	if silent := uconf.Output.Silent; silent != nil {
+	if silent := repr.Output.Silent; silent != nil {
 		cfg.Output.Silent = *silent
 		addField(runner.ConfigFieldSilent)
 	}
 
-	testSuite := uconf.Tests
+	testSuite := repr.Tests
 	if len(testSuite) == 0 {
 		return cfg.WithFields(fieldsSet...), nil
 	}

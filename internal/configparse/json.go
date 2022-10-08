@@ -8,12 +8,12 @@ import (
 func JSON(in []byte) (runner.Config, error) {
 	parser := jsonParser{}
 
-	var uconf UnmarshaledConfig
-	if err := parser.parse(in, &uconf); err != nil {
+	var repr Representation
+	if err := parser.parse(in, &repr); err != nil {
 		return runner.Config{}, err
 	}
 
-	cfg, err := newParsedConfig(uconf)
+	cfg, err := newParsedConfig(repr)
 	if err != nil {
 		return runner.Config{}, err
 	}
