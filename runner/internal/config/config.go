@@ -79,11 +79,6 @@ type Runner struct {
 	GlobalTimeout  time.Duration
 }
 
-// Output contains options relative to the output.
-type Output struct {
-	Silent bool
-}
-
 type set map[string]struct{}
 
 func (set set) add(values ...string) {
@@ -97,8 +92,8 @@ func (set set) add(values ...string) {
 type Global struct {
 	Request Request
 	Runner  Runner
-	Output  Output
-	Tests   []tests.Case
+
+	Tests []tests.Case
 
 	fieldsSet set
 }
@@ -152,8 +147,6 @@ func (cfg Global) Override(c Global) Global {
 			c.Runner.RequestTimeout = cfg.Runner.RequestTimeout
 		case FieldGlobalTimeout:
 			c.Runner.GlobalTimeout = cfg.Runner.GlobalTimeout
-		case FieldSilent:
-			c.Output.Silent = cfg.Output.Silent
 		case FieldTests:
 			c.Tests = cfg.Tests
 		}

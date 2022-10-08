@@ -17,6 +17,3 @@ runner:
   interval: 50ms
   requestTimeout: 2s
   globalTimeout: 60s
-
-output:
-  silent: true

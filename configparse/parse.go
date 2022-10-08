@@ -36,10 +36,6 @@ type Representation struct {
 		GlobalTimeout  *string `yaml:"globalTimeout" json:"globalTimeout"`
 	} `yaml:"runner" json:"runner"`
 
-	Output struct {
-		Silent *bool `yaml:"silent" json:"silent"`
-	} `yaml:"output" json:"output"`
-
 	Tests []struct {
 		Name      *string     `yaml:"name" json:"name"`
 		Field     *string     `yaml:"field" json:"field"`
@@ -128,11 +124,6 @@ func ParseRepresentation(repr Representation) (runner.Config, error) { //nolint:
 		}
 		cfg.Runner.GlobalTimeout = parsedGlobalTimeout
 		addField(runner.ConfigFieldGlobalTimeout)
-	}
-
-	if silent := repr.Output.Silent; silent != nil {
-		cfg.Output.Silent = *silent
-		addField(runner.ConfigFieldSilent)
 	}
 
 	testSuite := repr.Tests

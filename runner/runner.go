@@ -16,7 +16,6 @@ type (
 	RequestConfig  = config.Request
 	RequestBody    = config.RequestBody
 	RecorderConfig = config.Runner
-	OutputConfig   = config.Output
 
 	RecordingProgress = recorder.Progress
 	RecordingStatus   = recorder.Status
@@ -51,7 +50,6 @@ const (
 	ConfigFieldInterval       = config.FieldInterval
 	ConfigFieldRequestTimeout = config.FieldRequestTimeout
 	ConfigFieldGlobalTimeout  = config.FieldGlobalTimeout
-	ConfigFieldSilent         = config.FieldSilent
 	ConfigFieldTests          = config.FieldTests
 )
 

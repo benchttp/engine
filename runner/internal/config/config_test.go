@@ -83,9 +83,6 @@ func TestGlobal_Override(t *testing.T) {
 				RequestTimeout: 3 * time.Second,
 				GlobalTimeout:  4 * time.Second,
 			},
-			Output: config.Output{
-				Silent: true,
-			},
 		}
 
 		if gotCfg := nextCfg.Override(baseCfg); !gotCfg.Equal(baseCfg) {
@@ -102,7 +99,6 @@ func TestGlobal_Override(t *testing.T) {
 			config.FieldRequestTimeout,
 			config.FieldGlobalTimeout,
 			config.FieldBody,
-			config.FieldSilent,
 		}
 
 		baseCfg := config.Global{}
@@ -115,9 +111,6 @@ func TestGlobal_Override(t *testing.T) {
 				Concurrency:    2,
 				RequestTimeout: 3 * time.Second,
 				GlobalTimeout:  4 * time.Second,
-			},
-			Output: config.Output{
-				Silent: true,
 			},
 		}.WithFields(fields...)
 
