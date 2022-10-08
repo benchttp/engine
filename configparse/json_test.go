@@ -47,16 +47,16 @@ func TestJSON(t *testing.T) {
 			input: baseInput.assign(object{
 				"runner": object{"concurrency": 3},
 			}).json(),
-			expConfig: runner.DefaultConfig().Override(
-				runner.Config{
-					Request: runner.RequestConfig{
-						URL: mustParseURL("https://example.com"),
-					},
-					Runner: runner.RecorderConfig{
-						Concurrency: 3,
-					},
-				}.WithFields("url", "concurrency"),
-			),
+			expConfig: runner.Config{
+				Request: runner.RequestConfig{
+					URL: mustParseURL("https://example.com"),
+				},
+				Runner: runner.RecorderConfig{
+					Concurrency: 3,
+				},
+			}.
+				WithFields("url", "concurrency").
+				Override(runner.DefaultConfig()),
 			expError: nil,
 		},
 	}

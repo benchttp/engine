@@ -18,5 +18,5 @@ func JSON(in []byte) (runner.Config, error) {
 		return runner.Config{}, err
 	}
 
-	return runner.DefaultConfig().Override(cfg), nil
+	return cfg.Override(runner.DefaultConfig()), nil
 }
