@@ -42,7 +42,7 @@ func TestJSONParser(t *testing.T) {
 					rawcfg configparse.Representation
 				)
 
-				gotErr := parser.Parser(tc.in, &rawcfg)
+				gotErr := parser.Parse(tc.in, &rawcfg)
 
 				if tc.exp == "" {
 					if gotErr != nil {

@@ -11,9 +11,9 @@ import (
 // JSONParser implements configParser.
 type JSONParser struct{}
 
-// Parser decodes a raw JSON input in strict mode (unknown fields disallowed)
+// Parse decodes a raw JSON input in strict mode (unknown fields disallowed)
 // and stores the resulting value into dst.
-func (p JSONParser) Parser(in []byte, dst *Representation) error {
+func (p JSONParser) Parse(in []byte, dst *Representation) error {
 	decoder := json.NewDecoder(bytes.NewReader(in))
 	decoder.DisallowUnknownFields()
 	return p.handleError(decoder.Decode(dst))

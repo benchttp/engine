@@ -9,7 +9,7 @@ func JSON(in []byte) (runner.Config, error) {
 	parser := JSONParser{}
 
 	var repr Representation
-	if err := parser.Parser(in, &repr); err != nil {
+	if err := parser.Parse(in, &repr); err != nil {
 		return runner.Config{}, err
 	}
 
