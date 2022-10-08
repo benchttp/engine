@@ -83,6 +83,14 @@ type Output struct {
 	Silent bool
 }
 
+type set map[string]struct{}
+
+func (set set) add(values ...string) {
+	for _, v := range values {
+		set[v] = struct{}{}
+	}
+}
+
 // Global represents the global configuration of the runner.
 // It must be validated using Global.Validate before usage.
 type Global struct {
@@ -90,6 +98,19 @@ type Global struct {
 	Runner  Runner
 	Output  Output
 	Tests   []tests.Case
+
+	fieldsSet set
+}
+
+// WithField returns a new Global with the input fields marked as set.
+func (cfg Global) WithFields(fields ...string) Global {
+	fieldsSet := cfg.fieldsSet
+	if fieldsSet == nil {
+		fieldsSet = set{}
+	}
+	fieldsSet.add(fields...)
+	cfg.fieldsSet = fieldsSet
+	return cfg
 }
 
 // String returns an indented JSON representation of Config
@@ -102,8 +123,11 @@ func (cfg Global) String() string {
 // Override returns a new Config based on cfg with overridden values from c.
 // Only fields specified in options are replaced. Accepted options are limited
 // to existing Fields, other values are silently ignored.
-func (cfg Global) Override(c Global, fields ...string) Global {
-	for _, field := range fields {
+func (cfg Global) Override(c Global) Global {
+	if len(c.fieldsSet) == 0 {
+		return cfg
+	}
+	for field := range c.fieldsSet {
 		switch field {
 		case FieldMethod:
 			cfg.Request.Method = c.Request.Method

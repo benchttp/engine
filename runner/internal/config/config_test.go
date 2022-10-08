@@ -120,7 +120,7 @@ func TestGlobal_Override(t *testing.T) {
 			config.FieldSilent,
 		}
 
-		if gotCfg := baseCfg.Override(newCfg, fields...); !reflect.DeepEqual(gotCfg, newCfg) {
+		if gotCfg := baseCfg.Override(newCfg.WithFields(fields...)); !reflect.DeepEqual(gotCfg, newCfg) {
 			t.Errorf("did not override expected fields:\nexp %v\ngot %v", baseCfg, gotCfg)
 			t.Log(fields)
 		}
@@ -204,7 +204,7 @@ func TestGlobal_Override(t *testing.T) {
 					},
 				}
 
-				gotCfg := oldCfg.Override(newCfg, config.FieldHeader)
+				gotCfg := oldCfg.Override(newCfg.WithFields(config.FieldHeader))
 
 				if gotHeader := gotCfg.Request.Header; !reflect.DeepEqual(gotHeader, tc.expHeader) {
 					t.Errorf("\nexp %#v\ngot %#v", tc.expHeader, gotHeader)

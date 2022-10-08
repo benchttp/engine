@@ -55,9 +55,7 @@ func TestJSON(t *testing.T) {
 					Runner: runner.RecorderConfig{
 						Concurrency: 3,
 					},
-				},
-				"url",
-				"concurrency",
+				}.WithFields("url", "concurrency"),
 			),
 			expError: nil,
 		},

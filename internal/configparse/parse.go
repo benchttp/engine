@@ -48,32 +48,23 @@ type UnmarshaledConfig struct {
 	} `yaml:"tests" json:"tests"`
 }
 
-// parsedConfig embeds a parsed runner.ConfigGlobal and the list of its set fields.
-type parsedConfig struct {
-	// TODO: do not embed, use field config
-	config runner.Config
-	fields []string
-}
-
-// addField adds a field to the list of set fields.
-func (pconf *parsedConfig) add(field string) {
-	pconf.fields = append(pconf.fields, field)
-}
-
 // newParsedConfig parses an input raw config as a runner.ConfigGlobal and returns
-// a parsedConfig or the first non-nil error occurring in the process.
-func newParsedConfig(uconf UnmarshaledConfig) (parsedConfig, error) { //nolint:gocognit // acceptable complexity for a parsing func
-	maxFields := len(runner.ConfigFieldsUsage)
-	pconf := parsedConfig{fields: make([]string, 0, maxFields)}
-	cfg := &pconf.config
+// a parsed Config or the first non-nil error occurring in the process.
+func newParsedConfig(uconf UnmarshaledConfig) (runner.Config, error) { //nolint:gocognit // acceptable complexity for a parsing func
+	cfg := runner.Config{}
+	fieldsSet := []string{}
 
-	abort := func(err error) (parsedConfig, error) {
-		return parsedConfig{}, err
+	addField := func(field string) {
+		fieldsSet = append(fieldsSet, field)
+	}
+
+	abort := func(err error) (runner.Config, error) {
+		return runner.Config{}, err
 	}
 
 	if method := uconf.Request.Method; method != nil {
 		cfg.Request.Method = *method
-		pconf.add(runner.ConfigFieldMethod)
+		addField(runner.ConfigFieldMethod)
 	}
 
 	if rawURL := uconf.Request.URL; rawURL != nil {
@@ -82,7 +73,7 @@ func newParsedConfig(uconf UnmarshaledConfig) (parsedConfig, error) { //nolint:g
 			return abort(err)
 		}
 		cfg.Request.URL = parsedURL
-		pconf.add(runner.ConfigFieldURL)
+		addField(runner.ConfigFieldURL)
 	}
 
 	if header := uconf.Request.Header; header != nil {
@@ -91,7 +82,7 @@ func newParsedConfig(uconf UnmarshaledConfig) (parsedConfig, error) { //nolint:g
 			httpHeader[key] = val
 		}
 		cfg.Request.Header = httpHeader
-		pconf.add(runner.ConfigFieldHeader)
+		addField(runner.ConfigFieldHeader)
 	}
 
 	if body := uconf.Request.Body; body != nil {
@@ -99,17 +90,17 @@ func newParsedConfig(uconf UnmarshaledConfig) (parsedConfig, error) { //nolint:g
 			Type:    body.Type,
 			Content: []byte(body.Content),
 		}
-		pconf.add(runner.ConfigFieldBody)
+		addField(runner.ConfigFieldBody)
 	}
 
 	if requests := uconf.Runner.Requests; requests != nil {
 		cfg.Runner.Requests = *requests
-		pconf.add(runner.ConfigFieldRequests)
+		addField(runner.ConfigFieldRequests)
 	}
 
 	if concurrency := uconf.Runner.Concurrency; concurrency != nil {
 		cfg.Runner.Concurrency = *concurrency
-		pconf.add(runner.ConfigFieldConcurrency)
+		addField(runner.ConfigFieldConcurrency)
 	}
 
 	if interval := uconf.Runner.Interval; interval != nil {
@@ -118,7 +109,7 @@ func newParsedConfig(uconf UnmarshaledConfig) (parsedConfig, error) { //nolint:g
 			return abort(err)
 		}
 		cfg.Runner.Interval = parsedInterval
-		pconf.add(runner.ConfigFieldInterval)
+		addField(runner.ConfigFieldInterval)
 	}
 
 	if requestTimeout := uconf.Runner.RequestTimeout; requestTimeout != nil {
@@ -127,7 +118,7 @@ func newParsedConfig(uconf UnmarshaledConfig) (parsedConfig, error) { //nolint:g
 			return abort(err)
 		}
 		cfg.Runner.RequestTimeout = parsedTimeout
-		pconf.add(runner.ConfigFieldRequestTimeout)
+		addField(runner.ConfigFieldRequestTimeout)
 	}
 
 	if globalTimeout := uconf.Runner.GlobalTimeout; globalTimeout != nil {
@@ -136,17 +127,17 @@ func newParsedConfig(uconf UnmarshaledConfig) (parsedConfig, error) { //nolint:g
 			return abort(err)
 		}
 		cfg.Runner.GlobalTimeout = parsedGlobalTimeout
-		pconf.add(runner.ConfigFieldGlobalTimeout)
+		addField(runner.ConfigFieldGlobalTimeout)
 	}
 
 	if silent := uconf.Output.Silent; silent != nil {
 		cfg.Output.Silent = *silent
-		pconf.add(runner.ConfigFieldSilent)
+		addField(runner.ConfigFieldSilent)
 	}
 
 	testSuite := uconf.Tests
 	if len(testSuite) == 0 {
-		return pconf, nil
+		return cfg.WithFields(fieldsSet...), nil
 	}
 
 	cases := make([]runner.TestCase, len(testSuite))
@@ -187,9 +178,9 @@ func newParsedConfig(uconf UnmarshaledConfig) (parsedConfig, error) { //nolint:g
 		}
 	}
 	cfg.Tests = cases
-	pconf.add(runner.ConfigFieldTests)
+	addField(runner.ConfigFieldTests)
 
-	return pconf, nil
+	return cfg.WithFields(fieldsSet...), nil
 }
 
 // helpers
