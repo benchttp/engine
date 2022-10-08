@@ -1,16 +1,12 @@
 package configparse
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
-	"os"
-	"path/filepath"
 	"strconv"
 	"time"
 
-	"github.com/benchttp/engine/internal/errorutil"
 	"github.com/benchttp/engine/runner"
 )
 
@@ -50,113 +46,6 @@ type UnmarshaledConfig struct {
 		Predicate *string     `yaml:"predicate" json:"predicate"`
 		Target    interface{} `yaml:"target" json:"target"`
 	} `yaml:"tests" json:"tests"`
-}
-
-// Parse parses a benchttp runner config file into a runner.ConfigGlobal
-// and returns it or the first non-nil error occurring in the process,
-// which can be any of the values declared in the package.
-func Parse(filename string) (cfg runner.Config, err error) {
-	uconfs, err := parseFileRecursive(filename, []UnmarshaledConfig{}, set{})
-	if err != nil {
-		return
-	}
-	return parseAndMergeConfigs(uconfs)
-}
-
-// set is a collection of unique string values.
-type set map[string]bool
-
-// add adds v to the receiver. If v is already set, it returns a non-nil
-// error instead.
-func (s set) add(v string) error {
-	if _, exists := s[v]; exists {
-		return errors.New("value already set")
-	}
-	s[v] = true
-	return nil
-}
-
-// parseFileRecursive parses a config file and its parent found from key
-// "extends" recursively until the root config file is reached.
-// It returns the list of all parsed configs or the first non-nil error
-// occurring in the process.
-func parseFileRecursive(
-	filename string,
-	uconfs []UnmarshaledConfig,
-	seen set,
-) ([]UnmarshaledConfig, error) {
-	// avoid infinite recursion caused by circular reference
-	if err := seen.add(filename); err != nil {
-		return uconfs, ErrCircularExtends
-	}
-
-	// parse current file, append parsed config
-	uconf, err := parseFile(filename)
-	if err != nil {
-		return uconfs, err
-	}
-	uconfs = append(uconfs, uconf)
-
-	// root config reached: stop now and return the parsed configs
-	if uconf.Extends == nil {
-		return uconfs, nil
-	}
-
-	// config has parent: resolve its path and parse it recursively
-	parentPath := filepath.Join(filepath.Dir(filename), *uconf.Extends)
-	return parseFileRecursive(parentPath, uconfs, seen)
-}
-
-// parseFile parses a single config file and returns the result as an
-// unmarshaledConfig and an appropriate error predeclared in the package.
-func parseFile(filename string) (uconf UnmarshaledConfig, err error) {
-	b, err := os.ReadFile(filename)
-	switch {
-	case err == nil:
-	case errors.Is(err, os.ErrNotExist):
-		return uconf, errorutil.WithDetails(ErrFileNotFound, filename)
-	default:
-		return uconf, errorutil.WithDetails(ErrFileRead, filename, err)
-	}
-
-	ext := extension(filepath.Ext(filename))
-	parser, err := newParser(ext)
-	if err != nil {
-		return uconf, errorutil.WithDetails(ErrFileExt, ext, err)
-	}
-
-	if err = parser.parse(b, &uconf); err != nil {
-		return uconf, errorutil.WithDetails(ErrParse, filename, err)
-	}
-
-	return uconf, nil
-}
-
-// parseAndMergeConfigs iterates backwards over uconfs, parsing them
-// as runner.ConfigGlobal and merging them into a single one.
-// It returns the merged result or the first non-nil error occurring in the
-// process.
-func parseAndMergeConfigs(uconfs []UnmarshaledConfig) (cfg runner.Config, err error) {
-	if len(uconfs) == 0 { // supposedly catched upstream, should not occur
-		return cfg, errors.New(
-			"an unacceptable error occurred parsing the config file, " +
-				"please visit https://github.com/benchttp/runner/issues/new " +
-				"and insult us properly",
-		)
-	}
-
-	cfg = runner.DefaultConfig()
-
-	for i := len(uconfs) - 1; i >= 0; i-- {
-		uconf := uconfs[i]
-		pconf, err := newParsedConfig(uconf)
-		if err != nil {
-			return cfg, errorutil.WithDetails(ErrParse, err)
-		}
-		cfg = cfg.Override(pconf.config, pconf.fields...)
-	}
-
-	return cfg, nil
 }
 
 // parsedConfig embeds a parsed runner.ConfigGlobal and the list of its set fields.
