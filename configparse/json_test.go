@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"net/url"
-	"reflect"
 	"testing"
 
 	"github.com/benchttp/engine/configparse"
@@ -64,7 +63,7 @@ func TestJSON(t *testing.T) {
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
 			gotConfig, gotError := configparse.JSON(tc.input)
-			if !reflect.DeepEqual(gotConfig, tc.expConfig) {
+			if !gotConfig.Equal(tc.expConfig) {
 				t.Errorf("unexpected config:\nexp %+v\ngot %+v", tc.expConfig, gotConfig)
 			}
 

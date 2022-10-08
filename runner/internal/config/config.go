@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"reflect"
 	"time"
 
 	"github.com/benchttp/engine/runner/internal/tests"
@@ -118,6 +119,13 @@ func (cfg Global) WithFields(fields ...string) Global {
 func (cfg Global) String() string {
 	b, _ := json.MarshalIndent(cfg, "", "  ")
 	return string(b)
+}
+
+// Equal returns true if cfg and c are equal configurations.
+func (cfg Global) Equal(c Global) bool {
+	cfg.fieldsSet = nil
+	c.fieldsSet = nil
+	return reflect.DeepEqual(cfg, c)
 }
 
 // Override returns a new Config based on cfg with overridden values from c.
