@@ -11,4 +11,5 @@ jobs:
     steps:
       - name: Create workflow_dispatch event
         run: gh workflow run --repo benchttp/desktop update-engine.yml --ref main -f sha=${{ github.sha }}
-    env: ${{ secrets.ACTION_TOKEN }}
+    env:
+      GH_TOKEN: ${{ secrets.ACTION_TOKEN }}
