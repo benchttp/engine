@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/benchttp/engine/internal/configparse"
+	"github.com/benchttp/engine/configparse"
 	"github.com/benchttp/engine/runner"
 )
 
