@@ -5,6 +5,8 @@ import (
 	"net/http"
 )
 
+// ListenAndServe listen to the given port and serves routes
+// to run and stream a benchttp benchmark.
 func ListenAndServe(port string) error {
 	return (&http.Server{
 		Addr:    ":" + fmt.Sprint(port),

@@ -5,6 +5,8 @@ import (
 	"strconv"
 )
 
+// FindFreePort returns an available port as a string or the first
+// non-nil error occurring in the process.
 func FindFreePort() (string, error) {
 	addr, err := net.ResolveTCPAddr("tcp", "localhost:0")
 	if err != nil {
