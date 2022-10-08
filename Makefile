@@ -37,16 +37,6 @@ test:
 test-cov:
 	@go-acc ./...
 
-# Build
-.PHONY: build
-build:
-	@./script/build
-	@./script/build-healthcheck
-
-.PHONY: clear
-clear:
-	@rm -rf ./bin/*
-
 # Docs
 
 .PHONY: docs
