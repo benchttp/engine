@@ -48,9 +48,9 @@ type Representation struct {
 	} `yaml:"tests" json:"tests"`
 }
 
-// newParsedConfig parses an input raw config as a runner.ConfigGlobal and returns
+// ParseRepresentation parses an input raw config as a runner.ConfigGlobal and returns
 // a parsed Config or the first non-nil error occurring in the process.
-func newParsedConfig(repr Representation) (runner.Config, error) { //nolint:gocognit // acceptable complexity for a parsing func
+func ParseRepresentation(repr Representation) (runner.Config, error) { //nolint:gocognit // acceptable complexity for a parsing func
 	cfg := runner.Config{}
 	fieldsSet := []string{}
 

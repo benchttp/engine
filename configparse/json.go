@@ -13,7 +13,7 @@ func JSON(in []byte) (runner.Config, error) {
 		return runner.Config{}, err
 	}
 
-	cfg, err := newParsedConfig(repr)
+	cfg, err := ParseRepresentation(repr)
 	if err != nil {
 		return runner.Config{}, err
 	}
