@@ -6,10 +6,10 @@ import (
 
 // JSON reads input bytes as JSON and unmarshals it into a runner.ConfigGlobal.
 func JSON(in []byte) (runner.Config, error) {
-	parser := jsonParser{}
+	parser := JSONParser{}
 
 	var repr Representation
-	if err := parser.parse(in, &repr); err != nil {
+	if err := parser.Parser(in, &repr); err != nil {
 		return runner.Config{}, err
 	}
 

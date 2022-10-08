@@ -1,4 +1,4 @@
-package configparse
+package configparse_test
 
 import (
 	"errors"
@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	"gopkg.in/yaml.v3"
+
+	"github.com/benchttp/engine/configparse"
 )
 
 func TestYAMLParser(t *testing.T) {
@@ -63,12 +65,12 @@ func TestYAMLParser(t *testing.T) {
 		for _, tc := range testcases {
 			t.Run(tc.label, func(t *testing.T) {
 				var (
-					parser  yamlParser
-					rawcfg  Representation
+					parser  configparse.YAMLParser
+					rawcfg  configparse.Representation
 					yamlErr *yaml.TypeError
 				)
 
-				gotErr := parser.parse(tc.in, &rawcfg)
+				gotErr := parser.Parse(tc.in, &rawcfg)
 
 				if tc.expErr == nil {
 					if gotErr != nil {
@@ -121,11 +123,11 @@ func TestJSONParser(t *testing.T) {
 		for _, tc := range testcases {
 			t.Run(tc.label, func(t *testing.T) {
 				var (
-					parser jsonParser
-					rawcfg Representation
+					parser configparse.JSONParser
+					rawcfg configparse.Representation
 				)
 
-				gotErr := parser.parse(tc.in, &rawcfg)
+				gotErr := parser.Parser(tc.in, &rawcfg)
 
 				if tc.exp == "" {
 					if gotErr != nil {
