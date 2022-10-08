@@ -15,6 +15,7 @@ func FindFreePort() (string, error) {
 	if err != nil {
 		return "", err
 	}
+	defer listener.Close()
 
 	return strconv.Itoa(listener.Addr().(*net.TCPAddr).Port), nil
 }
