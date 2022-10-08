@@ -95,22 +95,22 @@ type Global struct {
 
 	Tests []tests.Case
 
-	fieldsSet set
+	assignedFields set
 }
 
 // WithField returns a new Global with the input fields marked as set.
+// Accepted options are limited to existing Fields, other values are
+// silently ignored.
 func (cfg Global) WithFields(fields ...string) Global {
-	fieldsSet := cfg.fieldsSet
-	if fieldsSet == nil {
-		fieldsSet = set{}
+	if cfg.assignedFields == nil {
+		cfg.assignedFields = set{}
 	}
-	fieldsSet.add(fields...)
-	cfg.fieldsSet = fieldsSet
+	cfg.assignedFields.add(fields...)
 	return cfg
 }
 
-// String returns an indented JSON representation of Config
-// for debugging purposes.
+// String implements fmt.Stringer. It returns an indented JSON representation
+// of Config for debugging purposes.
 func (cfg Global) String() string {
 	b, _ := json.MarshalIndent(cfg, "", "  ")
 	return string(b)
@@ -118,40 +118,54 @@ func (cfg Global) String() string {
 
 // Equal returns true if cfg and c are equal configurations.
 func (cfg Global) Equal(c Global) bool {
-	cfg.fieldsSet = nil
-	c.fieldsSet = nil
+	cfg.assignedFields = nil
+	c.assignedFields = nil
 	return reflect.DeepEqual(cfg, c)
 }
 
-// Override returns a new Config based on cfg with overridden values from c.
-// Only fields specified in options are replaced. Accepted options are limited
-// to existing Fields, other values are silently ignored.
-func (cfg Global) Override(c Global) Global {
-	for field := range cfg.fieldsSet {
+// Override returns a new Config by overriding the values of base
+// with the values from the Config receiver.
+// Only fields previously specified by the receiver via Config.WithFields
+// are replaced.
+// All other values from base are preserved.
+//
+// The following example is equivalent to defaultConfig with the concurrency
+// value from myConfig:
+//
+// 	myConfig.
+// 		WithFields(FieldConcurrency).
+// 		Override(defaultConfig)
+//
+// The following example is equivalent to defaultConfig, as no field as been
+// tagged via WithFields by the receiver:
+//
+// 	myConfig.Override(defaultConfig)
+func (cfg Global) Override(base Global) Global {
+	for field := range cfg.assignedFields {
 		switch field {
 		case FieldMethod:
-			c.Request.Method = cfg.Request.Method
+			base.Request.Method = cfg.Request.Method
 		case FieldURL:
-			c.Request.URL = cfg.Request.URL
+			base.Request.URL = cfg.Request.URL
 		case FieldHeader:
-			c.overrideHeader(cfg.Request.Header)
+			base.overrideHeader(cfg.Request.Header)
 		case FieldBody:
-			c.Request.Body = cfg.Request.Body
+			base.Request.Body = cfg.Request.Body
 		case FieldRequests:
-			c.Runner.Requests = cfg.Runner.Requests
+			base.Runner.Requests = cfg.Runner.Requests
 		case FieldConcurrency:
-			c.Runner.Concurrency = cfg.Runner.Concurrency
+			base.Runner.Concurrency = cfg.Runner.Concurrency
 		case FieldInterval:
-			c.Runner.Interval = cfg.Runner.Interval
+			base.Runner.Interval = cfg.Runner.Interval
 		case FieldRequestTimeout:
-			c.Runner.RequestTimeout = cfg.Runner.RequestTimeout
+			base.Runner.RequestTimeout = cfg.Runner.RequestTimeout
 		case FieldGlobalTimeout:
-			c.Runner.GlobalTimeout = cfg.Runner.GlobalTimeout
+			base.Runner.GlobalTimeout = cfg.Runner.GlobalTimeout
 		case FieldTests:
-			c.Tests = cfg.Tests
+			base.Tests = cfg.Tests
 		}
 	}
-	return c
+	return base
 }
 
 // overrideHeader overrides cfg's Request.Header with the values from newHeader.

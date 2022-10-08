@@ -48,10 +48,10 @@ type Representation struct {
 // a parsed Config or the first non-nil error occurring in the process.
 func ParseRepresentation(repr Representation) (runner.Config, error) { //nolint:gocognit // acceptable complexity for a parsing func
 	cfg := runner.Config{}
-	fieldsSet := []string{}
+	assignedFields := []string{}
 
 	addField := func(field string) {
-		fieldsSet = append(fieldsSet, field)
+		assignedFields = append(assignedFields, field)
 	}
 
 	abort := func(err error) (runner.Config, error) {
@@ -128,7 +128,7 @@ func ParseRepresentation(repr Representation) (runner.Config, error) { //nolint:
 
 	testSuite := repr.Tests
 	if len(testSuite) == 0 {
-		return cfg.WithFields(fieldsSet...), nil
+		return cfg.WithFields(assignedFields...), nil
 	}
 
 	cases := make([]runner.TestCase, len(testSuite))
@@ -171,7 +171,7 @@ func ParseRepresentation(repr Representation) (runner.Config, error) { //nolint:
 	cfg.Tests = cases
 	addField(runner.ConfigFieldTests)
 
-	return cfg.WithFields(fieldsSet...), nil
+	return cfg.WithFields(assignedFields...), nil
 }
 
 // helpers
