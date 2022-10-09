@@ -1,10 +1,10 @@
 package httpclient
 
 import (
-	"fmt"
+	"errors"
 	"io"
+	"log"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/benchttp/engine/configparse"
@@ -23,11 +23,25 @@ func handle(w http.ResponseWriter, r *http.Request) {
 
 	cfg, err := configparse.JSON(b)
 	if err != nil {
-		internalError(w, err)
+		clientError(w, err)
 		return
 	}
 
 	rep, err := runner.New(streamProgress(w)).Run(r.Context(), cfg)
+	var invalidConfigError *runner.InvalidConfigError
+	switch {
+	case err == runner.ErrCanceled:
+		clientError(w, err)
+		return
+	case errors.As(err, &invalidConfigError):
+		clientError(w, invalidConfigError.Errors...)
+	case err == nil:
+		// Pass through.
+	default:
+		internalError(w, err)
+		return
+	}
+
 	if err != nil {
 		internalError(w, err)
 		return
@@ -53,11 +67,21 @@ func streamProgress(w http.ResponseWriter) func(runner.RecordingProgress) {
 	}
 }
 
-func internalError(w http.ResponseWriter, e error) {
-	fmt.Fprint(os.Stderr, e)
+func clientError(w http.ResponseWriter, e ...error) {
+	log.Printf("client error: %v\n", e)
+	w.WriteHeader(http.StatusBadRequest)
+
+	if err := response.ErrorClient(e).EncodeJSON(w); err != nil {
+		// Fallback to plain text encoding.
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func internalError(w http.ResponseWriter, e ...error) {
+	log.Printf("server error: %v\n", e)
 	w.WriteHeader(http.StatusInternalServerError)
 
-	if err := response.Error(e).EncodeJSON(w); err != nil {
+	if err := response.ErrorServer(e).EncodeJSON(w); err != nil {
 		// Fallback to plain text encoding.
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
