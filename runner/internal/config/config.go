@@ -132,14 +132,14 @@ func (cfg Global) Equal(c Global) bool {
 // The following example is equivalent to defaultConfig with the concurrency
 // value from myConfig:
 //
-// 	myConfig.
-// 		WithFields(FieldConcurrency).
-// 		Override(defaultConfig)
+//	myConfig.
+//		WithFields(FieldConcurrency).
+//		Override(defaultConfig)
 //
 // The following example is equivalent to defaultConfig, as no field as been
 // tagged via WithFields by the receiver:
 //
-// 	myConfig.Override(defaultConfig)
+//	myConfig.Override(defaultConfig)
 func (cfg Global) Override(base Global) Global {
 	for field := range cfg.assignedFields {
 		switch field {

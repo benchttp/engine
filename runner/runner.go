@@ -12,10 +12,11 @@ import (
 )
 
 type (
-	Config         = config.Global
-	RequestConfig  = config.Request
-	RequestBody    = config.RequestBody
-	RecorderConfig = config.Runner
+	Config             = config.Global
+	RequestConfig      = config.Request
+	RequestBody        = config.RequestBody
+	RecorderConfig     = config.Runner
+	InvalidConfigError = config.InvalidConfigError
 
 	RecordingProgress = recorder.Progress
 	RecordingStatus   = recorder.Status
@@ -58,6 +59,8 @@ var (
 	ConfigFieldsUsage = config.FieldsUsage
 	NewRequestBody    = config.NewRequestBody
 	IsConfigField     = config.IsField
+
+	ErrCanceled = recorder.ErrCanceled
 )
 
 type Runner struct {
