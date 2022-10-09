@@ -88,7 +88,7 @@ func main() {
 
 📄 Please refer to [our Wiki](https://github.com/benchttp/engine/wiki/IO-Structures) for exhaustive `Config` and `Report` structures (and more!)
 
-## Contributing: set up develpment environment
+## Contributing: set up development environment
 
 ### Prerequisites
 
