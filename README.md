@@ -19,21 +19,21 @@
 Benchttp engine is a Go library providing a way to perform benchmarks and tests
 on HTTP endpoints.
 
-## Usage
+## Installation
 
 ### Prerequisites
 
-- Go1.17 environment or higher
+Go1.17 environment or higher is required.
 
-### Install dependency
+Install.
 
 ```txt
 go get github.com/benchttp/engine
 ```
 
-### Usage
+## Usage
 
-#### Basic usage
+### Basic usage
 
 ```go
 package main
@@ -57,17 +57,17 @@ func main(t *testing.T) {
 }
 ```
 
-#### Usage with JSON config via `configparse`
+### Usage with JSON config via `configparse`
 
 ```go
 package main
 
 import (
-	"context"
-	"fmt"
+    "context"
+    "fmt"
 
-	"github.com/benchttp/engine/configparse"
-	"github.com/benchttp/engine/runner"
+    "github.com/benchttp/engine/configparse"
+    "github.com/benchttp/engine/runner"
 )
 
 func main() {
