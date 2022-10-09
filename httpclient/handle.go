@@ -30,19 +30,15 @@ func handle(w http.ResponseWriter, r *http.Request) {
 	rep, err := runner.New(streamProgress(w)).Run(r.Context(), cfg)
 	var invalidConfigError *runner.InvalidConfigError
 	switch {
+	case err == nil:
+		// Pass through.
 	case err == runner.ErrCanceled:
 		clientError(w, err)
 		return
 	case errors.As(err, &invalidConfigError):
 		clientError(w, invalidConfigError.Errors...)
-	case err == nil:
-		// Pass through.
-	default:
-		internalError(w, err)
 		return
-	}
-
-	if err != nil {
+	default:
 		internalError(w, err)
 		return
 	}
