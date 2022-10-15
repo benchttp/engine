@@ -7,16 +7,15 @@ import (
 // JSON reads input bytes as JSON and unmarshals it into a runner.ConfigGlobal.
 func JSON(in []byte) (runner.Config, error) {
 	parser := JSONParser{}
-
-	var repr Representation
+	repr := Representation{}
 	if err := parser.Parse(in, &repr); err != nil {
 		return runner.Config{}, err
 	}
 
-	cfg, err := ParseRepresentation(repr)
-	if err != nil {
+	cfg := runner.DefaultConfig()
+	if err := repr.Unmarshal(&cfg); err != nil {
 		return runner.Config{}, err
 	}
 
-	return cfg.Override(runner.DefaultConfig()), nil
+	return cfg, nil
 }
