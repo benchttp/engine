@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"reflect"
 	"time"
 
 	"github.com/benchttp/engine/runner/internal/tests"
@@ -79,34 +78,12 @@ type Runner struct {
 	GlobalTimeout  time.Duration
 }
 
-type set map[string]struct{}
-
-func (set set) add(values ...string) {
-	for _, v := range values {
-		set[v] = struct{}{}
-	}
-}
-
 // Global represents the global configuration of the runner.
 // It must be validated using Global.Validate before usage.
 type Global struct {
 	Request Request
 	Runner  Runner
-
-	Tests []tests.Case
-
-	assignedFields set
-}
-
-// WithField returns a new Global with the input fields marked as set.
-// Accepted options are limited to existing Fields, other values are
-// silently ignored.
-func (cfg Global) WithFields(fields ...string) Global {
-	if cfg.assignedFields == nil {
-		cfg.assignedFields = set{}
-	}
-	cfg.assignedFields.add(fields...)
-	return cfg
+	Tests   []tests.Case
 }
 
 // String implements fmt.Stringer. It returns an indented JSON representation
@@ -114,78 +91,6 @@ func (cfg Global) WithFields(fields ...string) Global {
 func (cfg Global) String() string {
 	b, _ := json.MarshalIndent(cfg, "", "  ")
 	return string(b)
-}
-
-// Equal returns true if cfg and c are equal configurations.
-func (cfg Global) Equal(c Global) bool {
-	cfg.assignedFields = nil
-	c.assignedFields = nil
-	return reflect.DeepEqual(cfg, c)
-}
-
-// Override returns a new Config by overriding the values of base
-// with the values from the Config receiver.
-// Only fields previously specified by the receiver via Config.WithFields
-// are replaced.
-// All other values from base are preserved.
-//
-// The following example is equivalent to defaultConfig with the concurrency
-// value from myConfig:
-//
-//	myConfig.
-//		WithFields(FieldConcurrency).
-//		Override(defaultConfig)
-//
-// The following example is equivalent to defaultConfig, as no field as been
-// tagged via WithFields by the receiver:
-//
-//	myConfig.Override(defaultConfig)
-func (cfg Global) Override(base Global) Global {
-	for field := range cfg.assignedFields {
-		switch field {
-		case FieldMethod:
-			base.Request.Method = cfg.Request.Method
-		case FieldURL:
-			base.Request.URL = cfg.Request.URL
-		case FieldHeader:
-			base.overrideHeader(cfg.Request.Header)
-		case FieldBody:
-			base.Request.Body = cfg.Request.Body
-		case FieldRequests:
-			base.Runner.Requests = cfg.Runner.Requests
-		case FieldConcurrency:
-			base.Runner.Concurrency = cfg.Runner.Concurrency
-		case FieldInterval:
-			base.Runner.Interval = cfg.Runner.Interval
-		case FieldRequestTimeout:
-			base.Runner.RequestTimeout = cfg.Runner.RequestTimeout
-		case FieldGlobalTimeout:
-			base.Runner.GlobalTimeout = cfg.Runner.GlobalTimeout
-		case FieldTests:
-			base.Tests = cfg.Tests
-		}
-	}
-	return base
-}
-
-// overrideHeader overrides cfg's Request.Header with the values from newHeader.
-// For every key in newHeader:
-//
-// - If it's not present in cfg.Request.Header, it is added.
-//
-// - If it's already present in cfg.Request.Header, the value is replaced.
-//
-// - All other keys in cfg.Request.Header are left untouched.
-func (cfg *Global) overrideHeader(newHeader http.Header) {
-	if newHeader == nil {
-		return
-	}
-	if cfg.Request.Header == nil {
-		cfg.Request.Header = http.Header{}
-	}
-	for k, v := range newHeader {
-		cfg.Request.Header[k] = v
-	}
 }
 
 // Validate returns a non-nil InvalidConfigError if any of its fields
