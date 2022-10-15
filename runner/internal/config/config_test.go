@@ -8,7 +8,6 @@ import (
 	"net/url"
 	"reflect"
 	"testing"
-	"time"
 
 	"github.com/benchttp/engine/runner/internal/config"
 )
@@ -67,144 +66,6 @@ func TestGlobal_Validate(t *testing.T) {
 		findErrorOrFail(t, errs, `globalTimeout (-5): want > 0`)
 
 		t.Logf("got error:\n%v", errInvalid)
-	})
-}
-
-func TestGlobal_Override(t *testing.T) {
-	t.Run("do not override unspecified fields", func(t *testing.T) {
-		baseCfg := config.Global{}
-		nextCfg := config.Global{
-			Request: config.Request{
-				Body: config.RequestBody{},
-			}.WithURL("http://a.b?p=2"),
-			Runner: config.Runner{
-				Requests:       1,
-				Concurrency:    2,
-				RequestTimeout: 3 * time.Second,
-				GlobalTimeout:  4 * time.Second,
-			},
-		}
-
-		if gotCfg := nextCfg.Override(baseCfg); !gotCfg.Equal(baseCfg) {
-			t.Errorf("overrode unexpected fields:\nexp %#v\ngot %#v", baseCfg, gotCfg)
-		}
-	})
-
-	t.Run("override specified fields", func(t *testing.T) {
-		fields := []string{
-			config.FieldMethod,
-			config.FieldURL,
-			config.FieldRequests,
-			config.FieldConcurrency,
-			config.FieldRequestTimeout,
-			config.FieldGlobalTimeout,
-			config.FieldBody,
-		}
-
-		baseCfg := config.Global{}
-		nextCfg := config.Global{
-			Request: config.Request{
-				Body: validBody,
-			}.WithURL("http://a.b?p=2"),
-			Runner: config.Runner{
-				Requests:       1,
-				Concurrency:    2,
-				RequestTimeout: 3 * time.Second,
-				GlobalTimeout:  4 * time.Second,
-			},
-		}.WithFields(fields...)
-
-		if gotCfg := nextCfg.Override(baseCfg); !gotCfg.Equal(nextCfg) {
-			t.Errorf("did not override expected fields:\nexp %v\ngot %v", nextCfg, gotCfg)
-			t.Log(fields)
-		}
-	})
-
-	t.Run("override header selectively", func(t *testing.T) {
-		testcases := []struct {
-			label     string
-			oldHeader http.Header
-			newHeader http.Header
-			expHeader http.Header
-		}{
-			{
-				label:     "erase overridden keys",
-				oldHeader: http.Header{"key": []string{"oldval"}},
-				newHeader: http.Header{"key": []string{"newval"}},
-				expHeader: http.Header{"key": []string{"newval"}},
-			},
-			{
-				label:     "do not erase not overridden keys",
-				oldHeader: http.Header{"key": []string{"oldval"}},
-				newHeader: http.Header{},
-				expHeader: http.Header{"key": []string{"oldval"}},
-			},
-			{
-				label:     "add new keys",
-				oldHeader: http.Header{"key0": []string{"oldval"}},
-				newHeader: http.Header{"key1": []string{"newval"}},
-				expHeader: http.Header{
-					"key0": []string{"oldval"},
-					"key1": []string{"newval"},
-				},
-			},
-			{
-				label: "erase only overridden keys",
-				oldHeader: http.Header{
-					"key0": []string{"oldval0", "oldval1"},
-					"key1": []string{"oldval0", "oldval1"},
-				},
-				newHeader: http.Header{
-					"key1": []string{"newval0", "newval1"},
-					"key2": []string{"newval0", "newval1"},
-				},
-				expHeader: http.Header{
-					"key0": []string{"oldval0", "oldval1"},
-					"key1": []string{"newval0", "newval1"},
-					"key2": []string{"newval0", "newval1"},
-				},
-			},
-			{
-				label:     "nil new header does nothing",
-				oldHeader: http.Header{"key": []string{"val"}},
-				newHeader: nil,
-				expHeader: http.Header{"key": []string{"val"}},
-			},
-			{
-				label:     "replace nil old header",
-				oldHeader: nil,
-				newHeader: http.Header{"key": []string{"val"}},
-				expHeader: http.Header{"key": []string{"val"}},
-			},
-			{
-				label:     "nil over nil is nil",
-				oldHeader: nil,
-				newHeader: nil,
-				expHeader: nil,
-			},
-		}
-
-		for _, tc := range testcases {
-			t.Run(tc.label, func(t *testing.T) {
-				baseCfg := config.Global{
-					Request: config.Request{
-						Header: tc.oldHeader,
-					},
-				}
-
-				nextCfg := config.Global{
-					Request: config.Request{
-						Header: tc.newHeader,
-					},
-				}.WithFields(config.FieldHeader)
-
-				gotCfg := nextCfg.Override(baseCfg)
-
-				if gotHeader := gotCfg.Request.Header; !reflect.DeepEqual(gotHeader, tc.expHeader) {
-					t.Errorf("\nexp %#v\ngot %#v", tc.expHeader, gotHeader)
-				}
-			})
-		}
 	})
 }
 
@@ -293,43 +154,6 @@ func TestRequest_Value(t *testing.T) {
 
 		if !sameRequests(gotReq, expReq) {
 			t.Errorf("\nexp %#v\ngot %#v", expReq, gotReq)
-		}
-	})
-}
-
-func TestGlobal_Equal(t *testing.T) {
-	t.Run("returns false for different configs", func(t *testing.T) {
-		base := config.Default()
-		diff := base
-		diff.Runner.Requests = base.Runner.Requests + 1
-
-		if base.Equal(diff) {
-			t.Error("exp unequal configs")
-		}
-	})
-
-	t.Run("ignores set fields", func(t *testing.T) {
-		base := config.Default()
-		same := base.WithFields(config.FieldRequests)
-
-		if !base.Equal(same) {
-			t.Error("exp equal configs")
-		}
-	})
-
-	t.Run("does not alter configs", func(t *testing.T) {
-		baseA := config.Default().WithFields(config.FieldRequests)
-		copyA := config.Default().WithFields(config.FieldRequests)
-		baseB := config.Default().WithFields(config.FieldURL)
-		copyB := config.Default().WithFields(config.FieldURL)
-
-		baseA.Equal(baseB)
-
-		if !reflect.DeepEqual(baseA, copyA) {
-			t.Error("altered receiver config")
-		}
-		if !reflect.DeepEqual(baseB, copyB) {
-			t.Error("altered parameter config")
 		}
 	})
 }
