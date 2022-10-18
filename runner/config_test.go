@@ -8,7 +8,7 @@ import (
 	"github.com/benchttp/engine/runner"
 )
 
-func TestGlobal_Validate(t *testing.T) {
+func TestConfig_Validate(t *testing.T) {
 	t.Run("return nil if config is valid", func(t *testing.T) {
 		cfg := runner.Config{
 			Request: validRequest(),
