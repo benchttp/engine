@@ -1,8 +1,8 @@
-package config
+package runner
 
 import "strings"
 
-// InvalidConfigError is the errors returned by Global.Validate
+// InvalidConfigError is the errors returned by Config.Validate
 // when values are missing or invalid.
 type InvalidConfigError struct {
 	Errors []error

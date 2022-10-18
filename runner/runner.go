@@ -4,22 +4,14 @@ import (
 	"context"
 	"time"
 
-	"github.com/benchttp/engine/runner/internal/config"
 	"github.com/benchttp/engine/runner/internal/metrics"
 	"github.com/benchttp/engine/runner/internal/recorder"
-	"github.com/benchttp/engine/runner/internal/report"
 	"github.com/benchttp/engine/runner/internal/tests"
 )
 
 type (
-	Config             = config.Global
-	RecorderConfig     = config.Runner
-	InvalidConfigError = config.InvalidConfigError
-
 	RecordingProgress = recorder.Progress
 	RecordingStatus   = recorder.Status
-
-	Report = report.Report
 
 	MetricsAggregate = metrics.Aggregate
 	MetricsField     = metrics.Field
@@ -30,8 +22,6 @@ type (
 	TestPredicate    = tests.Predicate
 	TestSuiteResults = tests.SuiteResult
 	TestCaseResult   = tests.CaseResult
-
-	ReportMetadata = report.Metadata
 )
 
 const (
@@ -41,11 +31,7 @@ const (
 	StatusDone     = recorder.StatusDone
 )
 
-var (
-	DefaultConfig = config.Default
-
-	ErrCanceled = recorder.ErrCanceled
-)
+var ErrCanceled = recorder.ErrCanceled
 
 type Runner struct {
 	recorder            *recorder.Recorder
@@ -56,7 +42,7 @@ func New(onRecordingProgress func(RecordingProgress)) *Runner {
 	return &Runner{onRecordingProgress: onRecordingProgress}
 }
 
-func (r *Runner) Run(ctx context.Context, cfg config.Global) (*Report, error) {
+func (r *Runner) Run(ctx context.Context, cfg Config) (*Report, error) {
 	// Validate input config
 	if err := cfg.Validate(); err != nil {
 		return nil, err
@@ -79,7 +65,7 @@ func (r *Runner) Run(ctx context.Context, cfg config.Global) (*Report, error) {
 
 	testResults := tests.Run(agg, cfg.Tests)
 
-	return report.New(cfg, duration, agg, testResults), nil
+	return newReport(cfg, duration, agg, testResults), nil
 }
 
 // Progress returns the current progress of the recording.
@@ -94,7 +80,7 @@ func (r *Runner) Progress() RecordingProgress {
 
 // recorderConfig returns a runner.RequesterConfig generated from cfg.
 func recorderConfig(
-	cfg config.Global,
+	cfg Config,
 	onRecordingProgress func(recorder.Progress),
 ) recorder.Config {
 	return recorder.Config{

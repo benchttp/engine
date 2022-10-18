@@ -1,4 +1,4 @@
-package config
+package runner
 
 import (
 	"fmt"
@@ -6,9 +6,9 @@ import (
 	"time"
 )
 
-var defaultConfig = Global{
+var defaultConfig = Config{
 	Request: defaultRequest(),
-	Runner: Runner{
+	Runner: RunnerConfig{
 		Concurrency:    10,
 		Requests:       100,
 		Interval:       0 * time.Second,
@@ -17,8 +17,8 @@ var defaultConfig = Global{
 	},
 }
 
-// Default returns a default config that is safe to use.
-func Default() Global {
+// DefaultConfig returns a default config that is safe to use.
+func DefaultConfig() Config {
 	return defaultConfig
 }
 

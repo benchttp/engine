@@ -4,7 +4,7 @@ import (
 	"github.com/benchttp/engine/runner"
 )
 
-// JSON reads input bytes as JSON and unmarshals it into a runner.ConfigGlobal.
+// JSON reads input bytes as JSON and unmarshals it into a runner.Config.
 func JSON(in []byte) (runner.Config, error) {
 	parser := JSONParser{}
 	repr := Representation{}

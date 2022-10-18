@@ -1,14 +1,14 @@
-package config_test
+package runner_test
 
 import (
 	"errors"
 	"testing"
 
-	"github.com/benchttp/engine/runner/internal/config"
+	"github.com/benchttp/engine/runner"
 )
 
 func TestInvalidConfigError_Error(t *testing.T) {
-	e := config.InvalidConfigError{
+	e := runner.InvalidConfigError{
 		Errors: []error{
 			errors.New("error 0"),
 			errors.New("error 1\nwith new line"),
