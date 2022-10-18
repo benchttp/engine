@@ -10,10 +10,11 @@ import (
 	"github.com/benchttp/engine/runner"
 )
 
-// Representation is a raw data model for runner config files.
+// Representation is a raw data model for formatted runner config (json, yaml).
 // It serves as a receiver for unmarshaling processes and for that reason
 // its types are kept simple (certain types are incompatible with certain
 // unmarshalers).
+// It exposes a method Unmarshal to convert its values into a runner.Config.
 type Representation struct {
 	Extends *string `yaml:"extends" json:"extends"`
 
@@ -44,19 +45,12 @@ type Representation struct {
 	} `yaml:"tests" json:"tests"`
 }
 
-// Unmarshal parses the Representation receiver as a runner.Config
+// ParseInto parses the Representation receiver as a runner.Config
 // and stores any non-nil field value into the corresponding field
 // of dst.
-func (repr Representation) Unmarshal(dst *runner.Config) error {
-	return UnmarshalRepresentation(repr, dst)
-}
-
-// Unmarshal parses the given Representation as a runner.Config
-// and stores any non-nil field value into the corresponding field
-// of dst.
-func UnmarshalRepresentation(repr Representation, cfg *runner.Config) error { //nolint:gocognit // acceptable complexity for a parsing func
+func (repr Representation) ParseInto(dst *runner.Config) error { //nolint:gocognit // acceptable complexity for a parsing func
 	if method := repr.Request.Method; method != nil {
-		cfg.Request.Method = *method
+		dst.Request.Method = *method
 	}
 
 	if rawURL := repr.Request.URL; rawURL != nil {
@@ -64,7 +58,7 @@ func UnmarshalRepresentation(repr Representation, cfg *runner.Config) error { //
 		if err != nil {
 			return err
 		}
-		cfg.Request.URL = parsedURL
+		dst.Request.URL = parsedURL
 	}
 
 	if header := repr.Request.Header; header != nil {
@@ -72,22 +66,22 @@ func UnmarshalRepresentation(repr Representation, cfg *runner.Config) error { //
 		for key, val := range header {
 			httpHeader[key] = val
 		}
-		cfg.Request.Header = httpHeader
+		dst.Request.Header = httpHeader
 	}
 
 	if body := repr.Request.Body; body != nil {
-		cfg.Request.Body = runner.RequestBody{
+		dst.Request.Body = runner.RequestBody{
 			Type:    body.Type,
 			Content: []byte(body.Content),
 		}
 	}
 
 	if requests := repr.Runner.Requests; requests != nil {
-		cfg.Runner.Requests = *requests
+		dst.Runner.Requests = *requests
 	}
 
 	if concurrency := repr.Runner.Concurrency; concurrency != nil {
-		cfg.Runner.Concurrency = *concurrency
+		dst.Runner.Concurrency = *concurrency
 	}
 
 	if interval := repr.Runner.Interval; interval != nil {
@@ -95,7 +89,7 @@ func UnmarshalRepresentation(repr Representation, cfg *runner.Config) error { //
 		if err != nil {
 			return err
 		}
-		cfg.Runner.Interval = parsedInterval
+		dst.Runner.Interval = parsedInterval
 	}
 
 	if requestTimeout := repr.Runner.RequestTimeout; requestTimeout != nil {
@@ -103,7 +97,7 @@ func UnmarshalRepresentation(repr Representation, cfg *runner.Config) error { //
 		if err != nil {
 			return err
 		}
-		cfg.Runner.RequestTimeout = parsedTimeout
+		dst.Runner.RequestTimeout = parsedTimeout
 	}
 
 	if globalTimeout := repr.Runner.GlobalTimeout; globalTimeout != nil {
@@ -111,7 +105,7 @@ func UnmarshalRepresentation(repr Representation, cfg *runner.Config) error { //
 		if err != nil {
 			return err
 		}
-		cfg.Runner.GlobalTimeout = parsedGlobalTimeout
+		dst.Runner.GlobalTimeout = parsedGlobalTimeout
 	}
 
 	testSuite := repr.Tests
@@ -156,7 +150,7 @@ func UnmarshalRepresentation(repr Representation, cfg *runner.Config) error { //
 			Target:    target,
 		}
 	}
-	cfg.Tests = cases
+	dst.Tests = cases
 
 	return nil
 }
