@@ -1,7 +1,10 @@
 package configparse
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -48,17 +51,29 @@ type Representation struct {
 // ParseInto parses the Representation receiver as a runner.Config
 // and stores any non-nil field value into the corresponding field
 // of dst.
-func (repr Representation) ParseInto(dst *runner.Config) error { //nolint:gocognit // acceptable complexity for a parsing func
+func (repr Representation) ParseInto(dst *runner.Config) error {
+	if err := repr.parseRequestInto(dst); err != nil {
+		return err
+	}
+	if err := repr.parseRunnerInto(dst); err != nil {
+		return err
+	}
+	return repr.parseTestsInto(dst)
+}
+
+func (repr Representation) parseRequestInto(dst *runner.Config) error {
+	req := &http.Request{}
+
 	if method := repr.Request.Method; method != nil {
-		dst.Request.Method = *method
+		req.Method = *method
 	}
 
 	if rawURL := repr.Request.URL; rawURL != nil {
 		parsedURL, err := parseAndBuildURL(*rawURL, repr.Request.QueryParams)
 		if err != nil {
-			return err
+			return fmt.Errorf(`configparse: invalid url: %q`, *rawURL)
 		}
-		dst.Request.URL = parsedURL
+		req.URL = parsedURL
 	}
 
 	if header := repr.Request.Header; header != nil {
@@ -66,16 +81,23 @@ func (repr Representation) ParseInto(dst *runner.Config) error { //nolint:gocogn
 		for key, val := range header {
 			httpHeader[key] = val
 		}
-		dst.Request.Header = httpHeader
+		req.Header = httpHeader
 	}
 
 	if body := repr.Request.Body; body != nil {
-		dst.Request.Body = runner.RequestBody{
-			Type:    body.Type,
-			Content: []byte(body.Content),
+		switch body.Type {
+		case "raw":
+			req.Body = io.NopCloser(bytes.NewReader([]byte(body.Content)))
+		default:
+			return errors.New(`configparse: request.body.type: only "raw" accepted`)
 		}
 	}
 
+	*dst.Request = *req
+	return nil
+}
+
+func (repr Representation) parseRunnerInto(dst *runner.Config) error {
 	if requests := repr.Runner.Requests; requests != nil {
 		dst.Runner.Requests = *requests
 	}
@@ -108,6 +130,10 @@ func (repr Representation) ParseInto(dst *runner.Config) error { //nolint:gocogn
 		dst.Runner.GlobalTimeout = parsedGlobalTimeout
 	}
 
+	return nil
+}
+
+func (repr Representation) parseTestsInto(dst *runner.Config) error {
 	testSuite := repr.Tests
 	if len(testSuite) == 0 {
 		return nil
@@ -150,8 +176,8 @@ func (repr Representation) ParseInto(dst *runner.Config) error { //nolint:gocogn
 			Target:    target,
 		}
 	}
-	dst.Tests = cases
 
+	dst.Tests = cases
 	return nil
 }
 
