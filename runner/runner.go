@@ -41,24 +41,11 @@ const (
 	StatusCanceled = recorder.StatusCanceled
 	StatusTimeout  = recorder.StatusTimeout
 	StatusDone     = recorder.StatusDone
-
-	ConfigFieldMethod         = config.FieldMethod
-	ConfigFieldURL            = config.FieldURL
-	ConfigFieldHeader         = config.FieldHeader
-	ConfigFieldBody           = config.FieldBody
-	ConfigFieldRequests       = config.FieldRequests
-	ConfigFieldConcurrency    = config.FieldConcurrency
-	ConfigFieldInterval       = config.FieldInterval
-	ConfigFieldRequestTimeout = config.FieldRequestTimeout
-	ConfigFieldGlobalTimeout  = config.FieldGlobalTimeout
-	ConfigFieldTests          = config.FieldTests
 )
 
 var (
-	DefaultConfig     = config.Default
-	ConfigFieldsUsage = config.FieldsUsage
-	NewRequestBody    = config.NewRequestBody
-	IsConfigField     = config.IsField
+	DefaultConfig  = config.Default
+	NewRequestBody = config.NewRequestBody
 
 	ErrCanceled = recorder.ErrCanceled
 )
