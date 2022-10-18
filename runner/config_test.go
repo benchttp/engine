@@ -1,18 +1,18 @@
-package config_test
+package runner_test
 
 import (
 	"errors"
 	"net/http"
 	"testing"
 
-	"github.com/benchttp/engine/runner/internal/config"
+	"github.com/benchttp/engine/runner"
 )
 
 func TestGlobal_Validate(t *testing.T) {
 	t.Run("return nil if config is valid", func(t *testing.T) {
-		cfg := config.Global{
+		cfg := runner.Config{
 			Request: validRequest(),
-			Runner: config.Runner{
+			Runner: runner.RunnerConfig{
 				Requests:       5,
 				Concurrency:    5,
 				Interval:       5,
@@ -26,9 +26,9 @@ func TestGlobal_Validate(t *testing.T) {
 	})
 
 	t.Run("return cumulated errors if config is invalid", func(t *testing.T) {
-		cfg := config.Global{
+		cfg := runner.Config{
 			Request: nil,
-			Runner: config.Runner{
+			Runner: runner.RunnerConfig{
 				Requests:       -5,
 				Concurrency:    -5,
 				Interval:       -5,
@@ -42,7 +42,7 @@ func TestGlobal_Validate(t *testing.T) {
 			t.Fatal("invalid configuration considered valid")
 		}
 
-		var errInvalid *config.InvalidConfigError
+		var errInvalid *runner.InvalidConfigError
 		if !errors.As(err, &errInvalid) {
 			t.Fatalf("unexpected error type: %T", err)
 		}

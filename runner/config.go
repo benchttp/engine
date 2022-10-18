@@ -1,4 +1,4 @@
-package config
+package runner
 
 import (
 	"encoding/json"
@@ -10,8 +10,8 @@ import (
 	"github.com/benchttp/engine/runner/internal/tests"
 )
 
-// Runner contains options relative to the runner.
-type Runner struct {
+// RunnerConfig contains options relative to the runner.
+type RunnerConfig struct {
 	Requests       int
 	Concurrency    int
 	Interval       time.Duration
@@ -19,24 +19,24 @@ type Runner struct {
 	GlobalTimeout  time.Duration
 }
 
-// Global represents the global configuration of the runner.
-// It must be validated using Global.Validate before usage.
-type Global struct {
+// Config represents the global configuration of the runner.
+// It must be validated using Config.Validate before usage.
+type Config struct {
 	Request *http.Request
-	Runner  Runner
+	Runner  RunnerConfig
 	Tests   []tests.Case
 }
 
 // String implements fmt.Stringer. It returns an indented JSON representation
 // of Config for debugging purposes.
-func (cfg Global) String() string {
+func (cfg Config) String() string {
 	b, _ := json.MarshalIndent(cfg, "", "  ")
 	return string(b)
 }
 
 // Validate returns a non-nil InvalidConfigError if any of its fields
 // does not meet the requirements.
-func (cfg Global) Validate() error { //nolint:gocognit
+func (cfg Config) Validate() error { //nolint:gocognit
 	errs := []error{}
 	appendError := func(err error) {
 		errs = append(errs, err)
