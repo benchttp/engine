@@ -13,8 +13,6 @@ import (
 
 type (
 	Config             = config.Global
-	RequestConfig      = config.Request
-	RequestBody        = config.RequestBody
 	RecorderConfig     = config.Runner
 	InvalidConfigError = config.InvalidConfigError
 
@@ -44,8 +42,7 @@ const (
 )
 
 var (
-	DefaultConfig  = config.Default
-	NewRequestBody = config.NewRequestBody
+	DefaultConfig = config.Default
 
 	ErrCanceled = recorder.ErrCanceled
 )
@@ -65,19 +62,13 @@ func (r *Runner) Run(ctx context.Context, cfg config.Global) (*Report, error) {
 		return nil, err
 	}
 
-	// Generate http request from input config
-	rq, err := cfg.Request.Value()
-	if err != nil {
-		return nil, err
-	}
-
 	// Create and attach request recorder
 	r.recorder = recorder.New(recorderConfig(cfg, r.onRecordingProgress))
 
 	startTime := time.Now()
 
 	// Run request recorder
-	records, err := r.recorder.Record(ctx, rq)
+	records, err := r.recorder.Record(ctx, cfg.Request)
 	if err != nil {
 		return nil, err
 	}
