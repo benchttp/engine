@@ -48,10 +48,10 @@ type Representation struct {
 	} `yaml:"tests" json:"tests"`
 }
 
-// ParseInto parses the Representation receiver as a runner.Config
+// ParseInto parses the Representation receiver as a runner.Runner
 // and stores any non-nil field value into the corresponding field
 // of dst.
-func (repr Representation) ParseInto(dst *runner.Config) error {
+func (repr Representation) ParseInto(dst *runner.Runner) error {
 	if err := repr.parseRequestInto(dst); err != nil {
 		return err
 	}
@@ -61,7 +61,7 @@ func (repr Representation) ParseInto(dst *runner.Config) error {
 	return repr.parseTestsInto(dst)
 }
 
-func (repr Representation) parseRequestInto(dst *runner.Config) error {
+func (repr Representation) parseRequestInto(dst *runner.Runner) error {
 	if dst.Request == nil {
 		dst.Request = &http.Request{}
 	}
@@ -98,13 +98,13 @@ func (repr Representation) parseRequestInto(dst *runner.Config) error {
 	return nil
 }
 
-func (repr Representation) parseRunnerInto(dst *runner.Config) error {
+func (repr Representation) parseRunnerInto(dst *runner.Runner) error {
 	if requests := repr.Runner.Requests; requests != nil {
-		dst.Runner.Requests = *requests
+		dst.Requests = *requests
 	}
 
 	if concurrency := repr.Runner.Concurrency; concurrency != nil {
-		dst.Runner.Concurrency = *concurrency
+		dst.Concurrency = *concurrency
 	}
 
 	if interval := repr.Runner.Interval; interval != nil {
@@ -112,7 +112,7 @@ func (repr Representation) parseRunnerInto(dst *runner.Config) error {
 		if err != nil {
 			return err
 		}
-		dst.Runner.Interval = parsedInterval
+		dst.Interval = parsedInterval
 	}
 
 	if requestTimeout := repr.Runner.RequestTimeout; requestTimeout != nil {
@@ -120,7 +120,7 @@ func (repr Representation) parseRunnerInto(dst *runner.Config) error {
 		if err != nil {
 			return err
 		}
-		dst.Runner.RequestTimeout = parsedTimeout
+		dst.RequestTimeout = parsedTimeout
 	}
 
 	if globalTimeout := repr.Runner.GlobalTimeout; globalTimeout != nil {
@@ -128,13 +128,13 @@ func (repr Representation) parseRunnerInto(dst *runner.Config) error {
 		if err != nil {
 			return err
 		}
-		dst.Runner.GlobalTimeout = parsedGlobalTimeout
+		dst.GlobalTimeout = parsedGlobalTimeout
 	}
 
 	return nil
 }
 
-func (repr Representation) parseTestsInto(dst *runner.Config) error {
+func (repr Representation) parseTestsInto(dst *runner.Runner) error {
 	testSuite := repr.Tests
 	if len(testSuite) == 0 {
 		return nil

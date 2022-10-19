@@ -7,8 +7,8 @@ import (
 	"github.com/benchttp/engine/runner"
 )
 
-func TestInvalidConfigError_Error(t *testing.T) {
-	e := runner.InvalidConfigError{
+func TestInvalidRunnerError(t *testing.T) {
+	e := runner.InvalidRunnerError{
 		Errors: []error{
 			errors.New("error 0"),
 			errors.New("error 1\nwith new line"),

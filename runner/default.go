@@ -6,20 +6,19 @@ import (
 	"time"
 )
 
-var defaultConfig = Config{
-	Request: defaultRequest(),
-	Runner: RunnerConfig{
-		Concurrency:    10,
-		Requests:       100,
-		Interval:       0 * time.Second,
-		RequestTimeout: 5 * time.Second,
-		GlobalTimeout:  30 * time.Second,
-	},
+// DefaultRunner returns a default Runner that is safe to use.
+func DefaultRunner() Runner {
+	return defaultRunner
 }
 
-// DefaultConfig returns a default config that is safe to use.
-func DefaultConfig() Config {
-	return defaultConfig
+var defaultRunner = Runner{
+	Request: defaultRequest(),
+
+	Concurrency:    10,
+	Requests:       100,
+	Interval:       0 * time.Second,
+	RequestTimeout: 5 * time.Second,
+	GlobalTimeout:  30 * time.Second,
 }
 
 func defaultRequest() *http.Request {

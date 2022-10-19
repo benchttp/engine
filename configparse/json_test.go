@@ -19,7 +19,7 @@ func TestJSON(t *testing.T) {
 	testcases := []struct {
 		name          string
 		input         []byte
-		isValidConfig func(runner.Config) bool
+		isValidRunner func(runner.Runner) bool
 		expError      error
 	}{
 		{
@@ -27,7 +27,7 @@ func TestJSON(t *testing.T) {
 			input: baseInput.assign(object{
 				"badkey": "marcel-patulacci",
 			}).json(),
-			isValidConfig: func(cfg runner.Config) bool { return true },
+			isValidRunner: func(cfg runner.Runner) bool { return true },
 			expError:      errors.New(`invalid field ("badkey"): does not exist`),
 		},
 		{
@@ -37,7 +37,7 @@ func TestJSON(t *testing.T) {
 					"concurrency": "bad value", // want int
 				},
 			}).json(),
-			isValidConfig: func(runner.Config) bool { return true },
+			isValidRunner: func(runner.Runner) bool { return true },
 			expError:      errors.New(`wrong type for field runner.concurrency: want int, got string`),
 		},
 		{
@@ -45,12 +45,12 @@ func TestJSON(t *testing.T) {
 			input: baseInput.assign(object{
 				"runner": object{"concurrency": 3},
 			}).json(),
-			isValidConfig: func(cfg runner.Config) bool {
-				defaultConfig := runner.DefaultConfig()
+			isValidRunner: func(r runner.Runner) bool {
+				defaultRunner := runner.DefaultRunner()
 
-				isInputValueParsed := cfg.Runner.Concurrency == 3
-				isMergedWithDefault := cfg.Request.Method == defaultConfig.Request.Method &&
-					cfg.Runner.GlobalTimeout == defaultConfig.Runner.GlobalTimeout
+				isInputValueParsed := r.Concurrency == 3
+				isMergedWithDefault := r.Request.Method == defaultRunner.Request.Method &&
+					r.GlobalTimeout == defaultRunner.GlobalTimeout
 
 				return isInputValueParsed && isMergedWithDefault
 			},
@@ -60,9 +60,9 @@ func TestJSON(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			gotConfig, gotError := configparse.JSON(tc.input)
-			if !tc.isValidConfig(gotConfig) {
-				t.Errorf("unexpected config:\n%+v", gotConfig)
+			gotRunner, gotError := configparse.JSON(tc.input)
+			if !tc.isValidRunner(gotRunner) {
+				t.Errorf("unexpected config:\n%+v", gotRunner)
 			}
 
 			if !sameErrors(gotError, tc.expError) {
