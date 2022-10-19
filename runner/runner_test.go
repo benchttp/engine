@@ -8,41 +8,38 @@ import (
 	"github.com/benchttp/engine/runner"
 )
 
-func TestConfig_Validate(t *testing.T) {
+func TestRunner_Validate(t *testing.T) {
 	t.Run("return nil if config is valid", func(t *testing.T) {
-		cfg := runner.Config{
-			Request: validRequest(),
-			Runner: runner.RunnerConfig{
-				Requests:       5,
-				Concurrency:    5,
-				Interval:       5,
-				RequestTimeout: 5,
-				GlobalTimeout:  5,
-			},
+		brunner := runner.Runner{
+			Request:        validRequest(),
+			Requests:       5,
+			Concurrency:    5,
+			Interval:       5,
+			RequestTimeout: 5,
+			GlobalTimeout:  5,
 		}
-		if err := cfg.Validate(); err != nil {
+
+		if err := brunner.Validate(); err != nil {
 			t.Errorf("unexpected error: %v", err)
 		}
 	})
 
 	t.Run("return cumulated errors if config is invalid", func(t *testing.T) {
-		cfg := runner.Config{
-			Request: nil,
-			Runner: runner.RunnerConfig{
-				Requests:       -5,
-				Concurrency:    -5,
-				Interval:       -5,
-				RequestTimeout: -5,
-				GlobalTimeout:  -5,
-			},
+		brunner := runner.Runner{
+			Request:        nil,
+			Requests:       -5,
+			Concurrency:    -5,
+			Interval:       -5,
+			RequestTimeout: -5,
+			GlobalTimeout:  -5,
 		}
 
-		err := cfg.Validate()
+		err := brunner.Validate()
 		if err == nil {
 			t.Fatal("invalid configuration considered valid")
 		}
 
-		var errInvalid *runner.InvalidConfigError
+		var errInvalid *runner.InvalidRunnerError
 		if !errors.As(err, &errInvalid) {
 			t.Fatalf("unexpected error type: %T", err)
 		}

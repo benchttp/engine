@@ -16,14 +16,14 @@ type Report struct {
 
 // Metadata contains contextual information about a run.
 type Metadata struct {
-	Config        Config
+	Config        Runner
 	FinishedAt    time.Time
 	TotalDuration time.Duration
 }
 
 // newReport returns an initialized *Report.
 func newReport(
-	cfg Config,
+	cfg Runner,
 	d time.Duration,
 	m metrics.Aggregate,
 	t tests.SuiteResult,

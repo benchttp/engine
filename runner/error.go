@@ -2,14 +2,14 @@ package runner
 
 import "strings"
 
-// InvalidConfigError is the errors returned by Config.Validate
+// InvalidRunnerError is the errors returned by Config.Validate
 // when values are missing or invalid.
-type InvalidConfigError struct {
+type InvalidRunnerError struct {
 	Errors []error
 }
 
 // Error returns the joined errors of InvalidConfigError as a string.
-func (e *InvalidConfigError) Error() string {
+func (e *InvalidRunnerError) Error() string {
 	const sep = "\n  - "
 
 	var b strings.Builder
