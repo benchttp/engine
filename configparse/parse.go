@@ -62,10 +62,12 @@ func (repr Representation) ParseInto(dst *runner.Config) error {
 }
 
 func (repr Representation) parseRequestInto(dst *runner.Config) error {
-	req := &http.Request{}
+	if dst.Request == nil {
+		dst.Request = &http.Request{}
+	}
 
 	if method := repr.Request.Method; method != nil {
-		req.Method = *method
+		dst.Request.Method = *method
 	}
 
 	if rawURL := repr.Request.URL; rawURL != nil {
@@ -73,7 +75,7 @@ func (repr Representation) parseRequestInto(dst *runner.Config) error {
 		if err != nil {
 			return fmt.Errorf(`configparse: invalid url: %q`, *rawURL)
 		}
-		req.URL = parsedURL
+		dst.Request.URL = parsedURL
 	}
 
 	if header := repr.Request.Header; header != nil {
@@ -81,19 +83,18 @@ func (repr Representation) parseRequestInto(dst *runner.Config) error {
 		for key, val := range header {
 			httpHeader[key] = val
 		}
-		req.Header = httpHeader
+		dst.Request.Header = httpHeader
 	}
 
 	if body := repr.Request.Body; body != nil {
 		switch body.Type {
 		case "raw":
-			req.Body = io.NopCloser(bytes.NewReader([]byte(body.Content)))
+			dst.Request.Body = io.NopCloser(bytes.NewReader([]byte(body.Content)))
 		default:
 			return errors.New(`configparse: request.body.type: only "raw" accepted`)
 		}
 	}
 
-	*dst.Request = *req
 	return nil
 }
 
