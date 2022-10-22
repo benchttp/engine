@@ -131,7 +131,6 @@ linters:
   disable-all: true
   enable:
     - bodyclose # enforce resp.Body.Close()
-    - deadcode
     - dupl # duplicate code
     - errcheck
     - exportloopref
@@ -145,10 +144,8 @@ linters:
     - prealloc # enforce capacity allocation when possible
     - revive # golint enhancement
     - staticcheck # go vet enhancement
-    - structcheck # unused struct fields
     - testpackage # checks on tests (*_test)
     - thelper # enforce t.Helper()
-    - varcheck # unused global var and const
     - wastedassign
   fast: false
 
