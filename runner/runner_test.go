@@ -2,7 +2,7 @@ package runner_test
 
 import (
 	"errors"
-	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/benchttp/engine/runner"
@@ -11,7 +11,7 @@ import (
 func TestRunner_Validate(t *testing.T) {
 	t.Run("return nil if config is valid", func(t *testing.T) {
 		brunner := runner.Runner{
-			Request:        validRequest(),
+			Request:        httptest.NewRequest("GET", "https://a.b/#c?d=e&f=g", nil),
 			Requests:       5,
 			Concurrency:    5,
 			Interval:       5,
@@ -45,12 +45,12 @@ func TestRunner_Validate(t *testing.T) {
 		}
 
 		errs := errInvalid.Errors
-		findErrorOrFail(t, errs, `unexpected nil request`)
-		findErrorOrFail(t, errs, `requests (-5): want >= 0`)
-		findErrorOrFail(t, errs, `concurrency (-5): want > 0 and <= requests (-5)`)
-		findErrorOrFail(t, errs, `interval (-5): want >= 0`)
-		findErrorOrFail(t, errs, `requestTimeout (-5): want > 0`)
-		findErrorOrFail(t, errs, `globalTimeout (-5): want > 0`)
+		assertError(t, errs, `unexpected nil request`)
+		assertError(t, errs, `requests (-5): want >= 0`)
+		assertError(t, errs, `concurrency (-5): want > 0 and <= requests (-5)`)
+		assertError(t, errs, `interval (-5): want >= 0`)
+		assertError(t, errs, `requestTimeout (-5): want > 0`)
+		assertError(t, errs, `globalTimeout (-5): want > 0`)
 
 		t.Logf("got error:\n%v", errInvalid)
 	})
@@ -58,16 +58,8 @@ func TestRunner_Validate(t *testing.T) {
 
 // helpers
 
-func validRequest() *http.Request {
-	req, err := http.NewRequest("GET", "https://a.b#c?d=e&f=g", nil)
-	if err != nil {
-		panic(err)
-	}
-	return req
-}
-
-// findErrorOrFail fails t if no error in src matches msg.
-func findErrorOrFail(t *testing.T, src []error, msg string) {
+// assertError fails t if no error in src matches msg.
+func assertError(t *testing.T, src []error, msg string) {
 	t.Helper()
 	for _, err := range src {
 		if err.Error() == msg {
