@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/benchttp/engine/runner"
+	"github.com/benchttp/sdk/benchttp"
 )
 
 // Representation is a raw data model for formatted runner config (json, yaml).
@@ -48,10 +48,10 @@ type Representation struct {
 	} `yaml:"tests" json:"tests"`
 }
 
-// ParseInto parses the Representation receiver as a runner.Runner
+// ParseInto parses the Representation receiver as a benchttp.Runner
 // and stores any non-nil field value into the corresponding field
 // of dst.
-func (repr Representation) ParseInto(dst *runner.Runner) error {
+func (repr Representation) ParseInto(dst *benchttp.Runner) error {
 	if err := repr.parseRequestInto(dst); err != nil {
 		return err
 	}
@@ -61,7 +61,7 @@ func (repr Representation) ParseInto(dst *runner.Runner) error {
 	return repr.parseTestsInto(dst)
 }
 
-func (repr Representation) parseRequestInto(dst *runner.Runner) error {
+func (repr Representation) parseRequestInto(dst *benchttp.Runner) error {
 	if dst.Request == nil {
 		dst.Request = &http.Request{}
 	}
@@ -98,7 +98,7 @@ func (repr Representation) parseRequestInto(dst *runner.Runner) error {
 	return nil
 }
 
-func (repr Representation) parseRunnerInto(dst *runner.Runner) error {
+func (repr Representation) parseRunnerInto(dst *benchttp.Runner) error {
 	if requests := repr.Runner.Requests; requests != nil {
 		dst.Requests = *requests
 	}
@@ -134,13 +134,13 @@ func (repr Representation) parseRunnerInto(dst *runner.Runner) error {
 	return nil
 }
 
-func (repr Representation) parseTestsInto(dst *runner.Runner) error {
+func (repr Representation) parseTestsInto(dst *benchttp.Runner) error {
 	testSuite := repr.Tests
 	if len(testSuite) == 0 {
 		return nil
 	}
 
-	cases := make([]runner.TestCase, len(testSuite))
+	cases := make([]benchttp.TestCase, len(testSuite))
 	for i, t := range testSuite {
 		fieldPath := func(caseField string) string {
 			return fmt.Sprintf("tests[%d].%s", i, caseField)
@@ -155,12 +155,12 @@ func (repr Representation) parseTestsInto(dst *runner.Runner) error {
 			return err
 		}
 
-		field := runner.MetricsField(*t.Field)
+		field := benchttp.MetricsField(*t.Field)
 		if err := field.Validate(); err != nil {
 			return fmt.Errorf("%s: %s", fieldPath("field"), err)
 		}
 
-		predicate := runner.TestPredicate(*t.Predicate)
+		predicate := benchttp.TestPredicate(*t.Predicate)
 		if err := predicate.Validate(); err != nil {
 			return fmt.Errorf("%s: %s", fieldPath("predicate"), err)
 		}
@@ -170,7 +170,7 @@ func (repr Representation) parseTestsInto(dst *runner.Runner) error {
 			return fmt.Errorf("%s: %s", fieldPath("target"), err)
 		}
 
-		cases[i] = runner.TestCase{
+		cases[i] = benchttp.TestCase{
 			Name:      *t.Name,
 			Field:     field,
 			Predicate: predicate,
@@ -217,11 +217,11 @@ func parseOptionalDuration(raw string) (time.Duration, error) {
 }
 
 func parseMetricValue(
-	field runner.MetricsField,
+	field benchttp.MetricsField,
 	inputValue string,
-) (runner.MetricsValue, error) {
+) (benchttp.MetricsValue, error) {
 	fieldType := field.Type()
-	handleError := func(v interface{}, err error) (runner.MetricsValue, error) {
+	handleError := func(v interface{}, err error) (benchttp.MetricsValue, error) {
 		if err != nil {
 			return nil, fmt.Errorf(
 				"value %q is incompatible with field %s (want %s)",

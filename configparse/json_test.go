@@ -5,8 +5,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/benchttp/engine/configparse"
-	"github.com/benchttp/engine/runner"
+	"github.com/benchttp/sdk/benchttp"
+	"github.com/benchttp/sdk/configparse"
 )
 
 func TestJSON(t *testing.T) {
@@ -19,7 +19,7 @@ func TestJSON(t *testing.T) {
 	testcases := []struct {
 		name          string
 		input         []byte
-		isValidRunner func(runner.Runner) bool
+		isValidRunner func(benchttp.Runner) bool
 		expError      error
 	}{
 		{
@@ -27,7 +27,7 @@ func TestJSON(t *testing.T) {
 			input: baseInput.assign(object{
 				"badkey": "marcel-patulacci",
 			}).json(),
-			isValidRunner: func(cfg runner.Runner) bool { return true },
+			isValidRunner: func(cfg benchttp.Runner) bool { return true },
 			expError:      errors.New(`invalid field ("badkey"): does not exist`),
 		},
 		{
@@ -37,7 +37,7 @@ func TestJSON(t *testing.T) {
 					"concurrency": "bad value", // want int
 				},
 			}).json(),
-			isValidRunner: func(runner.Runner) bool { return true },
+			isValidRunner: func(benchttp.Runner) bool { return true },
 			expError:      errors.New(`wrong type for field runner.concurrency: want int, got string`),
 		},
 		{
@@ -45,8 +45,8 @@ func TestJSON(t *testing.T) {
 			input: baseInput.assign(object{
 				"runner": object{"concurrency": 3},
 			}).json(),
-			isValidRunner: func(r runner.Runner) bool {
-				defaultRunner := runner.DefaultRunner()
+			isValidRunner: func(r benchttp.Runner) bool {
+				defaultRunner := benchttp.DefaultRunner()
 
 				isInputValueParsed := r.Concurrency == 3
 				isMergedWithDefault := r.Request.Method == defaultRunner.Request.Method &&
@@ -60,7 +60,7 @@ func TestJSON(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			gotRunner := runner.DefaultRunner()
+			gotRunner := benchttp.DefaultRunner()
 			gotError := configparse.JSON(tc.input, &gotRunner)
 
 			if !tc.isValidRunner(gotRunner) {

@@ -1,4 +1,4 @@
-package runner
+package benchttp
 
 import (
 	"fmt"
@@ -24,7 +24,7 @@ var defaultRunner = Runner{
 func defaultRequest() *http.Request {
 	req, err := http.NewRequest("GET", "", nil)
 	if err != nil {
-		panic(fmt.Sprintf("benchttp/runner: %s", err))
+		panic(fmt.Sprintf("benchttp: %s", err))
 	}
 	return req
 }
