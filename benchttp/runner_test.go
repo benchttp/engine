@@ -45,12 +45,12 @@ func TestRunner_Validate(t *testing.T) {
 		}
 
 		errs := errInvalid.Errors
-		assertError(t, errs, `unexpected nil request`)
-		assertError(t, errs, `requests (-5): want >= 0`)
-		assertError(t, errs, `concurrency (-5): want > 0 and <= requests (-5)`)
-		assertError(t, errs, `interval (-5): want >= 0`)
-		assertError(t, errs, `requestTimeout (-5): want > 0`)
-		assertError(t, errs, `globalTimeout (-5): want > 0`)
+		assertError(t, errs, "Runner.Request must not be nil")
+		assertError(t, errs, "requests (-5): want >= 0")
+		assertError(t, errs, "concurrency (-5): want > 0 and <= requests (-5)")
+		assertError(t, errs, "interval (-5): want >= 0")
+		assertError(t, errs, "requestTimeout (-5): want > 0")
+		assertError(t, errs, "globalTimeout (-5): want > 0")
 
 		t.Logf("got error:\n%v", errInvalid)
 	})

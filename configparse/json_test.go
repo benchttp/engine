@@ -10,16 +10,17 @@ import (
 )
 
 func TestJSON(t *testing.T) {
+	const testURL = "https://example.com"
 	baseInput := object{
 		"request": object{
-			"url": "https://example.com",
+			"url": testURL,
 		},
 	}
 
 	testcases := []struct {
 		name          string
 		input         []byte
-		isValidRunner func(benchttp.Runner) bool
+		isValidRunner func(base, got benchttp.Runner) bool
 		expError      error
 	}{
 		{
@@ -27,7 +28,7 @@ func TestJSON(t *testing.T) {
 			input: baseInput.assign(object{
 				"badkey": "marcel-patulacci",
 			}).json(),
-			isValidRunner: func(cfg benchttp.Runner) bool { return true },
+			isValidRunner: func(_, _ benchttp.Runner) bool { return true },
 			expError:      errors.New(`invalid field ("badkey"): does not exist`),
 		},
 		{
@@ -37,22 +38,16 @@ func TestJSON(t *testing.T) {
 					"concurrency": "bad value", // want int
 				},
 			}).json(),
-			isValidRunner: func(benchttp.Runner) bool { return true },
+			isValidRunner: func(_, _ benchttp.Runner) bool { return true },
 			expError:      errors.New(`wrong type for field runner.concurrency: want int, got string`),
 		},
 		{
-			name: "unmarshals JSON config and merges it with default",
-			input: baseInput.assign(object{
-				"runner": object{"concurrency": 3},
-			}).json(),
-			isValidRunner: func(r benchttp.Runner) bool {
-				defaultRunner := benchttp.DefaultRunner()
-
-				isInputValueParsed := r.Concurrency == 3
-				isMergedWithDefault := r.Request.Method == defaultRunner.Request.Method &&
-					r.GlobalTimeout == defaultRunner.GlobalTimeout
-
-				return isInputValueParsed && isMergedWithDefault
+			name:  "unmarshals JSON config and merges it with base runner",
+			input: baseInput.json(),
+			isValidRunner: func(base, got benchttp.Runner) bool {
+				isParsed := got.Request.URL.String() == testURL
+				isMerged := got.GlobalTimeout == base.GlobalTimeout
+				return isParsed && isMerged
 			},
 			expError: nil,
 		},
@@ -63,8 +58,8 @@ func TestJSON(t *testing.T) {
 			gotRunner := benchttp.DefaultRunner()
 			gotError := configparse.JSON(tc.input, &gotRunner)
 
-			if !tc.isValidRunner(gotRunner) {
-				t.Errorf("unexpected config:\n%+v", gotRunner)
+			if !tc.isValidRunner(benchttp.DefaultRunner(), gotRunner) {
+				t.Errorf("unexpected runner:\n%+v", gotRunner)
 			}
 			if !sameErrors(gotError, tc.expError) {
 				t.Errorf("unexpected error:\nexp %v,\ngot %v", tc.expError, gotError)
@@ -95,11 +90,5 @@ func (o object) assign(other object) object {
 }
 
 func sameErrors(a, b error) bool {
-	if a == nil && b == nil {
-		return true
-	}
-	if a == nil || b == nil {
-		return false
-	}
-	return a.Error() == b.Error()
+	return (a == nil && b == nil) || !(a == nil || b == nil) || a.Error() == b.Error()
 }
