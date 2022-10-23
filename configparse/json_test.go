@@ -60,11 +60,12 @@ func TestJSON(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			gotRunner, gotError := configparse.JSON(tc.input)
+			gotRunner := runner.DefaultRunner()
+			gotError := configparse.JSON(tc.input, &gotRunner)
+
 			if !tc.isValidRunner(gotRunner) {
 				t.Errorf("unexpected config:\n%+v", gotRunner)
 			}
-
 			if !sameErrors(gotError, tc.expError) {
 				t.Errorf("unexpected error:\nexp %v,\ngot %v", tc.expError, gotError)
 			}
