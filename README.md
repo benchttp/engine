@@ -46,12 +46,15 @@ import (
 )
 
 func main(t *testing.T) {
-    // Set runner configuration
-    config := runner.DefaultConfig()
-    config.Request = config.Request.WithURL("https://example.com")
+    // Set the request to send
+    req, _ := http.NewRequest("GET", "http://localhost:3000", nil)
 
-    // Instantiate runner and run benchmark
-    report, _ := runner.New(nil).Run(context.Background(), config)
+    // Configure the runner
+    rnr := runner.DefaultRunner()
+    rnr.Request = req
+
+    // Run benchmark, get report
+    report, _ := rnr.Run(context.Background())
 
     fmt.Println(report.Metrics.ResponseTimes.Mean)
 }
@@ -67,7 +70,6 @@ import (
     "fmt"
 
     "github.com/benchttp/engine/configparse"
-    "github.com/benchttp/engine/runner"
 )
 
 func main() {
@@ -75,12 +77,12 @@ func main() {
     jsonConfig := []byte(`
 {
   "request": {
-    "url": "https://example.com"
+    "url": "http://localhost:9999"
   }
 }`)
 
-    config, _ := configparse.JSON(jsonConfig)
-    report, _ := runner.New(nil).Run(context.Background(), config)
+    runner, _ := configparse.JSON(jsonConfig)
+    report, _ := runner.Run(context.Background())
 
     fmt.Println(report.Metrics.ResponseTimes.Mean)
 }
