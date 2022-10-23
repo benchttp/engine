@@ -99,8 +99,8 @@ func main() {
 
 ### Main commands
 
-| Command      | Description                         |
-| ------------ | ----------------------------------- |
-| `make lint`  | Runs lint on the codebase           |
-| `make tests` | Runs tests suites from all packages |
-| `make check` | Runs both lint and tests            |
+| Command         | Description                                       |
+| --------------- | ------------------------------------------------- |
+| `./script/lint` | Runs lint on the codebase                         |
+| `./script/test` | Runs tests suites from all packages               |
+| `./script/doc`  | Serves Go doc for this module at `localhost:9995` |
