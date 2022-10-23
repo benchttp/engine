@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 
@@ -62,6 +63,23 @@ func DefaultRunner() Runner {
 		RequestTimeout: 5 * time.Second,
 		GlobalTimeout:  30 * time.Second,
 	}
+}
+
+// WithRequest attaches the given HTTP request to the Runner.
+func (r *Runner) WithRequest(req *http.Request) *Runner {
+	r.Request = req
+	return r
+}
+
+// WithNewRequest calls http.NewRequest with the given parameters
+// and attaches the result to the Runner. If the call to http.NewRequest
+// returns a non-nil error, it panics with the content of that error.
+func (r *Runner) WithNewRequest(method, uri string, body io.Reader) *Runner {
+	req, err := http.NewRequest(method, uri, body)
+	if err != nil {
+		panic(err)
+	}
+	return r.WithRequest(req)
 }
 
 func (r *Runner) Run(ctx context.Context) (*Report, error) {
