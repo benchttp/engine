@@ -23,7 +23,7 @@ type Metadata struct {
 
 // newReport returns an initialized *Report.
 func newReport(
-	cfg Runner,
+	r Runner,
 	d time.Duration,
 	m metrics.Aggregate,
 	t tests.SuiteResult,
@@ -32,7 +32,7 @@ func newReport(
 		Metrics: m,
 		Tests:   t,
 		Metadata: Metadata{
-			Config:        cfg,
+			Config:        r,
 			FinishedAt:    time.Now(), // TODO: change, unreliable
 			TotalDuration: d,
 		},

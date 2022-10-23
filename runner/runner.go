@@ -47,17 +47,14 @@ type Runner struct {
 
 	Tests []tests.Case
 
-	recorder            *recorder.Recorder
-	onRecordingProgress func(RecordingProgress)
+	OnProgress func(RecordingProgress)
+
+	recorder *recorder.Recorder
 }
 
-func New(onRecordingProgress func(RecordingProgress)) *Runner {
-	return &Runner{onRecordingProgress: onRecordingProgress}
-}
-
-func (r *Runner) Run(ctx context.Context, cfg Runner) (*Report, error) {
+func (r *Runner) Run(ctx context.Context) (*Report, error) {
 	// Validate input config
-	if err := cfg.Validate(); err != nil {
+	if err := r.Validate(); err != nil {
 		return nil, err
 	}
 
@@ -67,7 +64,7 @@ func (r *Runner) Run(ctx context.Context, cfg Runner) (*Report, error) {
 	startTime := time.Now()
 
 	// Run request recorder
-	records, err := r.recorder.Record(ctx, cfg.Request)
+	records, err := r.recorder.Record(ctx, r.Request)
 	if err != nil {
 		return nil, err
 	}
@@ -76,9 +73,9 @@ func (r *Runner) Run(ctx context.Context, cfg Runner) (*Report, error) {
 
 	agg := metrics.NewAggregate(records)
 
-	testResults := tests.Run(agg, cfg.Tests)
+	testResults := tests.Run(agg, r.Tests)
 
-	return newReport(cfg, duration, agg, testResults), nil
+	return newReport(*r, duration, agg, testResults), nil
 }
 
 // Progress returns the current progress of the recording.
@@ -99,7 +96,7 @@ func (r *Runner) recorderConfig() recorder.Config {
 		Interval:       r.Interval,
 		RequestTimeout: r.RequestTimeout,
 		GlobalTimeout:  r.GlobalTimeout,
-		OnProgress:     r.onRecordingProgress,
+		OnProgress:     r.OnProgress,
 	}
 }
 
