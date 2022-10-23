@@ -52,6 +52,18 @@ type Runner struct {
 	recorder *recorder.Recorder
 }
 
+// DefaultRunner returns a default Runner that is ready to use,
+// except for Runner.Request that still needs to be set.
+func DefaultRunner() Runner {
+	return Runner{
+		Concurrency:    10,
+		Requests:       100,
+		Interval:       0 * time.Second,
+		RequestTimeout: 5 * time.Second,
+		GlobalTimeout:  30 * time.Second,
+	}
+}
+
 func (r *Runner) Run(ctx context.Context) (*Report, error) {
 	// Validate input config
 	if err := r.Validate(); err != nil {
@@ -99,7 +111,7 @@ func (r Runner) Validate() error { //nolint:gocognit
 	}
 
 	if r.Request == nil {
-		appendError(errors.New("unexpected nil request"))
+		appendError(errors.New("Runner.Request must not be nil"))
 	}
 
 	if r.Requests < 1 && r.Requests != -1 {
