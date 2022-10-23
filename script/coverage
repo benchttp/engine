@@ -1,0 +1,3 @@
+#!/bin/bash
+
+go-acc ./... -- -race -timeout=10s
