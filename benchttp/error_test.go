@@ -1,14 +1,14 @@
-package runner_test
+package benchttp_test
 
 import (
 	"errors"
 	"testing"
 
-	"github.com/benchttp/engine/runner"
+	"github.com/benchttp/sdk/benchttp"
 )
 
 func TestInvalidRunnerError(t *testing.T) {
-	e := runner.InvalidRunnerError{
+	e := benchttp.InvalidRunnerError{
 		Errors: []error{
 			errors.New("error 0"),
 			errors.New("error 1\nwith new line"),

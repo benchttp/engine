@@ -3,7 +3,7 @@ package configparse_test
 import (
 	"testing"
 
-	"github.com/benchttp/engine/configparse"
+	"github.com/benchttp/sdk/configparse"
 )
 
 func TestJSONParser(t *testing.T) {

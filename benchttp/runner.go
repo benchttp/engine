@@ -1,4 +1,4 @@
-package runner
+package benchttp
 
 import (
 	"context"
@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/benchttp/engine/runner/internal/metrics"
-	"github.com/benchttp/engine/runner/internal/recorder"
-	"github.com/benchttp/engine/runner/internal/tests"
+	"github.com/benchttp/sdk/benchttp/internal/metrics"
+	"github.com/benchttp/sdk/benchttp/internal/recorder"
+	"github.com/benchttp/sdk/benchttp/internal/tests"
 )
 
 type (

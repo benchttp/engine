@@ -1,16 +1,16 @@
 <h1 align="center">benchttp/engine</h1>
 
 <p align="center">
-  <a href="https://github.com/benchttp/engine/actions/workflows/ci.yml?query=branch%3Amain">
+  <a href="https://github.com/benchttp/sdk/actions/workflows/ci.yml?query=branch%3Amain">
     <img alt="Github Worklow Status" src="https://img.shields.io/github/workflow/status/benchttp/engine/Lint%20&%20Test%20&%20Build"></a>
   <a href="https://codecov.io/gh/benchttp/engine">
     <img alt="Code coverage" src="https://img.shields.io/codecov/c/gh/benchttp/engine?label=coverage"></a>
-  <a href="https://goreportcard.com/report/github.com/benchttp/engine">
-    <img alt="Go Report Card" src="https://goreportcard.com/badge/github.com/benchttp/engine" /></a>
+  <a href="https://goreportcard.com/report/github.com/benchttp/sdk">
+    <img alt="Go Report Card" src="https://goreportcard.com/badge/github.com/benchttp/sdk" /></a>
   <br />
-  <a href="https://pkg.go.dev/github.com/benchttp/engine#section-documentation">
+  <a href="https://pkg.go.dev/github.com/benchttp/sdk#section-documentation">
     <img alt="Go package Reference" src="https://img.shields.io/badge/pkg-reference-informational?logo=go" /></a>
-  <a href="https://github.com/benchttp/engine/releases">
+  <a href="https://github.com/benchttp/sdk/releases">
     <img alt="Latest version" src="https://img.shields.io/github/v/tag/benchttp/engine?label=release"></a>
 </p>
 
@@ -28,7 +28,7 @@ Go1.17 environment or higher is required.
 Install.
 
 ```txt
-go get github.com/benchttp/engine
+go get github.com/benchttp/sdk
 ```
 
 ## Usage
@@ -42,19 +42,19 @@ import (
     "context"
     "fmt"
 
-    "github.com/benchttp/engine/runner"
+    "github.com/benchttp/sdk/benchttp"
 )
 
 func main(t *testing.T) {
     // Set the request to send
-    req, _ := http.NewRequest("GET", "http://localhost:3000", nil)
+    request, _ := http.NewRequest("GET", "http://localhost:3000", nil)
 
     // Configure the runner
-    rnr := runner.DefaultRunner()
-    rnr.Request = req
+    runner := runner.DefaultRunner()
+    runner.Request = request
 
     // Run benchmark, get report
-    report, _ := rnr.Run(context.Background())
+    report, _ := runner.Run(context.Background())
 
     fmt.Println(report.Metrics.ResponseTimes.Mean)
 }
@@ -69,7 +69,7 @@ import (
     "context"
     "fmt"
 
-    "github.com/benchttp/engine/configparse"
+    "github.com/benchttp/sdk/configparse"
 )
 
 func main() {
@@ -88,7 +88,7 @@ func main() {
 }
 ```
 
-📄 Please refer to [our Wiki](https://github.com/benchttp/engine/wiki/IO-Structures) for exhaustive `Config` and `Report` structures (and more!)
+📄 Please refer to [our Wiki](https://github.com/benchttp/sdk/wiki/IO-Structures) for exhaustive `Runner` and `Report` structures (and more!)
 
 ## Development
 

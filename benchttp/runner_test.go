@@ -1,16 +1,16 @@
-package runner_test
+package benchttp_test
 
 import (
 	"errors"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/benchttp/engine/runner"
+	"github.com/benchttp/sdk/benchttp"
 )
 
 func TestRunner_Validate(t *testing.T) {
 	t.Run("return nil if config is valid", func(t *testing.T) {
-		brunner := runner.Runner{
+		runner := benchttp.Runner{
 			Request:        httptest.NewRequest("GET", "https://a.b/#c?d=e&f=g", nil),
 			Requests:       5,
 			Concurrency:    5,
@@ -19,13 +19,13 @@ func TestRunner_Validate(t *testing.T) {
 			GlobalTimeout:  5,
 		}
 
-		if err := brunner.Validate(); err != nil {
+		if err := runner.Validate(); err != nil {
 			t.Errorf("unexpected error: %v", err)
 		}
 	})
 
 	t.Run("return cumulated errors if config is invalid", func(t *testing.T) {
-		brunner := runner.Runner{
+		runner := benchttp.Runner{
 			Request:        nil,
 			Requests:       -5,
 			Concurrency:    -5,
@@ -34,12 +34,12 @@ func TestRunner_Validate(t *testing.T) {
 			GlobalTimeout:  -5,
 		}
 
-		err := brunner.Validate()
+		err := runner.Validate()
 		if err == nil {
 			t.Fatal("invalid configuration considered valid")
 		}
 
-		var errInvalid *runner.InvalidRunnerError
+		var errInvalid *benchttp.InvalidRunnerError
 		if !errors.As(err, &errInvalid) {
 			t.Fatalf("unexpected error type: %T", err)
 		}
