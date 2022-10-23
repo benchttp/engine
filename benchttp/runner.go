@@ -78,16 +78,6 @@ func (r *Runner) Run(ctx context.Context) (*Report, error) {
 	return newReport(*r, duration, agg, testResults), nil
 }
 
-// Progress returns the current progress of the recording.
-// r.Run must have been called before, otherwise it returns
-// a zero RecorderProgress.
-func (r *Runner) Progress() RecordingProgress {
-	if r.recorder == nil {
-		return RecordingProgress{}
-	}
-	return r.recorder.Progress()
-}
-
 // recorderConfig returns a runner.RequesterConfig generated from cfg.
 func (r *Runner) recorderConfig() recorder.Config {
 	return recorder.Config{
