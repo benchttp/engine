@@ -45,16 +45,11 @@ import (
     "github.com/benchttp/sdk/benchttp"
 )
 
-func main(t *testing.T) {
-    // Set the request to send
-    request, _ := http.NewRequest("GET", "http://localhost:3000", nil)
-
-    // Configure the runner
-    runner := runner.DefaultRunner()
-    runner.Request = request
-
-    // Run benchmark, get report
-    report, _ := runner.Run(context.Background())
+func main() {
+    report, _ := benchttp.
+        DefaultRunner(). // Default runner with safe configuration
+        WithNewRequest("GET", "http://localhost:3000", nil). // Attach request
+        Run(context.Background()) // Run benchmark, retrieve report
 
     fmt.Println(report.Metrics.ResponseTimes.Mean)
 }
@@ -69,6 +64,7 @@ import (
     "context"
     "fmt"
 
+    "github.com/benchttp/sdk/benchttp"
     "github.com/benchttp/sdk/configparse"
 )
 
@@ -77,11 +73,17 @@ func main() {
     jsonConfig := []byte(`
 {
   "request": {
-    "url": "http://localhost:9999"
+    "url": "http://localhost:3000"
   }
 }`)
 
-    runner, _ := configparse.JSON(jsonConfig)
+    // Instantiate a base Runner (here the default with a safe configuration)
+    runner := benchttp.DefaultRunner()
+
+    // Parse the json configuration into the Runner
+    _ = configparse.JSON(jsonConfig, &runner)
+
+    // Run benchmark, retrieve report
     report, _ := runner.Run(context.Background())
 
     fmt.Println(report.Metrics.ResponseTimes.Mean)
