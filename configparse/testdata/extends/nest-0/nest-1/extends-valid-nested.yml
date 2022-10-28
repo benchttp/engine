@@ -1,0 +1,4 @@
+extends: ../../extends-valid-parent.yml
+
+request:
+  url: http://nested.config
