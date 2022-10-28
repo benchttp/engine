@@ -66,7 +66,7 @@ func DefaultRunner() Runner {
 }
 
 // WithRequest attaches the given HTTP request to the Runner.
-func (r *Runner) WithRequest(req *http.Request) *Runner {
+func (r Runner) WithRequest(req *http.Request) Runner {
 	r.Request = req
 	return r
 }
@@ -74,7 +74,7 @@ func (r *Runner) WithRequest(req *http.Request) *Runner {
 // WithNewRequest calls http.NewRequest with the given parameters
 // and attaches the result to the Runner. If the call to http.NewRequest
 // returns a non-nil error, it panics with the content of that error.
-func (r *Runner) WithNewRequest(method, uri string, body io.Reader) *Runner {
+func (r Runner) WithNewRequest(method, uri string, body io.Reader) Runner {
 	req, err := http.NewRequest(method, uri, body)
 	if err != nil {
 		panic(err)
@@ -82,7 +82,7 @@ func (r *Runner) WithNewRequest(method, uri string, body io.Reader) *Runner {
 	return r.WithRequest(req)
 }
 
-func (r *Runner) Run(ctx context.Context) (*Report, error) {
+func (r Runner) Run(ctx context.Context) (*Report, error) {
 	// Validate input config
 	if err := r.Validate(); err != nil {
 		return nil, err
@@ -105,11 +105,11 @@ func (r *Runner) Run(ctx context.Context) (*Report, error) {
 
 	testResults := tests.Run(agg, r.Tests)
 
-	return newReport(*r, duration, agg, testResults), nil
+	return newReport(r, duration, agg, testResults), nil
 }
 
 // recorderConfig returns a runner.RequesterConfig generated from cfg.
-func (r *Runner) recorderConfig() recorder.Config {
+func (r Runner) recorderConfig() recorder.Config {
 	return recorder.Config{
 		Requests:       r.Requests,
 		Concurrency:    r.Concurrency,
