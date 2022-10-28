@@ -8,6 +8,37 @@ import (
 	"github.com/benchttp/sdk/benchttp"
 )
 
+func TestRunner_WithRequest(t *testing.T) {
+	request := httptest.NewRequest("POST", "https://example.com", nil)
+	runner := benchttp.DefaultRunner().WithRequest(request)
+
+	if runner.Request != request {
+		t.Error("request not set")
+	}
+}
+
+func TestRunner_WithNewRequest(t *testing.T) {
+	t.Run("attach valid request", func(t *testing.T) {
+		const method = "POST"
+		const urlString = "https://example.com"
+
+		runner := benchttp.DefaultRunner().WithNewRequest(method, urlString, nil)
+
+		if runner.Request.Method != method || runner.Request.URL.String() != urlString {
+			t.Error("request incorrectly seet")
+		}
+	})
+
+	t.Run("panic for bad request params", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Error("did not panic")
+			}
+		}()
+		_ = benchttp.DefaultRunner().WithNewRequest("ù", "", nil)
+	})
+}
+
 func TestRunner_Validate(t *testing.T) {
 	t.Run("return nil if config is valid", func(t *testing.T) {
 		runner := benchttp.Runner{
