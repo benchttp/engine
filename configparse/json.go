@@ -1,22 +1,12 @@
 package configparse
 
-import (
-	"github.com/benchttp/engine/runner"
-)
+import "github.com/benchttp/sdk/benchttp"
 
-// JSON reads input bytes as JSON and unmarshals it into a runner.ConfigGlobal.
-func JSON(in []byte) (runner.Config, error) {
-	parser := JSONParser{}
-
-	var repr Representation
-	if err := parser.Parse(in, &repr); err != nil {
-		return runner.Config{}, err
+// JSON reads input bytes as JSON and unmarshals it into a benchttp.Runner.
+func JSON(in []byte, dst *benchttp.Runner) error {
+	repr := Representation{}
+	if err := (JSONParser{}).Parse(in, &repr); err != nil {
+		return err
 	}
-
-	cfg, err := ParseRepresentation(repr)
-	if err != nil {
-		return runner.Config{}, err
-	}
-
-	return cfg.Override(runner.DefaultConfig()), nil
+	return repr.ParseInto(dst)
 }

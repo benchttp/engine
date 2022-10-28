@@ -1,9 +1,3 @@
-# Env files
-.env
-
-# Binary files
-/bin
-
 # IDE files
 /.vscode
 /.idea
@@ -12,6 +6,3 @@
 /.benchttp.yml
 /.benchttp.yaml
 /.benchttp.json
-
-# Benchttp reports
-/benchttp.report.*.json

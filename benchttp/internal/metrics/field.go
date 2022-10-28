@@ -3,7 +3,7 @@ package metrics
 import (
 	"errors"
 
-	"github.com/benchttp/engine/internal/errorutil"
+	"github.com/benchttp/sdk/internal/errorutil"
 )
 
 // ErrUnknownField occurs when a Field is used with an invalid path.

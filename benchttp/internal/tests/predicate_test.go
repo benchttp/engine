@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/benchttp/engine/runner/internal/metrics"
-	"github.com/benchttp/engine/runner/internal/tests"
+	"github.com/benchttp/sdk/benchttp/internal/metrics"
+	"github.com/benchttp/sdk/benchttp/internal/tests"
 )
 
 func TestPredicate(t *testing.T) {

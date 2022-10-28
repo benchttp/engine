@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/benchttp/engine/internal/dispatcher"
+	"github.com/benchttp/sdk/internal/dispatcher"
 )
 
 var errTest = errors.New("test-generated error")

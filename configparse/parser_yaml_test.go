@@ -7,7 +7,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/benchttp/engine/configparse"
+	"github.com/benchttp/sdk/configparse"
 )
 
 func TestYAMLParser(t *testing.T) {

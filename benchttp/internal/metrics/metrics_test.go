@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/benchttp/engine/runner/internal/metrics"
-	"github.com/benchttp/engine/runner/internal/metrics/timestats"
+	"github.com/benchttp/sdk/benchttp/internal/metrics"
+	"github.com/benchttp/sdk/benchttp/internal/metrics/timestats"
 )
 
 func TestMetric_Compare(t *testing.T) {

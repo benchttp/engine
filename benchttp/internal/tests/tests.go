@@ -3,7 +3,7 @@ package tests
 import (
 	"fmt"
 
-	"github.com/benchttp/engine/runner/internal/metrics"
+	"github.com/benchttp/sdk/benchttp/internal/metrics"
 )
 
 type Case struct {
