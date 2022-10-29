@@ -1,0 +1,5 @@
+extends: ./parent.yml
+
+request:
+  method: PUT
+  url: http://localhost:3000/child
