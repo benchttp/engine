@@ -1,4 +1,4 @@
-package configparse
+package configio
 
 import (
 	"bytes"
@@ -73,7 +73,7 @@ func (repr Representation) parseRequestInto(dst *benchttp.Runner) error {
 	if rawURL := repr.Request.URL; rawURL != nil {
 		parsedURL, err := parseAndBuildURL(*rawURL, repr.Request.QueryParams)
 		if err != nil {
-			return fmt.Errorf(`configparse: invalid url: %q`, *rawURL)
+			return fmt.Errorf(`configio: invalid url: %q`, *rawURL)
 		}
 		dst.Request.URL = parsedURL
 	}
@@ -91,7 +91,7 @@ func (repr Representation) parseRequestInto(dst *benchttp.Runner) error {
 		case "raw":
 			dst.Request.Body = io.NopCloser(bytes.NewReader([]byte(body.Content)))
 		default:
-			return errors.New(`configparse: request.body.type: only "raw" accepted`)
+			return errors.New(`configio: request.body.type: only "raw" accepted`)
 		}
 	}
 

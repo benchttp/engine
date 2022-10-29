@@ -1,4 +1,4 @@
-package configparse_test
+package configio_test
 
 import (
 	"encoding/json"
@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/benchttp/sdk/benchttp"
-	"github.com/benchttp/sdk/configparse"
+	"github.com/benchttp/sdk/configio"
 )
 
 func TestJSON(t *testing.T) {
@@ -56,7 +56,7 @@ func TestJSON(t *testing.T) {
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
 			gotRunner := benchttp.DefaultRunner()
-			gotError := configparse.JSON(tc.input, &gotRunner)
+			gotError := configio.JSON(tc.input, &gotRunner)
 
 			if !tc.isValidRunner(benchttp.DefaultRunner(), gotRunner) {
 				t.Errorf("unexpected runner:\n%+v", gotRunner)
