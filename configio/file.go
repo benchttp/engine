@@ -10,16 +10,16 @@ import (
 	"github.com/benchttp/sdk/internal/errorutil"
 )
 
-// Parse parses given filename as a benchttp runner configuration
+// UnmarshalFile parses given filename as a benchttp runner configuration
 // into a runner.Runner and stores the retrieved values into *dst.
 // It returns the first error occurring in the process, which can be
 // any of the values declared in the package.
-func Parse(filename string, dst *benchttp.Runner) (err error) {
+func UnmarshalFile(filename string, dst *benchttp.Runner) (err error) {
 	reprs, err := parseFileRecursive(filename, []Representation{}, set{})
 	if err != nil {
 		return
 	}
-	return parseAndMergeConfigs(reprs, dst)
+	return parseAndMergeReprs(reprs, dst)
 }
 
 // set is a collection of unique string values.
@@ -91,12 +91,12 @@ func parseFile(filename string) (repr Representation, err error) {
 	return repr, nil
 }
 
-// parseAndMergeConfigs iterates backwards over reprs, parses them as
+// parseAndMergeReprs iterates backwards over reprs, parses them as
 // runner.Runner, merges them successively and finally stores the result
 // into dst.
 // It returns the merged result or the first non-nil error occurring in the
 // process.
-func parseAndMergeConfigs(reprs []Representation, dst *benchttp.Runner) error {
+func parseAndMergeReprs(reprs []Representation, dst *benchttp.Runner) error {
 	if len(reprs) == 0 { // supposedly catched upstream, should not occur
 		return errors.New(
 			"an unacceptable error occurred parsing the config file, " +
@@ -106,7 +106,7 @@ func parseAndMergeConfigs(reprs []Representation, dst *benchttp.Runner) error {
 	}
 
 	for i := len(reprs) - 1; i >= 0; i-- {
-		if err := reprs[i].ParseInto(dst); err != nil {
+		if err := reprs[i].Into(dst); err != nil {
 			return errorutil.WithDetails(ErrFileParse, err)
 		}
 	}

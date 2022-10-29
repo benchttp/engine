@@ -2,11 +2,12 @@ package configio
 
 import "github.com/benchttp/sdk/benchttp"
 
-// JSON reads input bytes as JSON and unmarshals it into a benchttp.Runner.
-func JSON(in []byte, dst *benchttp.Runner) error {
+// UnmarshalJSONRunner parses the JSON-encoded data and stores the result
+// in the benchttp.Runner pointed to by dst.
+func UnmarshalJSONRunner(in []byte, dst *benchttp.Runner) error {
 	repr := Representation{}
 	if err := (JSONParser{}).Parse(in, &repr); err != nil {
 		return err
 	}
-	return repr.ParseInto(dst)
+	return repr.Into(dst)
 }

@@ -56,7 +56,7 @@ func TestJSON(t *testing.T) {
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
 			gotRunner := benchttp.DefaultRunner()
-			gotError := configio.JSON(tc.input, &gotRunner)
+			gotError := configio.UnmarshalJSONRunner(tc.input, &gotRunner)
 
 			if !tc.isValidRunner(benchttp.DefaultRunner(), gotRunner) {
 				t.Errorf("unexpected runner:\n%+v", gotRunner)
