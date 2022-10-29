@@ -99,13 +99,13 @@ func parseFile(filename string) (repr Representation, err error) {
 		return repr, errorutil.WithDetails(ErrFileRead, filename, err)
 	}
 
-	ext := extension(filepath.Ext(filename))
-	parser, err := newParser(ext)
+	ext := Extension(filepath.Ext(filename))
+	dec, err := DecoderOf(ext, b)
 	if err != nil {
 		return repr, errorutil.WithDetails(ErrFileExt, ext, err)
 	}
 
-	if err = parser.Parse(b, &repr); err != nil {
+	if err = dec.Decode(&repr); err != nil {
 		return repr, errorutil.WithDetails(ErrFileParse, filename, err)
 	}
 

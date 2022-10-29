@@ -81,7 +81,7 @@ func main() {
     runner := benchttp.DefaultRunner()
 
     // Parse the json configuration into the Runner
-    _ = configio.JSON(jsonConfig, &runner)
+    _ = configio.UnmarshalJSONRunner(jsonConfig, &runner)
 
     // Run benchmark, retrieve report
     report, _ := runner.Run(context.Background())

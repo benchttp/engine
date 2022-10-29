@@ -4,25 +4,56 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"regexp"
 
 	"gopkg.in/yaml.v3"
+
+	"github.com/benchttp/sdk/benchttp"
 )
 
-// YAMLParser implements configParser.
-type YAMLParser struct{}
+// UnmarshalYAML parses the YAML-encoded data and stores the result
+// in the Representation pointed to by dst.
+func UnmarshalYAML(in []byte, dst *Representation) error {
+	dec := NewYAMLDecoder(bytes.NewReader(in))
+	return dec.Decode(dst)
+}
 
-// Parse decodes a raw yaml input in strict mode (unknown fields disallowed)
-// and stores the resulting value into dst.
-func (p YAMLParser) Parse(in []byte, dst *Representation) error {
-	decoder := yaml.NewDecoder(bytes.NewReader(in))
+// UnmarshalYAMLRunner parses the YAML-encoded data and stores the result
+// in the benchttp.Runner pointed to by dst.
+func UnmarshalYAMLRunner(in []byte, dst *benchttp.Runner) error {
+	dec := NewYAMLDecoder(bytes.NewReader(in))
+	return dec.DecodeRunner(dst)
+}
+
+// YAMLDecoder implements Decoder
+type YAMLDecoder struct{ r io.Reader }
+
+func NewYAMLDecoder(r io.Reader) YAMLDecoder {
+	return YAMLDecoder{r: r}
+}
+
+// Decode reads the next YAML-encoded value from its input
+// and stores it in the Representation pointed to by dst.
+func (d YAMLDecoder) Decode(dst *Representation) error {
+	decoder := yaml.NewDecoder(d.r)
 	decoder.KnownFields(true)
-	return p.handleError(decoder.Decode(dst))
+	return d.handleError(decoder.Decode(dst))
+}
+
+// Decode reads the next YAML-encoded value from its input
+// and stores it in the benchttp.Runner pointed to by dst.
+func (d YAMLDecoder) DecodeRunner(dst *benchttp.Runner) error {
+	repr := Representation{}
+	if err := d.Decode(&repr); err != nil {
+		return err
+	}
+	return repr.Into(dst)
 }
 
 // handleError handles a raw yaml decoder.Decode error, filters it,
 // and return the resulting error.
-func (p YAMLParser) handleError(err error) error {
+func (d YAMLDecoder) handleError(err error) error {
 	// yaml.TypeError errors require special handling, other errors
 	// (nil included) can be returned as is.
 	var typeError *yaml.TypeError
@@ -38,10 +69,10 @@ func (p YAMLParser) handleError(err error) error {
 		// It is a wanted behavior but prevents the usage of custom aliases.
 		// To work around this we allow an exception for that rule with fields
 		// starting with x- (inspired by docker compose api).
-		if p.isCustomFieldError(msg) {
+		if d.isCustomFieldError(msg) {
 			continue
 		}
-		filtered.Errors = append(filtered.Errors, p.prettyErrorMessage(msg))
+		filtered.Errors = append(filtered.Errors, d.prettyErrorMessage(msg))
 	}
 
 	if len(filtered.Errors) != 0 {
@@ -53,7 +84,7 @@ func (p YAMLParser) handleError(err error) error {
 
 // isCustomFieldError returns true if the raw error message is due
 // to an allowed custom field.
-func (p YAMLParser) isCustomFieldError(raw string) bool {
+func (d YAMLDecoder) isCustomFieldError(raw string) bool {
 	customFieldRgx := regexp.MustCompile(
 		// raw output example:
 		// 	line 9: field x-my-alias not found in type struct { ... }
@@ -65,7 +96,7 @@ func (p YAMLParser) isCustomFieldError(raw string) bool {
 // prettyErrorMessage transforms a raw Decode error message into a more
 // user-friendly one by removing noisy information and returns the resulting
 // value.
-func (p YAMLParser) prettyErrorMessage(raw string) string {
+func (d YAMLDecoder) prettyErrorMessage(raw string) string {
 	// field not found error
 	fieldNotFoundRgx := regexp.MustCompile(
 		// raw output example (type unmarshaledConfig is entirely exposed):
