@@ -1,4 +1,4 @@
-package configparse_test
+package configio_test
 
 import (
 	"bytes"
@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/benchttp/sdk/benchttp"
-	"github.com/benchttp/sdk/configparse"
+	"github.com/benchttp/sdk/configio"
 )
 
 const (
@@ -39,39 +39,39 @@ func TestParse(t *testing.T) {
 			{
 				label:  "not found",
 				path:   configPath("invalid/bad path"),
-				expErr: configparse.ErrFileNotFound,
+				expErr: configio.ErrFileNotFound,
 			},
 			{
 				label:  "unsupported extension",
 				path:   configPath("invalid/badext.yams"),
-				expErr: configparse.ErrFileExt,
+				expErr: configio.ErrFileExt,
 			},
 			{
 				label:  "yaml invalid fields",
 				path:   configPath("invalid/badfields.yml"),
-				expErr: configparse.ErrFileParse,
+				expErr: configio.ErrFileParse,
 			},
 			{
 				label:  "json invalid fields",
 				path:   configPath("invalid/badfields.json"),
-				expErr: configparse.ErrFileParse,
+				expErr: configio.ErrFileParse,
 			},
 			{
 				label:  "self reference",
 				path:   configPath("extends/extends-circular-self.yml"),
-				expErr: configparse.ErrFileCircular,
+				expErr: configio.ErrFileCircular,
 			},
 			{
 				label:  "circular reference",
 				path:   configPath("extends/extends-circular-0.yml"),
-				expErr: configparse.ErrFileCircular,
+				expErr: configio.ErrFileCircular,
 			},
 		}
 
 		for _, tc := range testcases {
 			t.Run(tc.label, func(t *testing.T) {
 				runner := benchttp.Runner{}
-				gotErr := configparse.Parse(tc.path, &runner)
+				gotErr := configio.Parse(tc.path, &runner)
 
 				if gotErr == nil {
 					t.Fatal("exp non-nil error, got nil")
@@ -94,7 +94,7 @@ func TestParse(t *testing.T) {
 			fname := configPath("valid/benchttp" + ext)
 
 			gotCfg := benchttp.Runner{}
-			if err := configparse.Parse(fname, &gotCfg); err != nil {
+			if err := configio.Parse(fname, &gotCfg); err != nil {
 				// critical error, stop the test
 				t.Fatal(err)
 			}
@@ -117,7 +117,7 @@ func TestParse(t *testing.T) {
 
 		fname := configPath("valid/benchttp-zeros.yml")
 
-		if err := configparse.Parse(fname, &runner); err != nil {
+		if err := configio.Parse(fname, &runner); err != nil {
 			t.Fatal(err)
 		}
 
@@ -166,7 +166,7 @@ func TestParse(t *testing.T) {
 		for _, tc := range testcases {
 			t.Run(tc.label, func(t *testing.T) {
 				var runner benchttp.Runner
-				if err := configparse.Parse(tc.cfpath, &runner); err != nil {
+				if err := configio.Parse(tc.cfpath, &runner); err != nil {
 					t.Fatal(err)
 				}
 

@@ -1,9 +1,9 @@
-package configparse_test
+package configio_test
 
 import (
 	"testing"
 
-	"github.com/benchttp/sdk/configparse"
+	"github.com/benchttp/sdk/configio"
 )
 
 var (
@@ -16,15 +16,15 @@ func TestFind(t *testing.T) {
 	t.Run("return first existing file form input", func(t *testing.T) {
 		files := []string{badFile, goodFileYML, goodFileJSON}
 
-		if got := configparse.Find(files...); got != goodFileYML {
+		if got := configio.Find(files...); got != goodFileYML {
 			t.Errorf("did not retrieve good file: exp %s, got %s", goodFileYML, got)
 		}
 	})
 
 	t.Run("return first existing file from defaults", func(t *testing.T) {
-		configparse.DefaultPaths = []string{badFile, goodFileYML, goodFileJSON}
+		configio.DefaultPaths = []string{badFile, goodFileYML, goodFileJSON}
 
-		if got := configparse.Find(); got != goodFileYML {
+		if got := configio.Find(); got != goodFileYML {
 			t.Errorf("did not retrieve good file: exp %s, got %s", goodFileYML, got)
 		}
 	})
@@ -32,7 +32,7 @@ func TestFind(t *testing.T) {
 	t.Run("return empty string when no match", func(t *testing.T) {
 		files := []string{badFile}
 
-		if got := configparse.Find(files...); got != "" {
+		if got := configio.Find(files...); got != "" {
 			t.Errorf("retrieved unexpected file: %s", got)
 		}
 	})

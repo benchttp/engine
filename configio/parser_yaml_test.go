@@ -1,4 +1,4 @@
-package configparse_test
+package configio_test
 
 import (
 	"errors"
@@ -7,7 +7,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/benchttp/sdk/configparse"
+	"github.com/benchttp/sdk/configio"
 )
 
 func TestYAMLParser(t *testing.T) {
@@ -65,8 +65,8 @@ func TestYAMLParser(t *testing.T) {
 		for _, tc := range testcases {
 			t.Run(tc.label, func(t *testing.T) {
 				var (
-					parser  configparse.YAMLParser
-					rawcfg  configparse.Representation
+					parser  configio.YAMLParser
+					rawcfg  configio.Representation
 					yamlErr *yaml.TypeError
 				)
 

@@ -1,9 +1,9 @@
-package configparse_test
+package configio_test
 
 import (
 	"testing"
 
-	"github.com/benchttp/sdk/configparse"
+	"github.com/benchttp/sdk/configio"
 )
 
 func TestJSONParser(t *testing.T) {
@@ -38,8 +38,8 @@ func TestJSONParser(t *testing.T) {
 		for _, tc := range testcases {
 			t.Run(tc.label, func(t *testing.T) {
 				var (
-					parser configparse.JSONParser
-					rawcfg configparse.Representation
+					parser configio.JSONParser
+					rawcfg configio.Representation
 				)
 
 				gotErr := parser.Parse(tc.in, &rawcfg)
