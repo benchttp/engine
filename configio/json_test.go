@@ -1,6 +1,7 @@
 package configio_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"testing"
@@ -9,7 +10,7 @@ import (
 	"github.com/benchttp/sdk/configio"
 )
 
-func TestJSON(t *testing.T) {
+func TestMarshalJSON(t *testing.T) {
 	const testURL = "https://example.com"
 	baseInput := object{
 		"request": object{
@@ -68,6 +69,61 @@ func TestJSON(t *testing.T) {
 	}
 }
 
+func TestJSONDecoder(t *testing.T) {
+	t.Run("return expected errors", func(t *testing.T) {
+		testcases := []struct {
+			label string
+			in    []byte
+			exp   string
+		}{
+			{
+				label: "syntax error",
+				in:    []byte("{\n  \"runner\": {},\n}\n"),
+				exp:   "syntax error near 19: invalid character '}' looking for beginning of object key string",
+			},
+			{
+				label: "unknown field",
+				in:    []byte("{\n  \"notafield\": 123\n}\n"),
+				exp:   `invalid field ("notafield"): does not exist`,
+			},
+			{
+				label: "wrong type",
+				in:    []byte("{\n  \"runner\": {\n    \"requests\": [123]\n  }\n}\n"),
+				exp:   "wrong type for field runner.requests: want int, got array",
+			},
+			{
+				label: "valid config",
+				in:    []byte("{\n  \"runner\": {\n    \"requests\": 123\n  }\n}\n"),
+				exp:   "",
+			},
+		}
+
+		for _, tc := range testcases {
+			t.Run(tc.label, func(t *testing.T) {
+				runner := benchttp.Runner{}
+				decoder := configio.NewJSONDecoder(bytes.NewReader(tc.in))
+
+				gotErr := decoder.DecodeRunner(&runner)
+
+				if tc.exp == "" {
+					if gotErr != nil {
+						t.Fatalf("unexpected error: %v", gotErr)
+					}
+					return
+				}
+				if gotErr.Error() != tc.exp {
+					t.Errorf(
+						"unexpected error message:\nexp %s\ngot %v",
+						tc.exp, gotErr,
+					)
+				}
+			})
+		}
+	})
+}
+
+// helpers
+
 type object map[string]interface{}
 
 func (o object) json() []byte {
@@ -90,5 +146,5 @@ func (o object) assign(other object) object {
 }
 
 func sameErrors(a, b error) bool {
-	return (a == nil && b == nil) || !(a == nil || b == nil) || a.Error() == b.Error()
+	return (a == nil && b == nil) || (a != nil && b != nil) || a.Error() == b.Error()
 }
