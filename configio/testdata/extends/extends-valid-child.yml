@@ -1,4 +1,0 @@
-extends: ./extends-valid-parent.yml
-
-request:
-  url: http://child.config

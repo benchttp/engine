@@ -78,7 +78,7 @@ func (repr Representation) parseRequestInto(dst *benchttp.Runner) error {
 		dst.Request.URL = parsedURL
 	}
 
-	if header := repr.Request.Header; header != nil {
+	if header := repr.Request.Header; len(header) != 0 {
 		httpHeader := http.Header{}
 		for key, val := range header {
 			httpHeader[key] = val
