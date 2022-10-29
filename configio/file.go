@@ -2,6 +2,7 @@ package configio
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -117,13 +118,11 @@ func parseFile(filename string) (repr Representation, err error) {
 // into dst.
 // It returns the merged result or the first non-nil error occurring in the
 // process.
+//
+// The input Representation slice must never be nil or empty, otherwise it panics.
 func parseAndMergeReprs(reprs []Representation, dst *benchttp.Runner) error {
 	if len(reprs) == 0 { // supposedly catched upstream, should not occur
-		return errors.New(
-			"an unacceptable error occurred parsing the config file, " +
-				"please visit https://github.com/benchttp/runner/issues/new " +
-				"and insult us properly",
-		)
+		panicInternal("parseAndMergeReprs", "nil or empty []Representation")
 	}
 
 	for i := len(reprs) - 1; i >= 0; i-- {
@@ -131,6 +130,14 @@ func parseAndMergeReprs(reprs []Representation, dst *benchttp.Runner) error {
 			return errorutil.WithDetails(ErrFileParse, err)
 		}
 	}
-
 	return nil
+}
+
+func panicInternal(funcname, detail string) {
+	const reportURL = "https://github.com/benchttp/sdk/issues/new"
+	source := fmt.Sprintf("configio.%s", funcname)
+	panic(fmt.Sprintf(
+		"%s: unexpected internal error: %s, please file an issue at %s",
+		source, detail, reportURL,
+	))
 }
