@@ -16,18 +16,45 @@ import (
 	"github.com/benchttp/sdk/configio"
 )
 
-const (
-	validConfigPath = "./testdata"
-	validURL        = "http://localhost:9999?fib=30&delay=200ms" // value from testdata files
-)
+func TestFindFile(t *testing.T) {
+	var (
+		fileYAML = configPath("valid/benchttp.yaml")
+		fileJSON = configPath("valid/benchttp.json")
+		nofile   = configPath("does-not-exist.json")
+	)
 
-var supportedExt = []string{
-	".yml",
-	".yaml",
-	".json",
+	t.Run("return first existing file from input", func(t *testing.T) {
+		files := []string{nofile, fileYAML, fileJSON}
+
+		if got := configio.FindFile(files...); got != fileYAML {
+			t.Errorf("did not retrieve good file: exp %s, got %s", fileYAML, got)
+		}
+	})
+
+	t.Run("return first existing file from defaults", func(t *testing.T) {
+		configio.DefaultPaths = []string{nofile, fileYAML, fileJSON}
+
+		if got := configio.FindFile(); got != fileYAML {
+			t.Errorf("did not retrieve good file: exp %s, got %s", fileYAML, got)
+		}
+	})
+
+	t.Run("return empty string when no match", func(t *testing.T) {
+		files := []string{nofile}
+
+		if got := configio.FindFile(files...); got != "" {
+			t.Errorf("retrieved unexpected file: %s", got)
+		}
+	})
 }
 
 func TestUnmarshalFile(t *testing.T) {
+	supportedExt := []string{
+		".yml",
+		".yaml",
+		".json",
+	}
+
 	t.Run("return file errors early", func(t *testing.T) {
 		testcases := []struct {
 			label  string
@@ -191,7 +218,7 @@ func TestUnmarshalFile(t *testing.T) {
 func expectedRunner() benchttp.Runner {
 	request := httptest.NewRequest(
 		"POST",
-		validURL,
+		"http://localhost:9999?fib=30&delay=200ms",
 		bytes.NewReader([]byte(`{"key0":"val0","key1":"val1"}`)),
 	)
 	request.Header = http.Header{
@@ -268,5 +295,5 @@ func setTempValue(ptr *string, val string) (restore func()) {
 }
 
 func configPath(name string) string {
-	return filepath.Join(validConfigPath, name)
+	return filepath.Join("testdata", name)
 }
