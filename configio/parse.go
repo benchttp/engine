@@ -48,10 +48,10 @@ type Representation struct {
 	} `yaml:"tests" json:"tests"`
 }
 
-// ParseInto parses the Representation receiver as a benchttp.Runner
+// Into parses the Representation receiver as a benchttp.Runner
 // and stores any non-nil field value into the corresponding field
 // of dst.
-func (repr Representation) ParseInto(dst *benchttp.Runner) error {
+func (repr Representation) Into(dst *benchttp.Runner) error {
 	if err := repr.parseRequestInto(dst); err != nil {
 		return err
 	}

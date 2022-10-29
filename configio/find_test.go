@@ -12,11 +12,11 @@ var (
 	badFile      = configPath("does-not-exist.json")
 )
 
-func TestFind(t *testing.T) {
+func TestFindFile(t *testing.T) {
 	t.Run("return first existing file form input", func(t *testing.T) {
 		files := []string{badFile, goodFileYML, goodFileJSON}
 
-		if got := configio.Find(files...); got != goodFileYML {
+		if got := configio.FindFile(files...); got != goodFileYML {
 			t.Errorf("did not retrieve good file: exp %s, got %s", goodFileYML, got)
 		}
 	})
@@ -24,7 +24,7 @@ func TestFind(t *testing.T) {
 	t.Run("return first existing file from defaults", func(t *testing.T) {
 		configio.DefaultPaths = []string{badFile, goodFileYML, goodFileJSON}
 
-		if got := configio.Find(); got != goodFileYML {
+		if got := configio.FindFile(); got != goodFileYML {
 			t.Errorf("did not retrieve good file: exp %s, got %s", goodFileYML, got)
 		}
 	})
@@ -32,7 +32,7 @@ func TestFind(t *testing.T) {
 	t.Run("return empty string when no match", func(t *testing.T) {
 		files := []string{badFile}
 
-		if got := configio.Find(files...); got != "" {
+		if got := configio.FindFile(files...); got != "" {
 			t.Errorf("retrieved unexpected file: %s", got)
 		}
 	})
