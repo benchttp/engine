@@ -8,10 +8,10 @@ var DefaultPaths = []string{
 	"./.benchttp.json",
 }
 
-// Find returns the first name that matches a file path.
+// FindFile returns the first name that matches a file path.
 // If input paths is empty, it uses DefaultPaths.
 // If no match is found, it returns an empty string.
-func Find(paths ...string) string {
+func FindFile(paths ...string) string {
 	if len(paths) == 0 {
 		paths = DefaultPaths
 	}

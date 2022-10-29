@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -28,8 +27,7 @@ var supportedExt = []string{
 	".json",
 }
 
-// TestParse ensures the config file is open, read, and correctly parsed.
-func TestParse(t *testing.T) {
+func TestUnmarshalFile(t *testing.T) {
 	t.Run("return file errors early", func(t *testing.T) {
 		testcases := []struct {
 			label  string
@@ -71,7 +69,7 @@ func TestParse(t *testing.T) {
 		for _, tc := range testcases {
 			t.Run(tc.label, func(t *testing.T) {
 				runner := benchttp.Runner{}
-				gotErr := configio.Parse(tc.path, &runner)
+				gotErr := configio.UnmarshalFile(tc.path, &runner)
 
 				if gotErr == nil {
 					t.Fatal("exp non-nil error, got nil")
@@ -81,7 +79,7 @@ func TestParse(t *testing.T) {
 					t.Errorf("\nexp %v\ngot %v", tc.expErr, gotErr)
 				}
 
-				if !sameConfig(runner, benchttp.Runner{}) {
+				if !sameRunner(runner, benchttp.Runner{}) {
 					t.Errorf("\nexp empty config\ngot %v", runner)
 				}
 			})
@@ -90,34 +88,33 @@ func TestParse(t *testing.T) {
 
 	t.Run("happy path for all extensions", func(t *testing.T) {
 		for _, ext := range supportedExt {
-			expCfg := newExpConfig()
-			fname := configPath("valid/benchttp" + ext)
+			filename := configPath("valid/benchttp" + ext)
+			runner := benchttp.Runner{}
 
-			gotCfg := benchttp.Runner{}
-			if err := configio.Parse(fname, &gotCfg); err != nil {
+			if err := configio.UnmarshalFile(filename, &runner); err != nil {
 				// critical error, stop the test
 				t.Fatal(err)
 			}
 
-			if sameConfig(gotCfg, benchttp.Runner{}) {
+			if sameRunner(runner, benchttp.Runner{}) {
 				t.Error("received an empty configuration")
 			}
 
-			if !sameConfig(gotCfg, expCfg) {
-				t.Errorf("unexpected parsed config for %s file:\nexp %#v\ngot %#v", ext, expCfg, gotCfg)
+			exp := expectedRunner()
+			if !sameRunner(runner, exp) {
+				t.Errorf("unexpected parsed config for %s file:\nexp %#v\ngot %#v", ext, exp, runner)
 			}
 
 		}
 	})
 
 	t.Run("override input config", func(t *testing.T) {
+		filename := configPath("valid/benchttp-zeros.yml")
 		runner := benchttp.Runner{}
 		runner.Request = httptest.NewRequest("POST", "https://overriden.com", nil)
 		runner.GlobalTimeout = 10 * time.Millisecond
 
-		fname := configPath("valid/benchttp-zeros.yml")
-
-		if err := configio.Parse(fname, &runner); err != nil {
+		if err := configio.UnmarshalFile(filename, &runner); err != nil {
 			t.Fatal(err)
 		}
 
@@ -166,7 +163,7 @@ func TestParse(t *testing.T) {
 		for _, tc := range testcases {
 			t.Run(tc.label, func(t *testing.T) {
 				var runner benchttp.Runner
-				if err := configio.Parse(tc.cfpath, &runner); err != nil {
+				if err := configio.UnmarshalFile(tc.cfpath, &runner); err != nil {
 					t.Fatal(err)
 				}
 
@@ -189,9 +186,9 @@ func TestParse(t *testing.T) {
 
 // helpers
 
-// newExpConfig returns the expected runner.ConfigConfig result after parsing
-// one of the config files in testdataConfigPath.
-func newExpConfig() benchttp.Runner {
+// expectedRunner returns the expected benchttp.Runner after unmarhsaling
+// one of the valid config files in testdata.
+func expectedRunner() benchttp.Runner {
 	request := httptest.NewRequest(
 		"POST",
 		validURL,
@@ -233,13 +230,13 @@ func newExpConfig() benchttp.Runner {
 	}
 }
 
-func sameConfig(a, b benchttp.Runner) bool {
+func sameRunner(a, b benchttp.Runner) bool {
 	if a.Request == nil || b.Request == nil {
 		return a.Request == nil && b.Request == nil
 	}
 	return sameURL(a.Request.URL, b.Request.URL) &&
-		sameHeader(a.Request.Header, b.Request.Header) &&
-		sameBody(a.Request.Body, b.Request.Body)
+		reflect.DeepEqual(a.Request.Header, b.Request.Header) &&
+		reflect.DeepEqual(a.Request.Body, b.Request.Body)
 }
 
 // sameURL returns true if a and b are the same *url.URL, taking into account
@@ -252,24 +249,11 @@ func sameURL(a, b *url.URL) bool {
 
 	// temporarily set RawQuery to a determined value
 	for _, u := range []*url.URL{a, b} {
-		defer setTempValue(&u.RawQuery, "replaced by test")()
+		restore := setTempValue(&u.RawQuery, "replaced by test")
+		defer restore()
 	}
 
 	// we can now rely on deep equality check
-	return reflect.DeepEqual(a, b)
-}
-
-func sameHeader(a, b http.Header) bool {
-	return reflect.DeepEqual(a, b)
-	// if len(a) != len(b) {
-	// 	return false
-	// }
-	// for k, values := range a {
-	// 	if len(values) != len()
-	// }
-}
-
-func sameBody(a, b io.ReadCloser) bool {
 	return reflect.DeepEqual(a, b)
 }
 
