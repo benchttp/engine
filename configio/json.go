@@ -1,4 +1,4 @@
-package configparse
+package configio
 
 import "github.com/benchttp/sdk/benchttp"
 
