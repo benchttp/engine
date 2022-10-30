@@ -67,6 +67,10 @@ func InvalidExtendsSelf() ConfigFile {
 	return invalidConfig("extends/circular-self.yml")
 }
 
+func InvalidExtendsEmpty() ConfigFile {
+	return invalidConfig("extends/empty.yml")
+}
+
 type kind uint8
 
 const (
