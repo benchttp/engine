@@ -66,6 +66,11 @@ func TestUnmarshalFile(t *testing.T) {
 			expErr error
 		}{
 			{
+				label:  "empty path",
+				file:   testdata.ConfigFile{Path: ""},
+				expErr: configio.ErrFileNotFound,
+			},
+			{
 				label:  "not found",
 				file:   testdata.InvalidPath(),
 				expErr: configio.ErrFileNotFound,
@@ -94,6 +99,11 @@ func TestUnmarshalFile(t *testing.T) {
 				label:  "circular reference",
 				file:   testdata.InvalidExtendsCircular(),
 				expErr: configio.ErrFileCircular,
+			},
+			{
+				label:  "empty reference",
+				file:   testdata.InvalidExtendsEmpty(),
+				expErr: configio.ErrFileNotFound,
 			},
 		}
 
