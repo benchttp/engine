@@ -9,7 +9,7 @@ import (
 	"github.com/benchttp/sdk/benchttp"
 	"github.com/benchttp/sdk/benchttptest"
 	"github.com/benchttp/sdk/configio"
-	"github.com/benchttp/sdk/configio/testdata"
+	"github.com/benchttp/sdk/configio/internal/testdata"
 )
 
 func TestFindFile(t *testing.T) {
