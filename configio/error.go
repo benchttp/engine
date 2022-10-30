@@ -2,6 +2,7 @@ package configio
 
 import (
 	"errors"
+	"fmt"
 )
 
 var (
@@ -24,3 +25,12 @@ var (
 	// ErrFileCircular signals a circular reference in the config file.
 	ErrFileCircular = errors.New("circular reference detected")
 )
+
+func panicInternal(funcname, detail string) {
+	const reportURL = "https://github.com/benchttp/sdk/issues/new"
+	source := fmt.Sprintf("configio.%s", funcname)
+	panic(fmt.Sprintf(
+		"%s: unexpected internal error: %s, please file an issue at %s",
+		source, detail, reportURL,
+	))
+}

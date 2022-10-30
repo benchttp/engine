@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/benchttp/sdk/benchttp"
+	"github.com/benchttp/sdk/internal/errorutil"
 )
 
 // Representation is a raw data model for formatted runner config (json, yaml).
@@ -244,6 +245,24 @@ func requireConfigFields(fields map[string]interface{}) error {
 	for name, value := range fields {
 		if value == nil {
 			return fmt.Errorf("%s: missing field", name)
+		}
+	}
+	return nil
+}
+
+type representations []Representation
+
+// mergeInto successively parses the given representations into dst.
+//
+// The input Representation slice must never be nil or empty, otherwise it panics.
+func (reprs representations) mergeInto(dst *benchttp.Runner) error {
+	if len(reprs) == 0 { // supposedly catched upstream, should not occur
+		panicInternal("parseAndMergeReprs", "nil or empty []Representation")
+	}
+
+	for _, repr := range reprs {
+		if err := repr.Into(dst); err != nil {
+			return errorutil.WithDetails(ErrFileParse, err)
 		}
 	}
 	return nil
