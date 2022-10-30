@@ -75,16 +75,18 @@ const (
 	kindExtended
 )
 
+var basePath = filepath.Join("internal", "testdata")
+
 func validConfig(name string, k kind) ConfigFile {
 	return ConfigFile{
-		Path:   filepath.Join("testdata", "valid", name),
+		Path:   filepath.Join(basePath, "valid", name),
 		Runner: runnerOf(k),
 	}
 }
 
 func invalidConfig(name string) ConfigFile {
 	return ConfigFile{
-		Path:   filepath.Join("testdata", "invalid", name),
+		Path:   filepath.Join(basePath, "invalid", name),
 		Runner: benchttp.Runner{},
 	}
 }
