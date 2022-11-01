@@ -2,7 +2,7 @@ package configio
 
 import (
 	"bytes"
-	"errors"
+	"fmt"
 
 	"github.com/benchttp/sdk/benchttp"
 )
@@ -12,24 +12,23 @@ type Decoder interface {
 	DecodeRunner(dst *benchttp.Runner) error
 }
 
-type Extension string
+type Format string
 
 const (
-	ExtYML  Extension = ".yml"
-	ExtYAML Extension = ".yaml"
-	ExtJSON Extension = ".json"
+	FormatJSON Format = "json"
+	FormatYAML Format = "yaml"
 )
 
-// DecoderOf returns the appropriate Decoder for the given extension,
-// or a non-nil error if ext is not an expected extension.
-func DecoderOf(ext Extension, in []byte) (Decoder, error) {
+// DecoderOf returns the appropriate Decoder for the given Format.
+// It panics if the format is not a Format declared in configio.
+func DecoderOf(format Format, in []byte) Decoder {
 	r := bytes.NewReader(in)
-	switch ext {
-	case ExtYML, ExtYAML:
-		return NewYAMLDecoder(r), nil
-	case ExtJSON:
-		return NewJSONDecoder(r), nil
+	switch format {
+	case FormatYAML:
+		return NewYAMLDecoder(r)
+	case FormatJSON:
+		return NewJSONDecoder(r)
 	default:
-		return nil, errors.New("unsupported config format")
+		panic(fmt.Sprintf("configio.DecoderOf: unexpected format: %q", format))
 	}
 }

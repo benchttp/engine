@@ -83,17 +83,27 @@ func (f *file) decode() (err error) {
 		return errorutil.WithDetails(ErrFileRead, f.path, err)
 	}
 
-	ext := Extension(filepath.Ext(f.path))
-	dec, err := DecoderOf(ext, b)
+	ext, err := f.format()
 	if err != nil {
-		return errorutil.WithDetails(ErrFileExt, ext, err)
+		return err
 	}
 
-	if err = dec.Decode(&f.repr); err != nil {
+	if err := DecoderOf(ext, b).Decode(&f.repr); err != nil {
 		return errorutil.WithDetails(ErrFileParse, f.path, err)
 	}
 
 	return nil
+}
+
+func (f file) format() (Format, error) {
+	switch ext := filepath.Ext(f.path); ext {
+	case ".yml", ".yaml":
+		return FormatYAML, nil
+	case ".json":
+		return FormatJSON, nil
+	default:
+		return "", errorutil.WithDetails(ErrFileExt, ext, f.path)
+	}
 }
 
 func (f file) extend(nextPath string) file {
