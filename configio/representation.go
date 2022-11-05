@@ -49,6 +49,10 @@ type Representation struct {
 	} `yaml:"tests" json:"tests"`
 }
 
+func (repr Representation) validate() error {
+	return repr.Into(&benchttp.Runner{})
+}
+
 // Into parses the Representation receiver as a benchttp.Runner
 // and stores any non-nil field value into the corresponding field
 // of dst.
