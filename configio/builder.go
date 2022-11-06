@@ -33,7 +33,7 @@ func (b *Builder) WriteYAML(in []byte) error {
 }
 
 func (b *Builder) decodeAndWrite(in []byte, format Format) error {
-	repr := Representation{}
+	repr := representation{}
 	if err := DecoderOf(format, in).Decode(&repr); err != nil {
 		return err
 	}
@@ -43,7 +43,7 @@ func (b *Builder) decodeAndWrite(in []byte, format Format) error {
 	}
 	b.append(func(dst *benchttp.Runner) {
 		// err is already checked via repr.validate(), so nil is expected.
-		if err := repr.Into(dst); err != nil {
+		if err := repr.parseAndMutate(dst); err != nil {
 			panicInternal("Builder.decodeAndWrite", "unexpected error: "+err.Error())
 		}
 	})

@@ -14,7 +14,7 @@ import (
 
 // UnmarshalYAML parses the YAML-encoded data and stores the result
 // in the Representation pointed to by dst.
-func UnmarshalYAML(in []byte, dst *Representation) error {
+func UnmarshalYAML(in []byte, dst *representation) error {
 	dec := NewYAMLDecoder(bytes.NewReader(in))
 	return dec.Decode(dst)
 }
@@ -35,7 +35,7 @@ func NewYAMLDecoder(r io.Reader) YAMLDecoder {
 
 // Decode reads the next YAML-encoded value from its input
 // and stores it in the Representation pointed to by dst.
-func (d YAMLDecoder) Decode(dst *Representation) error {
+func (d YAMLDecoder) Decode(dst *representation) error {
 	decoder := yaml.NewDecoder(d.r)
 	decoder.KnownFields(true)
 	return d.handleError(decoder.Decode(dst))
@@ -44,11 +44,11 @@ func (d YAMLDecoder) Decode(dst *Representation) error {
 // Decode reads the next YAML-encoded value from its input
 // and stores it in the benchttp.Runner pointed to by dst.
 func (d YAMLDecoder) DecodeRunner(dst *benchttp.Runner) error {
-	repr := Representation{}
+	repr := representation{}
 	if err := d.Decode(&repr); err != nil {
 		return err
 	}
-	return repr.Into(dst)
+	return repr.parseAndMutate(dst)
 }
 
 // handleError handles a raw yaml decoder.Decode error, filters it,
