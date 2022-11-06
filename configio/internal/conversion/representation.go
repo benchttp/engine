@@ -49,23 +49,23 @@ type Repr struct {
 }
 
 func (repr Repr) Validate() error {
-	return repr.ParseAndMutate(&benchttp.Runner{})
+	return repr.Decode(&benchttp.Runner{})
 }
 
-// ParseAndMutate parses the Representation receiver as a benchttp.Runner
+// Decode parses the Representation receiver as a benchttp.Runner
 // and stores any non-nil field value into the corresponding field
 // of dst.
-func (repr Repr) ParseAndMutate(dst *benchttp.Runner) error {
-	if err := repr.parseRequestInto(dst); err != nil {
+func (repr Repr) Decode(dst *benchttp.Runner) error {
+	if err := repr.decodeRequestField(dst); err != nil {
 		return err
 	}
-	if err := repr.parseRunnerInto(dst); err != nil {
+	if err := repr.decodeRunnerFields(dst); err != nil {
 		return err
 	}
-	return repr.parseTestsInto(dst)
+	return repr.decodeTestsField(dst)
 }
 
-func (repr Repr) parseRequestInto(dst *benchttp.Runner) error {
+func (repr Repr) decodeRequestField(dst *benchttp.Runner) error {
 	if dst.Request == nil {
 		dst.Request = &http.Request{}
 	}
@@ -102,7 +102,7 @@ func (repr Repr) parseRequestInto(dst *benchttp.Runner) error {
 	return nil
 }
 
-func (repr Repr) parseRunnerInto(dst *benchttp.Runner) error {
+func (repr Repr) decodeRunnerFields(dst *benchttp.Runner) error {
 	if requests := repr.Runner.Requests; requests != nil {
 		dst.Requests = *requests
 	}
@@ -138,7 +138,7 @@ func (repr Repr) parseRunnerInto(dst *benchttp.Runner) error {
 	return nil
 }
 
-func (repr Repr) parseTestsInto(dst *benchttp.Runner) error {
+func (repr Repr) decodeTestsField(dst *benchttp.Runner) error {
 	testSuite := repr.Tests
 	if len(testSuite) == 0 {
 		return nil
@@ -264,7 +264,7 @@ func (reprs Reprs) MergeInto(dst *benchttp.Runner) error {
 	}
 
 	for _, repr := range reprs {
-		if err := repr.ParseAndMutate(dst); err != nil {
+		if err := repr.Decode(dst); err != nil {
 			return err
 			// TODO: uncomment once wrapped from configio/file.go
 			// return errorutil.WithDetails(ErrFileParse, err)

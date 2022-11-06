@@ -36,7 +36,7 @@ func (d YAMLDecoder) Decode(dst *benchttp.Runner) error {
 	if err := d.decodeRepr(&repr); err != nil {
 		return err
 	}
-	return repr.ParseAndMutate(dst)
+	return repr.Decode(dst)
 }
 
 // decodeRepr reads the next YAML-encoded value from its input

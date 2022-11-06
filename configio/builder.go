@@ -44,7 +44,7 @@ func (b *Builder) decodeAndWrite(in []byte, format Format) error {
 	}
 	b.append(func(dst *benchttp.Runner) {
 		// err is already checked via repr.validate(), so nil is expected.
-		if err := repr.ParseAndMutate(dst); err != nil {
+		if err := repr.Decode(dst); err != nil {
 			panicInternal("Builder.decodeAndWrite", "unexpected error: "+err.Error())
 		}
 	})
