@@ -10,7 +10,7 @@ import (
 )
 
 type Builder struct {
-	modifiers []func(*benchttp.Runner)
+	mutations []func(*benchttp.Runner)
 }
 
 func (b *Builder) WriteJSON(in []byte) error {
@@ -37,17 +37,13 @@ func (b *Builder) decodeAndWrite(in []byte, format Format) error {
 
 func (b *Builder) Runner() benchttp.Runner {
 	runner := benchttp.Runner{}
-	b.into(&runner)
+	b.Mutate(&runner)
 	return runner
 }
 
-func (b *Builder) Into(dst *benchttp.Runner) {
-	b.into(dst)
-}
-
-func (b *Builder) into(dst *benchttp.Runner) {
-	for _, modify := range b.modifiers {
-		modify(dst)
+func (b *Builder) Mutate(dst *benchttp.Runner) {
+	for _, mutate := range b.mutations {
+		mutate(dst)
 	}
 }
 
@@ -147,5 +143,5 @@ func (b *Builder) append(modifier func(runner *benchttp.Runner)) {
 	if modifier == nil {
 		panicInternal("Builder.append", "call with nil modifier")
 	}
-	b.modifiers = append(b.modifiers, modifier)
+	b.mutations = append(b.mutations, modifier)
 }
