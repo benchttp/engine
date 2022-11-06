@@ -23,7 +23,7 @@ func TestBuilder_WriteJSON(t *testing.T) {
 	if err := b.WriteJSON(in); err != nil {
 		t.Fatal(err)
 	}
-	b.Into(&dest)
+	b.Mutate(&dest)
 
 	benchttptest.AssertEqualRunners(t, want, dest)
 }
@@ -37,7 +37,7 @@ func TestBuilder_WriteYAML(t *testing.T) {
 	if err := b.WriteYAML(in); err != nil {
 		t.Fatal(err)
 	}
-	b.Into(&dest)
+	b.Mutate(&dest)
 
 	benchttptest.AssertEqualRunners(t, want, dest)
 }

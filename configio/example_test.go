@@ -24,7 +24,7 @@ func ExampleBuilder() {
 	_ = b.WriteYAML(yamlConfig)
 	b.SetInterval(100 * time.Millisecond)
 
-	b.Into(&runner)
+	b.Mutate(&runner)
 
 	// Output:
 	// PUT
