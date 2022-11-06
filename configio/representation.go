@@ -1,4 +1,4 @@
-package configparse
+package configio
 
 import (
 	"bytes"
@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/benchttp/sdk/benchttp"
+	"github.com/benchttp/sdk/internal/errorutil"
 )
 
 // Representation is a raw data model for formatted runner config (json, yaml).
@@ -48,10 +49,10 @@ type Representation struct {
 	} `yaml:"tests" json:"tests"`
 }
 
-// ParseInto parses the Representation receiver as a benchttp.Runner
+// Into parses the Representation receiver as a benchttp.Runner
 // and stores any non-nil field value into the corresponding field
 // of dst.
-func (repr Representation) ParseInto(dst *benchttp.Runner) error {
+func (repr Representation) Into(dst *benchttp.Runner) error {
 	if err := repr.parseRequestInto(dst); err != nil {
 		return err
 	}
@@ -73,12 +74,12 @@ func (repr Representation) parseRequestInto(dst *benchttp.Runner) error {
 	if rawURL := repr.Request.URL; rawURL != nil {
 		parsedURL, err := parseAndBuildURL(*rawURL, repr.Request.QueryParams)
 		if err != nil {
-			return fmt.Errorf(`configparse: invalid url: %q`, *rawURL)
+			return fmt.Errorf(`configio: invalid url: %q`, *rawURL)
 		}
 		dst.Request.URL = parsedURL
 	}
 
-	if header := repr.Request.Header; header != nil {
+	if header := repr.Request.Header; len(header) != 0 {
 		httpHeader := http.Header{}
 		for key, val := range header {
 			httpHeader[key] = val
@@ -91,7 +92,7 @@ func (repr Representation) parseRequestInto(dst *benchttp.Runner) error {
 		case "raw":
 			dst.Request.Body = io.NopCloser(bytes.NewReader([]byte(body.Content)))
 		default:
-			return errors.New(`configparse: request.body.type: only "raw" accepted`)
+			return errors.New(`configio: request.body.type: only "raw" accepted`)
 		}
 	}
 
@@ -244,6 +245,24 @@ func requireConfigFields(fields map[string]interface{}) error {
 	for name, value := range fields {
 		if value == nil {
 			return fmt.Errorf("%s: missing field", name)
+		}
+	}
+	return nil
+}
+
+type representations []Representation
+
+// mergeInto successively parses the given representations into dst.
+//
+// The input Representation slice must never be nil or empty, otherwise it panics.
+func (reprs representations) mergeInto(dst *benchttp.Runner) error {
+	if len(reprs) == 0 { // supposedly catched upstream, should not occur
+		panicInternal("parseAndMergeReprs", "nil or empty []Representation")
+	}
+
+	for _, repr := range reprs {
+		if err := repr.Into(dst); err != nil {
+			return errorutil.WithDetails(ErrFileParse, err)
 		}
 	}
 	return nil

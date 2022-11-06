@@ -1,16 +1,18 @@
-package configparse_test
+package configio_test
 
 import (
+	"bytes"
 	"errors"
 	"reflect"
 	"testing"
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/benchttp/sdk/configparse"
+	"github.com/benchttp/sdk/benchttp"
+	"github.com/benchttp/sdk/configio"
 )
 
-func TestYAMLParser(t *testing.T) {
+func TestYAMLDecoder(t *testing.T) {
 	t.Run("return expected errors", func(t *testing.T) {
 		testcases := []struct {
 			label  string
@@ -64,13 +66,10 @@ func TestYAMLParser(t *testing.T) {
 
 		for _, tc := range testcases {
 			t.Run(tc.label, func(t *testing.T) {
-				var (
-					parser  configparse.YAMLParser
-					rawcfg  configparse.Representation
-					yamlErr *yaml.TypeError
-				)
+				runner := benchttp.Runner{}
+				decoder := configio.NewYAMLDecoder(bytes.NewReader(tc.in))
 
-				gotErr := parser.Parse(tc.in, &rawcfg)
+				gotErr := decoder.DecodeRunner(&runner)
 
 				if tc.expErr == nil {
 					if gotErr != nil {
@@ -79,6 +78,7 @@ func TestYAMLParser(t *testing.T) {
 					return
 				}
 
+				var yamlErr *yaml.TypeError
 				if !errors.As(gotErr, &yamlErr) && tc.expErr != nil {
 					t.Fatalf("unexpected error: %v", gotErr)
 				}
