@@ -7,11 +7,6 @@ import (
 	"github.com/benchttp/sdk/benchttp"
 )
 
-type Decoder interface {
-	Decode(dst *representation) error
-	DecodeRunner(dst *benchttp.Runner) error
-}
-
 type Format string
 
 const (
@@ -19,9 +14,22 @@ const (
 	FormatYAML Format = "yaml"
 )
 
+type Decoder interface {
+	Decode(dst *benchttp.Runner) error
+}
+
 // DecoderOf returns the appropriate Decoder for the given Format.
 // It panics if the format is not a Format declared in configio.
 func DecoderOf(format Format, in []byte) Decoder {
+	return decoderOf(format, in)
+}
+
+type decoder interface {
+	Decoder
+	decodeRepr(dst *representation) error
+}
+
+func decoderOf(format Format, in []byte) decoder {
 	r := bytes.NewReader(in)
 	switch format {
 	case FormatYAML:
