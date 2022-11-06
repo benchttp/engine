@@ -69,7 +69,7 @@ func TestYAMLDecoder(t *testing.T) {
 				runner := benchttp.Runner{}
 				decoder := configio.NewYAMLDecoder(bytes.NewReader(tc.in))
 
-				gotErr := decoder.DecodeRunner(&runner)
+				gotErr := decoder.Decode(&runner)
 
 				if tc.expErr == nil {
 					if gotErr != nil {

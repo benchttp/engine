@@ -57,7 +57,7 @@ func TestMarshalJSON(t *testing.T) {
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
 			gotRunner := benchttp.DefaultRunner()
-			gotError := configio.UnmarshalJSONRunner(tc.input, &gotRunner)
+			gotError := configio.UnmarshalJSON(tc.input, &gotRunner)
 
 			if !tc.isValidRunner(benchttp.DefaultRunner(), gotRunner) {
 				t.Errorf("unexpected runner:\n%+v", gotRunner)
@@ -103,7 +103,7 @@ func TestJSONDecoder(t *testing.T) {
 				runner := benchttp.Runner{}
 				decoder := configio.NewJSONDecoder(bytes.NewReader(tc.in))
 
-				gotErr := decoder.DecodeRunner(&runner)
+				gotErr := decoder.Decode(&runner)
 
 				if tc.exp == "" {
 					if gotErr != nil {

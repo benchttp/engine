@@ -49,7 +49,7 @@ func UnmarshalFile(filename string, dst *benchttp.Runner) error {
 type file struct {
 	prev *file
 	path string
-	repr Representation
+	repr representation
 }
 
 // decodeAll reads f.path as a file and decodes it into f.repr.
@@ -88,7 +88,7 @@ func (f *file) decode() (err error) {
 		return err
 	}
 
-	if err := DecoderOf(ext, b).Decode(&f.repr); err != nil {
+	if err := decoderOf(ext, b).decodeRepr(&f.repr); err != nil {
 		return errorutil.WithDetails(ErrFileParse, f.path, err)
 	}
 
@@ -122,7 +122,7 @@ func (f file) seen(p string) bool {
 // reprs returns a slice of Representation, starting with the receiver
 // and ending with the last child.
 func (f file) reprs() representations {
-	reprs := []Representation{f.repr}
+	reprs := []representation{f.repr}
 	if f.prev != nil {
 		reprs = append(reprs, f.prev.reprs()...)
 	}
