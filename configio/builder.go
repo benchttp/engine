@@ -50,16 +50,16 @@ func (b *Builder) decodeAndWrite(in []byte, format Format) error {
 	return nil
 }
 
-// Runner successively applies Builder's mutations to a zero benchttp.Runner
-// and returns it.
+// Runner successively applies the Builder's mutations
+// to a zero benchttp.Runner and returns it.
 func (b *Builder) Runner() benchttp.Runner {
 	runner := benchttp.Runner{}
 	b.Mutate(&runner)
 	return runner
 }
 
-// Mutate successively applies Builder's mutations to the benchttp.Runner
-// value pointed to by dst.
+// Mutate successively applies the Builder's mutations
+// to the benchttp.Runner value pointed to by dst.
 func (b *Builder) Mutate(dst *benchttp.Runner) {
 	for _, mutate := range b.mutations {
 		mutate(dst)
