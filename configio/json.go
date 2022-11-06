@@ -9,6 +9,7 @@ import (
 	"regexp"
 
 	"github.com/benchttp/sdk/benchttp"
+	"github.com/benchttp/sdk/configio/internal/conversion"
 )
 
 // JSONDecoder implements Decoder
@@ -30,16 +31,16 @@ func NewJSONDecoder(r io.Reader) JSONDecoder {
 // Decode reads the next JSON-encoded value from its input
 // and stores it in the benchttp.Runner pointed to by dst.
 func (d JSONDecoder) Decode(dst *benchttp.Runner) error {
-	repr := representation{}
+	repr := conversion.Repr{}
 	if err := d.decodeRepr(&repr); err != nil {
 		return err
 	}
-	return repr.parseAndMutate(dst)
+	return repr.ParseAndMutate(dst)
 }
 
 // decodeRepr reads the next JSON-encoded value from its input
 // and stores it in the Representation pointed to by dst.
-func (d JSONDecoder) decodeRepr(dst *representation) error {
+func (d JSONDecoder) decodeRepr(dst *conversion.Repr) error {
 	decoder := json.NewDecoder(d.r)
 	decoder.DisallowUnknownFields()
 	return d.handleError(decoder.Decode(dst))

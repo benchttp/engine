@@ -10,6 +10,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/benchttp/sdk/benchttp"
+	"github.com/benchttp/sdk/configio/internal/conversion"
 )
 
 // YAMLDecoder implements Decoder
@@ -31,16 +32,16 @@ func NewYAMLDecoder(r io.Reader) YAMLDecoder {
 // Decode reads the next YAML-encoded value from its input
 // and stores it in the benchttp.Runner pointed to by dst.
 func (d YAMLDecoder) Decode(dst *benchttp.Runner) error {
-	repr := representation{}
+	repr := conversion.Repr{}
 	if err := d.decodeRepr(&repr); err != nil {
 		return err
 	}
-	return repr.parseAndMutate(dst)
+	return repr.ParseAndMutate(dst)
 }
 
 // decodeRepr reads the next YAML-encoded value from its input
 // and stores it in the Representation pointed to by dst.
-func (d YAMLDecoder) decodeRepr(dst *representation) error {
+func (d YAMLDecoder) decodeRepr(dst *conversion.Repr) error {
 	decoder := yaml.NewDecoder(d.r)
 	decoder.KnownFields(true)
 	return d.handleError(decoder.Decode(dst))

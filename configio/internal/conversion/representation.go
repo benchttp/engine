@@ -1,4 +1,4 @@
-package configio
+package conversion
 
 import (
 	"bytes"
@@ -11,15 +11,14 @@ import (
 	"time"
 
 	"github.com/benchttp/sdk/benchttp"
-	"github.com/benchttp/sdk/internal/errorutil"
 )
 
-// representation is a raw data model for formatted runner config (json, yaml).
+// Repr is a raw data model for formatted runner config (json, yaml).
 // It serves as a receiver for unmarshaling processes and for that reason
 // its types are kept simple (certain types are incompatible with certain
 // unmarshalers).
 // It exposes a method Unmarshal to convert its values into a runner.Config.
-type representation struct {
+type Repr struct {
 	Extends *string `yaml:"extends" json:"extends"`
 
 	Request struct {
@@ -49,14 +48,14 @@ type representation struct {
 	} `yaml:"tests" json:"tests"`
 }
 
-func (repr representation) validate() error {
-	return repr.parseAndMutate(&benchttp.Runner{})
+func (repr Repr) Validate() error {
+	return repr.ParseAndMutate(&benchttp.Runner{})
 }
 
-// parseAndMutate parses the Representation receiver as a benchttp.Runner
+// ParseAndMutate parses the Representation receiver as a benchttp.Runner
 // and stores any non-nil field value into the corresponding field
 // of dst.
-func (repr representation) parseAndMutate(dst *benchttp.Runner) error {
+func (repr Repr) ParseAndMutate(dst *benchttp.Runner) error {
 	if err := repr.parseRequestInto(dst); err != nil {
 		return err
 	}
@@ -66,7 +65,7 @@ func (repr representation) parseAndMutate(dst *benchttp.Runner) error {
 	return repr.parseTestsInto(dst)
 }
 
-func (repr representation) parseRequestInto(dst *benchttp.Runner) error {
+func (repr Repr) parseRequestInto(dst *benchttp.Runner) error {
 	if dst.Request == nil {
 		dst.Request = &http.Request{}
 	}
@@ -103,7 +102,7 @@ func (repr representation) parseRequestInto(dst *benchttp.Runner) error {
 	return nil
 }
 
-func (repr representation) parseRunnerInto(dst *benchttp.Runner) error {
+func (repr Repr) parseRunnerInto(dst *benchttp.Runner) error {
 	if requests := repr.Runner.Requests; requests != nil {
 		dst.Requests = *requests
 	}
@@ -139,7 +138,7 @@ func (repr representation) parseRunnerInto(dst *benchttp.Runner) error {
 	return nil
 }
 
-func (repr representation) parseTestsInto(dst *benchttp.Runner) error {
+func (repr Repr) parseTestsInto(dst *benchttp.Runner) error {
 	testSuite := repr.Tests
 	if len(testSuite) == 0 {
 		return nil
@@ -254,20 +253,31 @@ func requireConfigFields(fields map[string]interface{}) error {
 	return nil
 }
 
-type representations []representation
+type Reprs []Repr
 
-// mergeInto successively parses the given representations into dst.
+// MergeInto successively parses the given representations into dst.
 //
 // The input Representation slice must never be nil or empty, otherwise it panics.
-func (reprs representations) mergeInto(dst *benchttp.Runner) error {
+func (reprs Reprs) MergeInto(dst *benchttp.Runner) error {
 	if len(reprs) == 0 { // supposedly catched upstream, should not occur
 		panicInternal("parseAndMergeReprs", "nil or empty []Representation")
 	}
 
 	for _, repr := range reprs {
-		if err := repr.parseAndMutate(dst); err != nil {
-			return errorutil.WithDetails(ErrFileParse, err)
+		if err := repr.ParseAndMutate(dst); err != nil {
+			return err
+			// TODO: uncomment once wrapped from configio/file.go
+			// return errorutil.WithDetails(ErrFileParse, err)
 		}
 	}
 	return nil
+}
+
+func panicInternal(funcname, detail string) {
+	const reportURL = "https://github.com/benchttp/sdk/issues/new"
+	source := fmt.Sprintf("configio.%s", funcname)
+	panic(fmt.Sprintf(
+		"%s: unexpected internal error: %s, please file an issue at %s",
+		source, detail, reportURL,
+	))
 }
