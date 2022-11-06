@@ -8,7 +8,7 @@ import (
 )
 
 type Decoder interface {
-	Decode(dst *Representation) error
+	Decode(dst *representation) error
 	DecodeRunner(dst *benchttp.Runner) error
 }
 

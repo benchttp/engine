@@ -13,7 +13,7 @@ import (
 
 // UnmarshalJSON parses the JSON-encoded data and stores the result
 // in the Representation pointed to by dst.
-func UnmarshalJSON(in []byte, dst *Representation) error {
+func UnmarshalJSON(in []byte, dst *representation) error {
 	dec := NewJSONDecoder(bytes.NewReader(in))
 	return dec.Decode(dst)
 }
@@ -34,7 +34,7 @@ func NewJSONDecoder(r io.Reader) JSONDecoder {
 
 // Decode reads the next JSON-encoded value from its input
 // and stores it in the Representation pointed to by dst.
-func (d JSONDecoder) Decode(dst *Representation) error {
+func (d JSONDecoder) Decode(dst *representation) error {
 	decoder := json.NewDecoder(d.r)
 	decoder.DisallowUnknownFields()
 	return d.handleError(decoder.Decode(dst))
@@ -43,11 +43,11 @@ func (d JSONDecoder) Decode(dst *Representation) error {
 // Decode reads the next JSON-encoded value from its input
 // and stores it in the benchttp.Runner pointed to by dst.
 func (d JSONDecoder) DecodeRunner(dst *benchttp.Runner) error {
-	repr := Representation{}
+	repr := representation{}
 	if err := d.Decode(&repr); err != nil {
 		return err
 	}
-	return repr.Into(dst)
+	return repr.parseAndMutate(dst)
 }
 
 // handleError handles an error from package json,
