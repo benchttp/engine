@@ -34,7 +34,7 @@ func (b *Builder) WriteYAML(in []byte) error {
 
 func (b *Builder) decodeAndWrite(in []byte, format Format) error {
 	repr := representation{}
-	if err := DecoderOf(format, in).Decode(&repr); err != nil {
+	if err := decoderOf(format, in).decodeRepr(&repr); err != nil {
 		return err
 	}
 	// early check for invalid configuration

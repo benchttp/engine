@@ -12,43 +12,38 @@ import (
 	"github.com/benchttp/sdk/benchttp"
 )
 
+// YAMLDecoder implements Decoder
+type YAMLDecoder struct{ r io.Reader }
+
+var _ decoder = (*YAMLDecoder)(nil)
+
 // UnmarshalYAML parses the YAML-encoded data and stores the result
-// in the Representation pointed to by dst.
-func UnmarshalYAML(in []byte, dst *representation) error {
+// in the benchttp.Runner pointed to by dst.
+func UnmarshalYAML(in []byte, dst *benchttp.Runner) error {
 	dec := NewYAMLDecoder(bytes.NewReader(in))
 	return dec.Decode(dst)
 }
-
-// UnmarshalYAMLRunner parses the YAML-encoded data and stores the result
-// in the benchttp.Runner pointed to by dst.
-func UnmarshalYAMLRunner(in []byte, dst *benchttp.Runner) error {
-	dec := NewYAMLDecoder(bytes.NewReader(in))
-	return dec.DecodeRunner(dst)
-}
-
-// YAMLDecoder implements Decoder
-type YAMLDecoder struct{ r io.Reader }
 
 func NewYAMLDecoder(r io.Reader) YAMLDecoder {
 	return YAMLDecoder{r: r}
 }
 
 // Decode reads the next YAML-encoded value from its input
-// and stores it in the Representation pointed to by dst.
-func (d YAMLDecoder) Decode(dst *representation) error {
-	decoder := yaml.NewDecoder(d.r)
-	decoder.KnownFields(true)
-	return d.handleError(decoder.Decode(dst))
-}
-
-// Decode reads the next YAML-encoded value from its input
 // and stores it in the benchttp.Runner pointed to by dst.
-func (d YAMLDecoder) DecodeRunner(dst *benchttp.Runner) error {
+func (d YAMLDecoder) Decode(dst *benchttp.Runner) error {
 	repr := representation{}
-	if err := d.Decode(&repr); err != nil {
+	if err := d.decodeRepr(&repr); err != nil {
 		return err
 	}
 	return repr.parseAndMutate(dst)
+}
+
+// decodeRepr reads the next YAML-encoded value from its input
+// and stores it in the Representation pointed to by dst.
+func (d YAMLDecoder) decodeRepr(dst *representation) error {
+	decoder := yaml.NewDecoder(d.r)
+	decoder.KnownFields(true)
+	return d.handleError(decoder.Decode(dst))
 }
 
 // handleError handles a raw yaml decoder.Decode error, filters it,

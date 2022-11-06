@@ -88,7 +88,7 @@ func (f *file) decode() (err error) {
 		return err
 	}
 
-	if err := DecoderOf(ext, b).Decode(&f.repr); err != nil {
+	if err := decoderOf(ext, b).decodeRepr(&f.repr); err != nil {
 		return errorutil.WithDetails(ErrFileParse, f.path, err)
 	}
 
