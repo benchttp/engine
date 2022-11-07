@@ -56,50 +56,14 @@ var fieldRunner = converter{
 
 var fieldTests = converter{
 	decode: func(src Repr, dst *benchttp.Runner) error {
-		testSuite := src.Tests
-		if len(testSuite) == 0 {
-			return nil
-		}
-
-		cases := make([]benchttp.TestCase, len(testSuite))
-		for i, t := range testSuite {
-			fieldPath := func(caseField string) string {
-				return fmt.Sprintf("tests[%d].%s", i, caseField)
-			}
-
-			if err := requireConfigFields(map[string]interface{}{
-				fieldPath("name"):      t.Name,
-				fieldPath("field"):     t.Field,
-				fieldPath("predicate"): t.Predicate,
-				fieldPath("target"):    t.Target,
-			}); err != nil {
+		if tests := src.Tests; tests != nil {
+			cases, err := parseTests(tests)
+			if err != nil {
 				return err
 			}
-
-			field := benchttp.MetricsField(*t.Field)
-			if err := field.Validate(); err != nil {
-				return fmt.Errorf("%s: %s", fieldPath("field"), err)
-			}
-
-			predicate := benchttp.TestPredicate(*t.Predicate)
-			if err := predicate.Validate(); err != nil {
-				return fmt.Errorf("%s: %s", fieldPath("predicate"), err)
-			}
-
-			target, err := parseMetricValue(field, fmt.Sprint(t.Target))
-			if err != nil {
-				return fmt.Errorf("%s: %s", fieldPath("target"), err)
-			}
-
-			cases[i] = benchttp.TestCase{
-				Name:      *t.Name,
-				Field:     field,
-				Predicate: predicate,
-				Target:    target,
-			}
+			dst.Tests = cases
+			return nil
 		}
-
-		dst.Tests = cases
 		return nil
 	},
 }
@@ -222,19 +186,6 @@ func durationField(
 
 func intField(
 	bind func(*Repr, *benchttp.Runner) (*int, *int),
-) converter {
-	return converter{
-		decode: func(src Repr, dst *benchttp.Runner) error {
-			if vsrc, vdst := bind(&src, dst); vsrc != nil {
-				*vdst = *vsrc
-			}
-			return nil
-		},
-	}
-}
-
-func stringField(
-	bind func(*Repr, *benchttp.Runner) (*string, *string),
 ) converter {
 	return converter{
 		decode: func(src Repr, dst *benchttp.Runner) error {

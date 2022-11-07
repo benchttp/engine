@@ -12,33 +12,36 @@ import (
 // unmarshalers).
 // It exposes a method Unmarshal to convert its values into a runner.Config.
 type Repr struct {
-	Extends *string `yaml:"extends" json:"extends"`
+	Extends *string        `yaml:"extends" json:"extends"`
+	Request requestRepr    `yaml:"request" json:"request"`
+	Runner  runnerRepr     `yaml:"runner" json:"runner"`
+	Tests   []testcaseRepr `yaml:"tests" json:"tests"`
+}
 
-	Request struct {
-		Method      *string             `yaml:"method" json:"method"`
-		URL         *string             `yaml:"url" json:"url"`
-		QueryParams map[string]string   `yaml:"queryParams" json:"queryParams"`
-		Header      map[string][]string `yaml:"header" json:"header"`
-		Body        *struct {
-			Type    string `yaml:"type" json:"type"`
-			Content string `yaml:"content" json:"content"`
-		} `yaml:"body" json:"body"`
-	} `yaml:"request" json:"request"`
+type requestRepr struct {
+	Method      *string             `yaml:"method" json:"method"`
+	URL         *string             `yaml:"url" json:"url"`
+	QueryParams map[string]string   `yaml:"queryParams" json:"queryParams"`
+	Header      map[string][]string `yaml:"header" json:"header"`
+	Body        *struct {
+		Type    string `yaml:"type" json:"type"`
+		Content string `yaml:"content" json:"content"`
+	} `yaml:"body" json:"body"`
+}
 
-	Runner struct {
-		Requests       *int    `yaml:"requests" json:"requests"`
-		Concurrency    *int    `yaml:"concurrency" json:"concurrency"`
-		Interval       *string `yaml:"interval" json:"interval"`
-		RequestTimeout *string `yaml:"requestTimeout" json:"requestTimeout"`
-		GlobalTimeout  *string `yaml:"globalTimeout" json:"globalTimeout"`
-	} `yaml:"runner" json:"runner"`
+type runnerRepr struct {
+	Requests       *int    `yaml:"requests" json:"requests"`
+	Concurrency    *int    `yaml:"concurrency" json:"concurrency"`
+	Interval       *string `yaml:"interval" json:"interval"`
+	RequestTimeout *string `yaml:"requestTimeout" json:"requestTimeout"`
+	GlobalTimeout  *string `yaml:"globalTimeout" json:"globalTimeout"`
+}
 
-	Tests []struct {
-		Name      *string     `yaml:"name" json:"name"`
-		Field     *string     `yaml:"field" json:"field"`
-		Predicate *string     `yaml:"predicate" json:"predicate"`
-		Target    interface{} `yaml:"target" json:"target"`
-	} `yaml:"tests" json:"tests"`
+type testcaseRepr struct {
+	Name      *string     `yaml:"name" json:"name"`
+	Field     *string     `yaml:"field" json:"field"`
+	Predicate *string     `yaml:"predicate" json:"predicate"`
+	Target    interface{} `yaml:"target" json:"target"`
 }
 
 func (repr Repr) Validate() error {

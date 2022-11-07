@@ -41,6 +41,55 @@ func parseOptionalDuration(raw string) (time.Duration, error) {
 	return time.ParseDuration(raw)
 }
 
+func parseTests(tests []testcaseRepr) ([]benchttp.TestCase, error) {
+	cases := make([]benchttp.TestCase, len(tests))
+	for i, in := range tests {
+		c, err := parseTestcase(in, i)
+		if err != nil {
+			return nil, err
+		}
+		cases[i] = c
+	}
+	return cases, nil
+}
+
+func parseTestcase(in testcaseRepr, idx int) (benchttp.TestCase, error) {
+	fieldDesc := func(caseField string) string {
+		return fmt.Sprintf("tests[%d].%s", idx, caseField)
+	}
+
+	if err := assertDefinedFields(map[string]interface{}{
+		fieldDesc("name"):      in.Name,
+		fieldDesc("field"):     in.Field,
+		fieldDesc("predicate"): in.Predicate,
+		fieldDesc("target"):    in.Target,
+	}); err != nil {
+		return benchttp.TestCase{}, err
+	}
+
+	field := benchttp.MetricsField(*in.Field)
+	if err := field.Validate(); err != nil {
+		return benchttp.TestCase{}, fmt.Errorf("%s: %s", fieldDesc("field"), err)
+	}
+
+	predicate := benchttp.TestPredicate(*in.Predicate)
+	if err := predicate.Validate(); err != nil {
+		return benchttp.TestCase{}, fmt.Errorf("%s: %s", fieldDesc("predicate"), err)
+	}
+
+	target, err := parseMetricValue(field, fmt.Sprint(in.Target))
+	if err != nil {
+		return benchttp.TestCase{}, fmt.Errorf("%s: %s", fieldDesc("target"), err)
+	}
+
+	return benchttp.TestCase{
+		Name:      *in.Name,
+		Field:     field,
+		Predicate: predicate,
+		Target:    target,
+	}, nil
+}
+
 func parseMetricValue(
 	field benchttp.MetricsField,
 	inputValue string,
@@ -65,7 +114,7 @@ func parseMetricValue(
 	}
 }
 
-func requireConfigFields(fields map[string]interface{}) error {
+func assertDefinedFields(fields map[string]interface{}) error {
 	for name, value := range fields {
 		if value == nil {
 			return fmt.Errorf("%s: missing field", name)
