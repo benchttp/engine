@@ -83,11 +83,6 @@ var runnerConverters = []converter{
 	fieldRunnerGlobalTimeout,
 }
 
-// TODO:
-// var testsConverters = []converter{
-// 	fieldTests,
-// }
-
 var fieldRequestMethod = requestConverter{
 	decode: func(src Repr, dst *http.Request) error {
 		if m := src.Request.Method; m != nil {
@@ -137,37 +132,37 @@ var fieldRequestBody = requestConverter{
 	},
 }
 
-var fieldRunnerRequests = intField(
+var fieldRunnerRequests = bindInt(
 	func(src *Repr, dst *benchttp.Runner) (*int, *int) {
 		return src.Runner.Requests, &dst.Requests
 	},
 )
 
-var fieldRunnerConcurrency = intField(
+var fieldRunnerConcurrency = bindInt(
 	func(src *Repr, dst *benchttp.Runner) (*int, *int) {
 		return src.Runner.Concurrency, &dst.Concurrency
 	},
 )
 
-var fieldRunnerInterval = durationField(
+var fieldRunnerInterval = bindDuration(
 	func(src *Repr, dst *benchttp.Runner) (*string, *time.Duration) {
 		return src.Runner.Interval, &dst.Interval
 	},
 )
 
-var fieldRunnerRequestTimeout = durationField(
+var fieldRunnerRequestTimeout = bindDuration(
 	func(src *Repr, dst *benchttp.Runner) (*string, *time.Duration) {
 		return src.Runner.RequestTimeout, &dst.RequestTimeout
 	},
 )
 
-var fieldRunnerGlobalTimeout = durationField(
+var fieldRunnerGlobalTimeout = bindDuration(
 	func(src *Repr, dst *benchttp.Runner) (*string, *time.Duration) {
 		return src.Runner.GlobalTimeout, &dst.GlobalTimeout
 	},
 )
 
-func durationField(
+func bindDuration(
 	bind func(*Repr, *benchttp.Runner) (*string, *time.Duration),
 ) converter {
 	return converter{
@@ -184,7 +179,7 @@ func durationField(
 	}
 }
 
-func intField(
+func bindInt(
 	bind func(*Repr, *benchttp.Runner) (*int, *int),
 ) converter {
 	return converter{
