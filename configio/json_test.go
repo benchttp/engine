@@ -7,10 +7,12 @@ import (
 	"testing"
 
 	"github.com/benchttp/sdk/benchttp"
+	"github.com/benchttp/sdk/benchttptest"
 	"github.com/benchttp/sdk/configio"
+	"github.com/benchttp/sdk/configio/internal/testdata"
 )
 
-func TestMarshalJSON(t *testing.T) {
+func TestUnmarshalJSON(t *testing.T) {
 	const testURL = "https://example.com"
 	baseInput := object{
 		"request": object{
@@ -120,6 +122,25 @@ func TestJSONDecoder(t *testing.T) {
 			})
 		}
 	})
+}
+
+func TestMarshalJSON(t *testing.T) {
+	src := testdata.ValidFullJSON().Runner
+
+	b, err := configio.MarshalJSON(src)
+	if err != nil {
+		t.Log(string(b))
+		t.Fatal(err)
+	}
+
+	got := benchttp.Runner{}
+	if err := configio.UnmarshalJSON(b, &got); err != nil {
+		t.Log(string(b))
+		t.Fatal(err)
+	}
+
+	benchttptest.AssertEqualRunners(t, src, got)
+	t.Log(string(b))
 }
 
 // helpers

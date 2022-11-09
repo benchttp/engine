@@ -17,6 +17,12 @@ type JSONDecoder struct{ r io.Reader }
 
 var _ decoder = (*JSONDecoder)(nil)
 
+func MarshalJSON(runner benchttp.Runner) ([]byte, error) {
+	repr := conversion.Repr{}
+	repr.Encode(runner)
+	return json.Marshal(repr)
+}
+
 // UnmarshalJSON parses the JSON-encoded data and stores the result
 // in the benchttp.Runner pointed to by dst.
 func UnmarshalJSON(in []byte, dst *benchttp.Runner) error {

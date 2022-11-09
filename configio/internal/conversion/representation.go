@@ -60,6 +60,12 @@ func (repr Repr) Decode(dst *benchttp.Runner) error {
 	return nil
 }
 
+func (repr *Repr) Encode(src benchttp.Runner) {
+	for _, c := range converters {
+		c.encode(src, repr)
+	}
+}
+
 type Reprs []Repr
 
 // MergeInto successively parses the given representations into dst.

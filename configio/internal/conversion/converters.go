@@ -12,14 +12,12 @@ import (
 )
 
 type converter struct {
-	// TODO:
-	// encode func(src benchttp.Runner, dst *Repr)
+	encode func(src benchttp.Runner, dst *Repr)
 	decode func(src Repr, dst *benchttp.Runner) error
 }
 
 type requestConverter struct {
-	// TODO:
-	// encode func(src *http.Request, dst *Repr)
+	encode func(src *http.Request, dst *Repr)
 	decode func(src Repr, dst *http.Request) error
 }
 
@@ -41,6 +39,13 @@ var fieldRequest = converter{
 		}
 		return nil
 	},
+	encode: func(src benchttp.Runner, dst *Repr) {
+		if src.Request != nil {
+			for _, c := range requestConverters {
+				c.encode(src.Request, dst)
+			}
+		}
+	},
 }
 
 var fieldRunner = converter{
@@ -51,6 +56,11 @@ var fieldRunner = converter{
 			}
 		}
 		return nil
+	},
+	encode: func(src benchttp.Runner, dst *Repr) {
+		for _, c := range runnerConverters {
+			c.encode(src, dst)
+		}
 	},
 }
 
@@ -65,6 +75,25 @@ var fieldTests = converter{
 			return nil
 		}
 		return nil
+	},
+	encode: func(src benchttp.Runner, dst *Repr) {
+		for _, c := range src.Tests {
+			// /!\ loop ref hazard
+			name := c.Name
+			field := string(c.Field)
+			predicate := string(c.Predicate)
+			target := c.Target
+			switch t := target.(type) {
+			case time.Duration:
+				target = t.String()
+			}
+			dst.Tests = append(dst.Tests, testcaseRepr{
+				Name:      &name,
+				Field:     &field,
+				Predicate: &predicate,
+				Target:    &target,
+			})
+		}
 	},
 }
 
@@ -90,6 +119,9 @@ var fieldRequestMethod = requestConverter{
 		}
 		return nil
 	},
+	encode: func(src *http.Request, dst *Repr) {
+		dst.Request.Method = &src.Method
+	},
 }
 
 var fieldRequestURL = requestConverter{
@@ -102,6 +134,10 @@ var fieldRequestURL = requestConverter{
 			dst.URL = parsedURL
 		}
 		return nil
+	},
+	encode: func(src *http.Request, dst *Repr) {
+		s := src.URL.String()
+		dst.Request.URL = &s
 	},
 }
 
@@ -116,6 +152,9 @@ var fieldRequestHeader = requestConverter{
 		}
 		return nil
 	},
+	encode: func(src *http.Request, dst *Repr) {
+		dst.Request.Header = src.Header
+	},
 }
 
 var fieldRequestBody = requestConverter{
@@ -129,6 +168,9 @@ var fieldRequestBody = requestConverter{
 			}
 		}
 		return nil
+	},
+	encode: func(src *http.Request, dst *Repr) {
+		// TODO
 	},
 }
 
@@ -176,6 +218,12 @@ func bindDuration(
 			}
 			return nil
 		},
+		encode: func(src benchttp.Runner, dst *Repr) {
+			if vdst, vsrc := bind(dst, &src); vsrc != nil {
+				// FIXME: nil pointer deref
+				*vdst = vsrc.String()
+			}
+		},
 	}
 }
 
@@ -188,6 +236,12 @@ func bindInt(
 				*vdst = *vsrc
 			}
 			return nil
+		},
+		encode: func(src benchttp.Runner, dst *Repr) {
+			if vdst, vsrc := bind(dst, &src); vsrc != nil {
+				// FIXME: nil pointer deref
+				*vdst = *vsrc
+			}
 		},
 	}
 }
