@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/benchttp/sdk/benchttp"
+	"github.com/benchttp/sdk/configio/internal/conversion"
 )
 
 type Format string
@@ -26,7 +27,7 @@ func DecoderOf(format Format, in []byte) Decoder {
 
 type decoder interface {
 	Decoder
-	decodeRepr(dst *representation) error
+	decodeRepr(dst *conversion.Repr) error
 }
 
 func decoderOf(format Format, in []byte) decoder {

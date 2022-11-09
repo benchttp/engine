@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/benchttp/sdk/benchttp"
+	"github.com/benchttp/sdk/configio/internal/conversion"
 )
 
 // A Builder is used to incrementally build a benchttp.Runner
@@ -33,17 +34,17 @@ func (b *Builder) WriteYAML(in []byte) error {
 }
 
 func (b *Builder) decodeAndWrite(in []byte, format Format) error {
-	repr := representation{}
+	repr := conversion.Repr{}
 	if err := decoderOf(format, in).decodeRepr(&repr); err != nil {
 		return err
 	}
 	// early check for invalid configuration
-	if err := repr.validate(); err != nil {
+	if err := repr.Validate(); err != nil {
 		return err
 	}
 	b.append(func(dst *benchttp.Runner) {
 		// err is already checked via repr.validate(), so nil is expected.
-		if err := repr.parseAndMutate(dst); err != nil {
+		if err := repr.Decode(dst); err != nil {
 			panicInternal("Builder.decodeAndWrite", "unexpected error: "+err.Error())
 		}
 	})
