@@ -2,7 +2,7 @@
 
 <p align="center">
   <a href="https://github.com/benchttp/engine/actions/workflows/ci.yml?query=branch%3Amain">
-    <img alt="Github Worklow Status" src="https://img.shields.io/github/workflow/status/benchttp/engine/Lint%20&%20Test%20&%20Build"></a>
+    <img alt="Github Worklow Status" src="https://img.shields.io/github/actions/workflow/status/benchttp/engine/ci.yml?branch=main"></a>
   <a href="https://codecov.io/gh/benchttp/engine">
     <img alt="Code coverage" src="https://img.shields.io/codecov/c/gh/benchttp/engine?label=coverage"></a>
   <a href="https://goreportcard.com/report/github.com/benchttp/engine">
