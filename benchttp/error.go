@@ -2,13 +2,13 @@ package benchttp
 
 import "strings"
 
-// InvalidRunnerError is the errors returned by Config.Validate
+// InvalidRunnerError is the errors returned by Runner.Validate
 // when values are missing or invalid.
 type InvalidRunnerError struct {
 	Errors []error
 }
 
-// Error returns the joined errors of InvalidConfigError as a string.
+// Error returns the joined errors of InvalidRunnerError as a string.
 func (e *InvalidRunnerError) Error() string {
 	const sep = "\n  - "
 

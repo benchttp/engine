@@ -16,7 +16,7 @@ type Report struct {
 
 // Metadata contains contextual information about a run.
 type Metadata struct {
-	Config        Runner
+	Runner        Runner
 	FinishedAt    time.Time
 	TotalDuration time.Duration
 }
@@ -32,7 +32,7 @@ func newReport(
 		Metrics: m,
 		Tests:   t,
 		Metadata: Metadata{
-			Config:        r,
+			Runner:        r,
 			FinishedAt:    time.Now(), // TODO: change, unreliable
 			TotalDuration: d,
 		},
