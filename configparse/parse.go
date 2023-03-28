@@ -1,19 +1,23 @@
 package configparse
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strconv"
 	"time"
 
-	"github.com/benchttp/engine/runner"
+	"github.com/benchttp/sdk/benchttp"
 )
 
-// Representation is a raw data model for runner config files.
+// Representation is a raw data model for formatted runner config (json, yaml).
 // It serves as a receiver for unmarshaling processes and for that reason
 // its types are kept simple (certain types are incompatible with certain
 // unmarshalers).
+// It exposes a method Unmarshal to convert its values into a runner.Config.
 type Representation struct {
 	Extends *string `yaml:"extends" json:"extends"`
 
@@ -44,32 +48,34 @@ type Representation struct {
 	} `yaml:"tests" json:"tests"`
 }
 
-// ParseRepresentation parses an input raw config as a runner.ConfigGlobal and returns
-// a parsed Config or the first non-nil error occurring in the process.
-func ParseRepresentation(repr Representation) (runner.Config, error) { //nolint:gocognit // acceptable complexity for a parsing func
-	cfg := runner.Config{}
-	assignedFields := []string{}
-
-	addField := func(field string) {
-		assignedFields = append(assignedFields, field)
+// ParseInto parses the Representation receiver as a benchttp.Runner
+// and stores any non-nil field value into the corresponding field
+// of dst.
+func (repr Representation) ParseInto(dst *benchttp.Runner) error {
+	if err := repr.parseRequestInto(dst); err != nil {
+		return err
 	}
+	if err := repr.parseRunnerInto(dst); err != nil {
+		return err
+	}
+	return repr.parseTestsInto(dst)
+}
 
-	abort := func(err error) (runner.Config, error) {
-		return runner.Config{}, err
+func (repr Representation) parseRequestInto(dst *benchttp.Runner) error {
+	if dst.Request == nil {
+		dst.Request = &http.Request{}
 	}
 
 	if method := repr.Request.Method; method != nil {
-		cfg.Request.Method = *method
-		addField(runner.ConfigFieldMethod)
+		dst.Request.Method = *method
 	}
 
 	if rawURL := repr.Request.URL; rawURL != nil {
-		parsedURL, err := parseAndBuildURL(*repr.Request.URL, repr.Request.QueryParams)
+		parsedURL, err := parseAndBuildURL(*rawURL, repr.Request.QueryParams)
 		if err != nil {
-			return abort(err)
+			return fmt.Errorf(`configparse: invalid url: %q`, *rawURL)
 		}
-		cfg.Request.URL = parsedURL
-		addField(runner.ConfigFieldURL)
+		dst.Request.URL = parsedURL
 	}
 
 	if header := repr.Request.Header; header != nil {
@@ -77,61 +83,64 @@ func ParseRepresentation(repr Representation) (runner.Config, error) { //nolint:
 		for key, val := range header {
 			httpHeader[key] = val
 		}
-		cfg.Request.Header = httpHeader
-		addField(runner.ConfigFieldHeader)
+		dst.Request.Header = httpHeader
 	}
 
 	if body := repr.Request.Body; body != nil {
-		cfg.Request.Body = runner.RequestBody{
-			Type:    body.Type,
-			Content: []byte(body.Content),
+		switch body.Type {
+		case "raw":
+			dst.Request.Body = io.NopCloser(bytes.NewReader([]byte(body.Content)))
+		default:
+			return errors.New(`configparse: request.body.type: only "raw" accepted`)
 		}
-		addField(runner.ConfigFieldBody)
 	}
 
+	return nil
+}
+
+func (repr Representation) parseRunnerInto(dst *benchttp.Runner) error {
 	if requests := repr.Runner.Requests; requests != nil {
-		cfg.Runner.Requests = *requests
-		addField(runner.ConfigFieldRequests)
+		dst.Requests = *requests
 	}
 
 	if concurrency := repr.Runner.Concurrency; concurrency != nil {
-		cfg.Runner.Concurrency = *concurrency
-		addField(runner.ConfigFieldConcurrency)
+		dst.Concurrency = *concurrency
 	}
 
 	if interval := repr.Runner.Interval; interval != nil {
 		parsedInterval, err := parseOptionalDuration(*interval)
 		if err != nil {
-			return abort(err)
+			return err
 		}
-		cfg.Runner.Interval = parsedInterval
-		addField(runner.ConfigFieldInterval)
+		dst.Interval = parsedInterval
 	}
 
 	if requestTimeout := repr.Runner.RequestTimeout; requestTimeout != nil {
 		parsedTimeout, err := parseOptionalDuration(*requestTimeout)
 		if err != nil {
-			return abort(err)
+			return err
 		}
-		cfg.Runner.RequestTimeout = parsedTimeout
-		addField(runner.ConfigFieldRequestTimeout)
+		dst.RequestTimeout = parsedTimeout
 	}
 
 	if globalTimeout := repr.Runner.GlobalTimeout; globalTimeout != nil {
 		parsedGlobalTimeout, err := parseOptionalDuration(*globalTimeout)
 		if err != nil {
-			return abort(err)
+			return err
 		}
-		cfg.Runner.GlobalTimeout = parsedGlobalTimeout
-		addField(runner.ConfigFieldGlobalTimeout)
+		dst.GlobalTimeout = parsedGlobalTimeout
 	}
 
+	return nil
+}
+
+func (repr Representation) parseTestsInto(dst *benchttp.Runner) error {
 	testSuite := repr.Tests
 	if len(testSuite) == 0 {
-		return cfg.WithFields(assignedFields...), nil
+		return nil
 	}
 
-	cases := make([]runner.TestCase, len(testSuite))
+	cases := make([]benchttp.TestCase, len(testSuite))
 	for i, t := range testSuite {
 		fieldPath := func(caseField string) string {
 			return fmt.Sprintf("tests[%d].%s", i, caseField)
@@ -143,35 +152,34 @@ func ParseRepresentation(repr Representation) (runner.Config, error) { //nolint:
 			fieldPath("predicate"): t.Predicate,
 			fieldPath("target"):    t.Target,
 		}); err != nil {
-			return abort(err)
+			return err
 		}
 
-		field := runner.MetricsField(*t.Field)
+		field := benchttp.MetricsField(*t.Field)
 		if err := field.Validate(); err != nil {
-			return abort(fmt.Errorf("%s: %s", fieldPath("field"), err))
+			return fmt.Errorf("%s: %s", fieldPath("field"), err)
 		}
 
-		predicate := runner.TestPredicate(*t.Predicate)
+		predicate := benchttp.TestPredicate(*t.Predicate)
 		if err := predicate.Validate(); err != nil {
-			return abort(fmt.Errorf("%s: %s", fieldPath("predicate"), err))
+			return fmt.Errorf("%s: %s", fieldPath("predicate"), err)
 		}
 
 		target, err := parseMetricValue(field, fmt.Sprint(t.Target))
 		if err != nil {
-			return abort(fmt.Errorf("%s: %s", fieldPath("target"), err))
+			return fmt.Errorf("%s: %s", fieldPath("target"), err)
 		}
 
-		cases[i] = runner.TestCase{
+		cases[i] = benchttp.TestCase{
 			Name:      *t.Name,
 			Field:     field,
 			Predicate: predicate,
 			Target:    target,
 		}
 	}
-	cfg.Tests = cases
-	addField(runner.ConfigFieldTests)
 
-	return cfg.WithFields(assignedFields...), nil
+	dst.Tests = cases
+	return nil
 }
 
 // helpers
@@ -209,11 +217,11 @@ func parseOptionalDuration(raw string) (time.Duration, error) {
 }
 
 func parseMetricValue(
-	field runner.MetricsField,
+	field benchttp.MetricsField,
 	inputValue string,
-) (runner.MetricsValue, error) {
+) (benchttp.MetricsValue, error) {
 	fieldType := field.Type()
-	handleError := func(v interface{}, err error) (runner.MetricsValue, error) {
+	handleError := func(v interface{}, err error) (benchttp.MetricsValue, error) {
 		if err != nil {
 			return nil, fmt.Errorf(
 				"value %q is incompatible with field %s (want %s)",

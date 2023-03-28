@@ -1,15 +1,15 @@
-package config
+package benchttp
 
 import "strings"
 
-// InvalidConfigError is the errors returned by Global.Validate
+// InvalidRunnerError is the errors returned by Runner.Validate
 // when values are missing or invalid.
-type InvalidConfigError struct {
+type InvalidRunnerError struct {
 	Errors []error
 }
 
-// Error returns the joined errors of InvalidConfigError as a string.
-func (e *InvalidConfigError) Error() string {
+// Error returns the joined errors of InvalidRunnerError as a string.
+func (e *InvalidRunnerError) Error() string {
 	const sep = "\n  - "
 
 	var b strings.Builder

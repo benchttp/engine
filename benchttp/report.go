@@ -1,11 +1,10 @@
-package report
+package benchttp
 
 import (
 	"time"
 
-	"github.com/benchttp/engine/runner/internal/config"
-	"github.com/benchttp/engine/runner/internal/metrics"
-	"github.com/benchttp/engine/runner/internal/tests"
+	"github.com/benchttp/sdk/benchttp/internal/metrics"
+	"github.com/benchttp/sdk/benchttp/internal/tests"
 )
 
 // Report represents a run result as exported by the runner.
@@ -17,14 +16,14 @@ type Report struct {
 
 // Metadata contains contextual information about a run.
 type Metadata struct {
-	Config        config.Global
+	Runner        Runner
 	FinishedAt    time.Time
 	TotalDuration time.Duration
 }
 
-// New returns an initialized *Report.
-func New(
-	cfg config.Global,
+// newReport returns an initialized *Report.
+func newReport(
+	r Runner,
 	d time.Duration,
 	m metrics.Aggregate,
 	t tests.SuiteResult,
@@ -33,7 +32,7 @@ func New(
 		Metrics: m,
 		Tests:   t,
 		Metadata: Metadata{
-			Config:        cfg,
+			Runner:        r,
 			FinishedAt:    time.Now(), // TODO: change, unreliable
 			TotalDuration: d,
 		},
