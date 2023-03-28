@@ -55,7 +55,7 @@ func main() {
 }
 ```
 
-### Usage with JSON config via `configparse`
+### Usage with JSON config via `configio`
 
 ```go
 package main
@@ -65,7 +65,7 @@ import (
     "fmt"
 
     "github.com/benchttp/sdk/benchttp"
-    "github.com/benchttp/sdk/configparse"
+    "github.com/benchttp/sdk/configio"
 )
 
 func main() {
@@ -81,7 +81,7 @@ func main() {
     runner := benchttp.DefaultRunner()
 
     // Parse the json configuration into the Runner
-    _ = configparse.JSON(jsonConfig, &runner)
+    _ = configio.UnmarshalJSONRunner(jsonConfig, &runner)
 
     // Run benchmark, retrieve report
     report, _ := runner.Run(context.Background())

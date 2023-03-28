@@ -1,0 +1,5 @@
+request:
+  url: http://localhost:3000/parent # overridden
+
+runner:
+  globalTimeout: 42s # kept
