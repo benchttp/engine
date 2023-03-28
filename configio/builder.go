@@ -16,23 +16,23 @@ type Builder struct {
 	mutations []func(*benchttp.Runner)
 }
 
-// WriteJSON decodes the input bytes as a JSON benchttp configuration
+// DecodeJSON decodes the input bytes as a JSON benchttp configuration
 // and appends the resulting modifier to the builder.
 // It returns any encountered during the decoding process or if the
 // decoded configuration is invalid.
-func (b *Builder) WriteJSON(in []byte) error {
-	return b.decodeAndWrite(in, FormatJSON)
+func (b *Builder) DecodeJSON(in []byte) error {
+	return b.decode(in, FormatJSON)
 }
 
-// WriteYAML decodes the input bytes as a YAML benchttp configuration
+// DecodeYAML decodes the input bytes as a YAML benchttp configuration
 // and appends the resulting modifier to the builder.
 // It returns any encountered during the decoding process or if the
 // decoded configuration is invalid.
-func (b *Builder) WriteYAML(in []byte) error {
-	return b.decodeAndWrite(in, FormatYAML)
+func (b *Builder) DecodeYAML(in []byte) error {
+	return b.decode(in, FormatYAML)
 }
 
-func (b *Builder) decodeAndWrite(in []byte, format Format) error {
+func (b *Builder) decode(in []byte, format Format) error {
 	repr := representation{}
 	if err := decoderOf(format, in).decodeRepr(&repr); err != nil {
 		return err
@@ -44,7 +44,7 @@ func (b *Builder) decodeAndWrite(in []byte, format Format) error {
 	b.append(func(dst *benchttp.Runner) {
 		// err is already checked via repr.validate(), so nil is expected.
 		if err := repr.parseAndMutate(dst); err != nil {
-			panicInternal("Builder.decodeAndWrite", "unexpected error: "+err.Error())
+			panicInternal("Builder.decode", "unexpected error: "+err.Error())
 		}
 	})
 	return nil

@@ -20,7 +20,7 @@ func TestBuilder_WriteJSON(t *testing.T) {
 	want := benchttp.Runner{Requests: 5, Concurrency: 2}
 
 	b := configio.Builder{}
-	if err := b.WriteJSON(in); err != nil {
+	if err := b.DecodeJSON(in); err != nil {
 		t.Fatal(err)
 	}
 	b.Mutate(&dest)
@@ -34,7 +34,7 @@ func TestBuilder_WriteYAML(t *testing.T) {
 	want := benchttp.Runner{Requests: 5, Concurrency: 2}
 
 	b := configio.Builder{}
-	if err := b.WriteYAML(in); err != nil {
+	if err := b.DecodeYAML(in); err != nil {
 		t.Fatal(err)
 	}
 	b.Mutate(&dest)

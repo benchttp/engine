@@ -20,8 +20,8 @@ func ExampleBuilder() {
 	runner := benchttp.Runner{Requests: -1, Concurrency: 3}
 
 	b := configio.Builder{}
-	_ = b.WriteJSON(jsonConfig)
-	_ = b.WriteYAML(yamlConfig)
+	_ = b.DecodeJSON(jsonConfig)
+	_ = b.DecodeYAML(yamlConfig)
 	b.SetInterval(100 * time.Millisecond)
 
 	b.Mutate(&runner)
