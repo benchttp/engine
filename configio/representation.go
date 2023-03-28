@@ -14,12 +14,12 @@ import (
 	"github.com/benchttp/sdk/internal/errorutil"
 )
 
-// Representation is a raw data model for formatted runner config (json, yaml).
+// representation is a raw data model for formatted runner config (json, yaml).
 // It serves as a receiver for unmarshaling processes and for that reason
 // its types are kept simple (certain types are incompatible with certain
 // unmarshalers).
 // It exposes a method Unmarshal to convert its values into a runner.Config.
-type Representation struct {
+type representation struct {
 	Extends *string `yaml:"extends" json:"extends"`
 
 	Request struct {
@@ -49,10 +49,14 @@ type Representation struct {
 	} `yaml:"tests" json:"tests"`
 }
 
-// Into parses the Representation receiver as a benchttp.Runner
+func (repr representation) validate() error {
+	return repr.parseAndMutate(&benchttp.Runner{})
+}
+
+// parseAndMutate parses the Representation receiver as a benchttp.Runner
 // and stores any non-nil field value into the corresponding field
 // of dst.
-func (repr Representation) Into(dst *benchttp.Runner) error {
+func (repr representation) parseAndMutate(dst *benchttp.Runner) error {
 	if err := repr.parseRequestInto(dst); err != nil {
 		return err
 	}
@@ -62,7 +66,7 @@ func (repr Representation) Into(dst *benchttp.Runner) error {
 	return repr.parseTestsInto(dst)
 }
 
-func (repr Representation) parseRequestInto(dst *benchttp.Runner) error {
+func (repr representation) parseRequestInto(dst *benchttp.Runner) error {
 	if dst.Request == nil {
 		dst.Request = &http.Request{}
 	}
@@ -99,7 +103,7 @@ func (repr Representation) parseRequestInto(dst *benchttp.Runner) error {
 	return nil
 }
 
-func (repr Representation) parseRunnerInto(dst *benchttp.Runner) error {
+func (repr representation) parseRunnerInto(dst *benchttp.Runner) error {
 	if requests := repr.Runner.Requests; requests != nil {
 		dst.Requests = *requests
 	}
@@ -135,7 +139,7 @@ func (repr Representation) parseRunnerInto(dst *benchttp.Runner) error {
 	return nil
 }
 
-func (repr Representation) parseTestsInto(dst *benchttp.Runner) error {
+func (repr representation) parseTestsInto(dst *benchttp.Runner) error {
 	testSuite := repr.Tests
 	if len(testSuite) == 0 {
 		return nil
@@ -250,7 +254,7 @@ func requireConfigFields(fields map[string]interface{}) error {
 	return nil
 }
 
-type representations []Representation
+type representations []representation
 
 // mergeInto successively parses the given representations into dst.
 //
@@ -261,7 +265,7 @@ func (reprs representations) mergeInto(dst *benchttp.Runner) error {
 	}
 
 	for _, repr := range reprs {
-		if err := repr.Into(dst); err != nil {
+		if err := repr.parseAndMutate(dst); err != nil {
 			return errorutil.WithDetails(ErrFileParse, err)
 		}
 	}
