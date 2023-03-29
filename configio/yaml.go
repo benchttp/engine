@@ -9,7 +9,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/benchttp/sdk/benchttp"
+	"github.com/benchttp/engine/benchttp"
 )
 
 // YAMLDecoder implements Decoder

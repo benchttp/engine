@@ -6,8 +6,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/benchttp/sdk/benchttp"
-	"github.com/benchttp/sdk/configio"
+	"github.com/benchttp/engine/benchttp"
+	"github.com/benchttp/engine/configio"
 )
 
 func TestMarshalJSON(t *testing.T) {

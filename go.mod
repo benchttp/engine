@@ -1,4 +1,4 @@
-module github.com/benchttp/sdk
+module github.com/benchttp/engine
 
 go 1.17
 

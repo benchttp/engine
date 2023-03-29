@@ -8,7 +8,7 @@ import (
 	"io"
 	"regexp"
 
-	"github.com/benchttp/sdk/benchttp"
+	"github.com/benchttp/engine/benchttp"
 )
 
 // JSONDecoder implements Decoder

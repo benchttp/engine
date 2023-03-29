@@ -8,8 +8,8 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/benchttp/sdk/benchttp"
-	"github.com/benchttp/sdk/configio"
+	"github.com/benchttp/engine/benchttp"
+	"github.com/benchttp/engine/configio"
 )
 
 func TestYAMLDecoder(t *testing.T) {

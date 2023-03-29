@@ -3,8 +3,8 @@ package benchttp
 import (
 	"time"
 
-	"github.com/benchttp/sdk/benchttp/internal/metrics"
-	"github.com/benchttp/sdk/benchttp/internal/tests"
+	"github.com/benchttp/engine/benchttp/internal/metrics"
+	"github.com/benchttp/engine/benchttp/internal/tests"
 )
 
 // Report represents a run result as exported by the runner.

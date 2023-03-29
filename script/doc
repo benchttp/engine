@@ -5,7 +5,7 @@ port="9995"
 addr="${domain}:${port}"
 
 main() {
-  echo "http://${addr}/pkg/github.com/benchttp/sdk/"
+  echo "http://${addr}/pkg/github.com/benchttp/engine/"
   godoc -http="${addr}"
 }
 main

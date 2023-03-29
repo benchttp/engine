@@ -3,7 +3,7 @@ package metrics
 import (
 	"strings"
 
-	"github.com/benchttp/sdk/benchttp/internal/reflectpath"
+	"github.com/benchttp/engine/benchttp/internal/reflectpath"
 )
 
 // Value is a concrete metric value, e.g. 120 or 3 * time.Second.

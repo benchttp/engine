@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/benchttp/sdk/benchttp/internal/metrics/timestats"
+	"github.com/benchttp/engine/benchttp/internal/metrics/timestats"
 )
 
 func TestCompute(t *testing.T) {

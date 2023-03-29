@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/benchttp/sdk/benchttp"
+	"github.com/benchttp/engine/benchttp"
 )
 
 type Format string
