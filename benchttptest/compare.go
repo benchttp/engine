@@ -12,7 +12,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 
-	"github.com/benchttp/sdk/benchttp"
+	"github.com/benchttp/engine/benchttp"
 )
 
 // RunnerCmpOptions is the cmp.Options used to compare benchttp.Runner.

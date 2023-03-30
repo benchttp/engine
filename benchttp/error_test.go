@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/benchttp/sdk/benchttp"
+	"github.com/benchttp/engine/benchttp"
 )
 
 func TestInvalidRunnerError(t *testing.T) {

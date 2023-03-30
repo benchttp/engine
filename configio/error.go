@@ -27,7 +27,7 @@ var (
 )
 
 func panicInternal(funcname, detail string) {
-	const reportURL = "https://github.com/benchttp/sdk/issues/new"
+	const reportURL = "https://github.com/benchttp/engine/issues/new"
 	source := fmt.Sprintf("configio.%s", funcname)
 	panic(fmt.Sprintf(
 		"%s: unexpected internal error: %s, please file an issue at %s",

@@ -9,8 +9,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/benchttp/sdk/benchttp"
-	"github.com/benchttp/sdk/benchttptest"
+	"github.com/benchttp/engine/benchttp"
+	"github.com/benchttp/engine/benchttptest"
 )
 
 func TestAssertEqualRunners(t *testing.T) {

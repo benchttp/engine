@@ -3,8 +3,8 @@ package tests
 import (
 	"errors"
 
-	"github.com/benchttp/sdk/benchttp/internal/metrics"
-	"github.com/benchttp/sdk/internal/errorutil"
+	"github.com/benchttp/engine/benchttp/internal/metrics"
+	"github.com/benchttp/engine/internal/errorutil"
 )
 
 var ErrUnknownPredicate = errors.New("tests: unknown predicate")

@@ -5,9 +5,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/benchttp/sdk/benchttp"
+	"github.com/benchttp/engine/benchttp"
 
-	"github.com/benchttp/sdk/internal/errorutil"
+	"github.com/benchttp/engine/internal/errorutil"
 )
 
 // DefaultPaths is the default list of paths looked up by FindFile when

@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/benchttp/sdk/benchttp"
+	"github.com/benchttp/engine/benchttp"
 )
 
 // A Builder is used to incrementally build a benchttp.Runner

@@ -6,10 +6,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/benchttp/sdk/benchttp"
-	"github.com/benchttp/sdk/benchttptest"
-	"github.com/benchttp/sdk/configio"
-	"github.com/benchttp/sdk/configio/internal/testdata"
+	"github.com/benchttp/engine/benchttp"
+	"github.com/benchttp/engine/benchttptest"
+	"github.com/benchttp/engine/configio"
+	"github.com/benchttp/engine/configio/internal/testdata"
 )
 
 func TestFindFile(t *testing.T) {

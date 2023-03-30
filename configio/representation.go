@@ -10,8 +10,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/benchttp/sdk/benchttp"
-	"github.com/benchttp/sdk/internal/errorutil"
+	"github.com/benchttp/engine/benchttp"
+	"github.com/benchttp/engine/internal/errorutil"
 )
 
 // representation is a raw data model for formatted runner config (json, yaml).

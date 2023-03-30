@@ -5,12 +5,12 @@
     <img alt="Github Worklow Status" src="https://img.shields.io/github/actions/workflow/status/benchttp/engine/ci.yml?branch=main"></a>
   <a href="https://codecov.io/gh/benchttp/engine">
     <img alt="Code coverage" src="https://img.shields.io/codecov/c/gh/benchttp/engine?label=coverage"></a>
-  <a href="https://goreportcard.com/report/github.com/benchttp/sdk">
-    <img alt="Go Report Card" src="https://goreportcard.com/badge/github.com/benchttp/sdk" /></a>
+  <a href="https://goreportcard.com/report/github.com/benchttp/engine">
+    <img alt="Go Report Card" src="https://goreportcard.com/badge/github.com/benchttp/engine" /></a>
   <br />
-  <a href="https://pkg.go.dev/github.com/benchttp/sdk#section-documentation">
+  <a href="https://pkg.go.dev/github.com/benchttp/engine#section-documentation">
     <img alt="Go package Reference" src="https://img.shields.io/badge/pkg-reference-informational?logo=go" /></a>
-  <a href="https://github.com/benchttp/sdk/releases">
+  <a href="https://github.com/benchttp/engine/releases">
     <img alt="Latest version" src="https://img.shields.io/github/v/tag/benchttp/engine?label=release"></a>
 </p>
 
@@ -28,7 +28,7 @@ Go1.17 environment or higher is required.
 Install.
 
 ```txt
-go get github.com/benchttp/sdk
+go get github.com/benchttp/engine
 ```
 
 ## Usage
@@ -42,7 +42,7 @@ import (
     "context"
     "fmt"
 
-    "github.com/benchttp/sdk/benchttp"
+    "github.com/benchttp/engine/benchttp"
 )
 
 func main() {
@@ -64,8 +64,8 @@ import (
     "context"
     "fmt"
 
-    "github.com/benchttp/sdk/benchttp"
-    "github.com/benchttp/sdk/configio"
+    "github.com/benchttp/engine/benchttp"
+    "github.com/benchttp/engine/configio"
 )
 
 func main() {
@@ -90,7 +90,7 @@ func main() {
 }
 ```
 
-📄 Please refer to [our Wiki](https://github.com/benchttp/sdk/wiki/IO-Structures) for exhaustive `Runner` and `Report` structures (and more!)
+📄 Please refer to [our Wiki](https://github.com/benchttp/engine/wiki/IO-Structures) for exhaustive `Runner` and `Report` structures (and more!)
 
 ## Development
 

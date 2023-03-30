@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/benchttp/sdk/benchttp/internal/metrics"
-	"github.com/benchttp/sdk/benchttp/internal/metrics/timestats"
-	"github.com/benchttp/sdk/benchttp/internal/tests"
+	"github.com/benchttp/engine/benchttp/internal/metrics"
+	"github.com/benchttp/engine/benchttp/internal/metrics/timestats"
+	"github.com/benchttp/engine/benchttp/internal/tests"
 )
 
 func TestRun(t *testing.T) {
