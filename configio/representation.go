@@ -1,11 +1,7 @@
 package configio
 
 import (
-	"bytes"
-	"errors"
 	"fmt"
-	"io"
-	"net/http"
 	"net/url"
 	"strconv"
 	"time"
@@ -57,86 +53,13 @@ func (repr representation) validate() error {
 // and stores any non-nil field value into the corresponding field
 // of dst.
 func (repr representation) parseAndMutate(dst *benchttp.Runner) error {
-	if err := repr.parseRequestInto(dst); err != nil {
-		return err
+	for _, converter := range fieldConverters {
+		if err := converter(repr, dst); err != nil {
+			return err
+		}
 	}
-	if err := repr.parseRunnerInto(dst); err != nil {
-		return err
-	}
+	// TODO: use converter for tests
 	return repr.parseTestsInto(dst)
-}
-
-func (repr representation) parseRequestInto(dst *benchttp.Runner) error {
-	if dst.Request == nil {
-		dst.Request = &http.Request{}
-	}
-
-	if method := repr.Request.Method; method != nil {
-		dst.Request.Method = *method
-	}
-
-	if rawURL := repr.Request.URL; rawURL != nil {
-		parsedURL, err := parseAndBuildURL(*rawURL, repr.Request.QueryParams)
-		if err != nil {
-			return fmt.Errorf(`configio: invalid url: %q`, *rawURL)
-		}
-		dst.Request.URL = parsedURL
-	}
-
-	if header := repr.Request.Header; len(header) != 0 {
-		httpHeader := http.Header{}
-		for key, val := range header {
-			httpHeader[key] = val
-		}
-		dst.Request.Header = httpHeader
-	}
-
-	if body := repr.Request.Body; body != nil {
-		switch body.Type {
-		case "raw":
-			dst.Request.Body = io.NopCloser(bytes.NewReader([]byte(body.Content)))
-		default:
-			return errors.New(`configio: request.body.type: only "raw" accepted`)
-		}
-	}
-
-	return nil
-}
-
-func (repr representation) parseRunnerInto(dst *benchttp.Runner) error {
-	if requests := repr.Runner.Requests; requests != nil {
-		dst.Requests = *requests
-	}
-
-	if concurrency := repr.Runner.Concurrency; concurrency != nil {
-		dst.Concurrency = *concurrency
-	}
-
-	if interval := repr.Runner.Interval; interval != nil {
-		parsedInterval, err := parseOptionalDuration(*interval)
-		if err != nil {
-			return err
-		}
-		dst.Interval = parsedInterval
-	}
-
-	if requestTimeout := repr.Runner.RequestTimeout; requestTimeout != nil {
-		parsedTimeout, err := parseOptionalDuration(*requestTimeout)
-		if err != nil {
-			return err
-		}
-		dst.RequestTimeout = parsedTimeout
-	}
-
-	if globalTimeout := repr.Runner.GlobalTimeout; globalTimeout != nil {
-		parsedGlobalTimeout, err := parseOptionalDuration(*globalTimeout)
-		if err != nil {
-			return err
-		}
-		dst.GlobalTimeout = parsedGlobalTimeout
-	}
-
-	return nil
 }
 
 func (repr representation) parseTestsInto(dst *benchttp.Runner) error {
