@@ -1,0 +1,17 @@
+#!/bin/bash
+
+goos=$(go env GOOS)
+goarch=$(go env GOARCH)
+benchttp="./bin/benchttp_${goos}_${goarch}"
+
+expVersion="benchttp $(git describe --tags --abbrev=0)"
+gotVersion=$(eval $benchttp version)
+
+if [[ "$gotVersion" != "$expVersion" ]]; then
+    echo -e "\033[1;31m✘\033[0m Error running ./bin/benchttp version"
+    echo "  exp $expVersion"
+    echo "  got $gotVersion"
+    exit 1
+fi
+
+echo -e "\033[1;32m✔︎\033[0m Build integrity OK!"
