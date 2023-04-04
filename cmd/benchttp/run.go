@@ -1,4 +1,4 @@
-package cmd
+package main
 
 import (
 	"context"
@@ -9,11 +9,12 @@ import (
 	"os"
 
 	"github.com/benchttp/engine/benchttp"
+	"github.com/benchttp/engine/configio"
+
 	"github.com/benchttp/engine/cli/configflag"
 	"github.com/benchttp/engine/cli/output"
-	"github.com/benchttp/engine/configio"
-	"github.com/benchttp/engine/internal/ioutil"
-	"github.com/benchttp/engine/internal/signals"
+	"github.com/benchttp/engine/cli/render"
+	"github.com/benchttp/engine/cli/signals"
 )
 
 // cmdRun handles subcommand "benchttp run [options]".
@@ -97,23 +98,23 @@ func onRecordingProgress(silent bool) func(benchttp.RecordingProgress) {
 		return func(benchttp.RecordingProgress) {}
 	}
 
-	// hack: write a blank line as output.Progress always
+	// hack: write a blank line as render.Progress always
 	// erases the previous line
 	fmt.Println()
 
 	return func(progress benchttp.RecordingProgress) {
-		output.Progress(os.Stdout, progress) //nolint: errcheck
+		render.Progress(os.Stdout, progress) //nolint: errcheck
 	}
 }
 
 func renderReport(w io.Writer, report *benchttp.Report, silent bool) error {
-	writeIfNotSilent := ioutil.ConditionalWriter{Writer: w}.If(!silent)
+	writeIfNotSilent := output.ConditionalWriter{Writer: w}.If(!silent)
 
-	if _, err := output.ReportSummary(writeIfNotSilent, report); err != nil {
+	if _, err := render.ReportSummary(writeIfNotSilent, report); err != nil {
 		return err
 	}
 
-	if _, err := output.TestSuite(
+	if _, err := render.TestSuite(
 		writeIfNotSilent.ElseIf(!report.Tests.Pass),
 		report.Tests,
 	); err != nil {

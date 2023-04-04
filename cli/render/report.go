@@ -1,4 +1,4 @@
-package output
+package render
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 
 	"github.com/benchttp/engine/benchttp"
 
-	"github.com/benchttp/engine/cli/output/ansi"
+	"github.com/benchttp/engine/cli/render/ansi"
 )
 
 func ReportSummary(w io.Writer, rep *benchttp.Report) (int, error) {

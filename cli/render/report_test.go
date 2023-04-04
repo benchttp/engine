@@ -1,4 +1,4 @@
-package output_test
+package render_test
 
 import (
 	"net/http"
@@ -7,8 +7,8 @@ import (
 
 	"github.com/benchttp/engine/benchttp"
 
-	"github.com/benchttp/engine/cli/output"
-	"github.com/benchttp/engine/cli/output/ansi"
+	"github.com/benchttp/engine/cli/render"
+	"github.com/benchttp/engine/cli/render/ansi"
 )
 
 func TestReport_String(t *testing.T) {
@@ -23,7 +23,7 @@ func TestReport_String(t *testing.T) {
 				TotalDuration: duration,
 			},
 		}
-		checkSummary(t, output.ReportSummaryString(rep))
+		checkSummary(t, render.ReportSummaryString(rep))
 	})
 }
 

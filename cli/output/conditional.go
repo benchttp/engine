@@ -1,4 +1,4 @@
-package ioutil
+package output
 
 import (
 	"io"

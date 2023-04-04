@@ -1,4 +1,4 @@
-package cmd
+package main
 
 import (
 	"errors"
@@ -7,10 +7,20 @@ import (
 	"os"
 )
 
-// ErrUsage reports an incorrect usage of the benchttp-run command.
-var ErrUsage = errors.New("usage")
+// errUsage reports an incorrect usage of the benchttp command.
+var errUsage = errors.New("usage")
 
-func Exec() error {
+func main() {
+	if err := run(); err != nil {
+		fmt.Println(err)
+		if errors.Is(err, errUsage) {
+			flag.Usage()
+		}
+		os.Exit(1)
+	}
+}
+
+func run() error {
 	commandName, options, err := shiftArgs(os.Args[1:])
 	if err != nil {
 		return err
@@ -26,7 +36,7 @@ func Exec() error {
 
 func shiftArgs(args []string) (commandName string, nextArgs []string, err error) {
 	if len(args) < 1 {
-		return "", []string{}, fmt.Errorf("%w: no command specified", ErrUsage)
+		return "", []string{}, fmt.Errorf("%w: no command specified", errUsage)
 	}
 	return args[0], args[1:], nil
 }
@@ -43,6 +53,6 @@ func commandOf(name string) (command, error) {
 	case "version":
 		return &cmdVersion{}, nil
 	default:
-		return nil, fmt.Errorf("%w: unknown command: %s", ErrUsage, name)
+		return nil, fmt.Errorf("%w: unknown command: %s", errUsage, name)
 	}
 }
