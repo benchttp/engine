@@ -1,4 +1,4 @@
-package render
+package output
 
 import (
 	"io"
@@ -6,7 +6,7 @@ import (
 
 	"github.com/benchttp/engine/benchttp"
 
-	"github.com/benchttp/engine/cli/render/ansi"
+	"github.com/benchttp/engine/cli/output/ansi"
 )
 
 func TestSuite(w io.Writer, suite benchttp.TestSuiteResults) (int, error) {

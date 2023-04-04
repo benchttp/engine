@@ -1,4 +1,4 @@
-package render
+package output
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 
 	"github.com/benchttp/engine/benchttp"
 
-	"github.com/benchttp/engine/cli/render/ansi"
+	"github.com/benchttp/engine/cli/output/ansi"
 )
 
 // Progress renders a fancy representation of a runner.RecordingProgress
