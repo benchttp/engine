@@ -4,18 +4,18 @@ import (
 	"io"
 	"strings"
 
-	"github.com/benchttp/engine/benchttp"
+	"github.com/benchttp/engine/benchttp/testsuite"
 
 	"github.com/benchttp/engine/cli/render/ansi"
 )
 
-func TestSuite(w io.Writer, suite benchttp.TestSuiteResults) (int, error) {
-	return w.Write([]byte(TestSuiteString(suite)))
+func TestSuite(w io.Writer, result testsuite.Result) (int, error) {
+	return w.Write([]byte(TestSuiteString(result)))
 }
 
 // String returns a default summary of the Report as a string.
-func TestSuiteString(suite benchttp.TestSuiteResults) string {
-	if len(suite.Results) == 0 {
+func TestSuiteString(result testsuite.Result) string {
+	if len(result.OfCases) == 0 {
 		return ""
 	}
 
@@ -24,10 +24,10 @@ func TestSuiteString(suite benchttp.TestSuiteResults) string {
 	b.WriteString(ansi.Bold("→ Test suite"))
 	b.WriteString("\n")
 
-	writeResultString(&b, suite.Pass)
+	writeResultString(&b, result.Pass)
 	b.WriteString("\n")
 
-	for _, tr := range suite.Results {
+	for _, tr := range result.OfCases {
 		writeIndent(&b, 1)
 		writeResultString(&b, tr.Pass)
 		b.WriteString(" ")

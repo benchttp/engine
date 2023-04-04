@@ -1,9 +1,9 @@
-package tests
+package testsuite
 
 import (
 	"errors"
 
-	"github.com/benchttp/engine/benchttp/internal/metrics"
+	"github.com/benchttp/engine/benchttp/metrics"
 	"github.com/benchttp/engine/internal/errorutil"
 )
 

@@ -3,15 +3,15 @@ package benchttp
 import (
 	"time"
 
-	"github.com/benchttp/engine/benchttp/internal/metrics"
-	"github.com/benchttp/engine/benchttp/internal/tests"
+	"github.com/benchttp/engine/benchttp/metrics"
+	"github.com/benchttp/engine/benchttp/testsuite"
 )
 
 // Report represents a run result as exported by the runner.
 type Report struct {
 	Metadata Metadata
 	Metrics  metrics.Aggregate
-	Tests    tests.SuiteResult
+	Tests    testsuite.Result
 }
 
 // Metadata contains contextual information about a run.
@@ -26,7 +26,7 @@ func newReport(
 	r Runner,
 	d time.Duration,
 	m metrics.Aggregate,
-	t tests.SuiteResult,
+	t testsuite.Result,
 ) *Report {
 	return &Report{
 		Metrics: m,

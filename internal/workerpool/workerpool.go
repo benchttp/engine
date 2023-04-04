@@ -1,4 +1,4 @@
-package dispatcher
+package workerpool
 
 import (
 	"context"
@@ -15,7 +15,7 @@ type Dispatcher interface {
 	Do(ctx context.Context, maxIter int, callback func()) error
 }
 
-type dispatcher struct {
+type workerpool struct {
 	numWorker int
 	sem       *semaphore.Weighted
 }
@@ -26,7 +26,7 @@ func New(numWorker int) Dispatcher {
 		panic(fmt.Sprintf("invalid numWorker value: must be > 1, got %d", numWorker))
 	}
 	sem := semaphore.NewWeighted(int64(numWorker))
-	return dispatcher{sem: sem, numWorker: numWorker}
+	return workerpool{sem: sem, numWorker: numWorker}
 }
 
 // Do concurrently executes callback at most maxIter times or until ctx is done
@@ -39,7 +39,7 @@ func New(numWorker int) Dispatcher {
 //	callback == nil
 //
 // Else it returns the context error if any or nil.
-func (d dispatcher) Do(ctx context.Context, maxIter int, callback func()) error {
+func (d workerpool) Do(ctx context.Context, maxIter int, callback func()) error {
 	if err := d.validate(maxIter, callback); err != nil {
 		return err
 	}
@@ -72,7 +72,7 @@ func (d dispatcher) Do(ctx context.Context, maxIter int, callback func()) error 
 	return err
 }
 
-func (d dispatcher) validate(maxIter int, callback func()) error {
+func (d workerpool) validate(maxIter int, callback func()) error {
 	if maxIter < 1 && maxIter != -1 {
 		return fmt.Errorf("%w: maxIter: must be -1 or >= 1, got %d", ErrInvalidValue, maxIter)
 	}

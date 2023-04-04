@@ -1,11 +1,11 @@
-package tests_test
+package testsuite_test
 
 import (
 	"testing"
 	"time"
 
-	"github.com/benchttp/engine/benchttp/internal/metrics"
-	"github.com/benchttp/engine/benchttp/internal/tests"
+	"github.com/benchttp/engine/benchttp/metrics"
+	"github.com/benchttp/engine/benchttp/testsuite"
 )
 
 func TestPredicate(t *testing.T) {
@@ -16,37 +16,37 @@ func TestPredicate(t *testing.T) {
 	)
 
 	testcases := []struct {
-		Predicate  tests.Predicate
+		Predicate  testsuite.Predicate
 		PassValues []int
 		FailValues []int
 	}{
 		{
-			Predicate:  tests.EQ,
+			Predicate:  testsuite.EQ,
 			PassValues: []int{base},
 			FailValues: []int{more, less},
 		},
 		{
-			Predicate:  tests.NEQ,
+			Predicate:  testsuite.NEQ,
 			PassValues: []int{less, more},
 			FailValues: []int{base},
 		},
 		{
-			Predicate:  tests.LT,
+			Predicate:  testsuite.LT,
 			PassValues: []int{more},
 			FailValues: []int{base, less},
 		},
 		{
-			Predicate:  tests.LTE,
+			Predicate:  testsuite.LTE,
 			PassValues: []int{more, base},
 			FailValues: []int{less},
 		},
 		{
-			Predicate:  tests.GT,
+			Predicate:  testsuite.GT,
 			PassValues: []int{less},
 			FailValues: []int{base, more},
 		},
 		{
-			Predicate:  tests.GTE,
+			Predicate:  testsuite.GTE,
 			PassValues: []int{less, base},
 			FailValues: []int{more},
 		},
@@ -68,7 +68,7 @@ func TestPredicate(t *testing.T) {
 
 func expectPredicatePass(
 	t *testing.T,
-	p tests.Predicate,
+	p testsuite.Predicate,
 	src, tar int,
 ) {
 	t.Helper()
@@ -77,7 +77,7 @@ func expectPredicatePass(
 
 func expectPredicateFail(
 	t *testing.T,
-	p tests.Predicate,
+	p testsuite.Predicate,
 	src, tar int,
 ) {
 	t.Helper()
@@ -86,7 +86,7 @@ func expectPredicateFail(
 
 func expectPredicateResult(
 	t *testing.T,
-	p tests.Predicate,
+	p testsuite.Predicate,
 	src, tar int,
 	expPass bool,
 ) {
@@ -98,7 +98,7 @@ func expectPredicateResult(
 		}, src),
 	}
 
-	result := tests.Run(agg, []tests.Case{{
+	result := testsuite.Run(agg, []testsuite.Case{{
 		Predicate: p,
 		Field:     "RequestCount",
 		Target:    tar,

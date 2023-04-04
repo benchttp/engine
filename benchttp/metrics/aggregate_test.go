@@ -5,14 +5,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/benchttp/engine/benchttp/internal/metrics"
-	"github.com/benchttp/engine/benchttp/internal/metrics/timestats"
-	"github.com/benchttp/engine/benchttp/internal/recorder"
+	"github.com/benchttp/engine/benchttp/metrics"
+	"github.com/benchttp/engine/benchttp/recorder"
 )
 
 func TestNewAggregate(t *testing.T) {
-	// Test for "response times stats" is delegated to timestats.New because
-	// metrics.NewAggregate does not have any specific behavior aound it.
+	// Test for "response times stats" is delegated to metrics.NewTimeStats
+	// because metrics.NewAggregate does not have any specific behavior aound it.
 
 	t.Run("events times stats", func(t *testing.T) {
 		eventsStub := func(t1, t2 time.Duration) []recorder.Event {
@@ -26,7 +25,7 @@ func TestNewAggregate(t *testing.T) {
 			{Events: eventsStub(400, 500)},
 		}
 
-		want := map[string]timestats.TimeStats{
+		want := map[string]metrics.TimeStats{
 			"1": {Min: 100, Max: 400, Mean: 250, Median: 250},
 			"2": {Min: 200, Max: 500, Mean: 325, Median: 300},
 		}

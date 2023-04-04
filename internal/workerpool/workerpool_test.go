@@ -1,4 +1,4 @@
-package dispatcher_test
+package workerpool_test
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/benchttp/engine/internal/dispatcher"
+	"github.com/benchttp/engine/internal/workerpool"
 )
 
 func TestNew(t *testing.T) {
@@ -31,7 +31,7 @@ func TestNew(t *testing.T) {
 					}
 				}()
 
-				if d := dispatcher.New(numWorker); d != nil {
+				if d := workerpool.New(numWorker); d != nil {
 					t.Error("returned a non-nil Dispatcher")
 				}
 			}(numWorker)
@@ -39,7 +39,7 @@ func TestNew(t *testing.T) {
 	})
 
 	t.Run("return valid Dispatcher if numWorker > 0", func(t *testing.T) {
-		if d := dispatcher.New(10); d == nil {
+		if d := workerpool.New(10); d == nil {
 			t.Error("returned nil Dispatcher")
 		}
 	})
@@ -55,7 +55,7 @@ func TestDo(t *testing.T) {
 
 		gotIter := 0
 
-		dispatcher.New(numWorker).Do(context.Background(), maxIter, func() { //nolint:errcheck
+		workerpool.New(numWorker).Do(context.Background(), maxIter, func() { //nolint:errcheck
 			gotIter++
 		})
 
@@ -85,7 +85,7 @@ func TestDo(t *testing.T) {
 
 		var gotErr error
 		gotDuration := timeFunc(func() {
-			gotErr = dispatcher.New(numWorker).Do(ctx, maxIter, func() {
+			gotErr = workerpool.New(numWorker).Do(ctx, maxIter, func() {
 				gotIter++
 				time.Sleep(interval)
 			})
@@ -134,7 +134,7 @@ func TestDo(t *testing.T) {
 
 		var gotErr error
 		gotDuration := timeFunc(func() {
-			gotErr = dispatcher.New(numWorker).Do(ctx, maxIter, func() {
+			gotErr = workerpool.New(numWorker).Do(ctx, maxIter, func() {
 				gotIter++
 				time.Sleep(interval)
 			})
@@ -177,7 +177,7 @@ func TestDo(t *testing.T) {
 			gotNumGoroutines = make([]int, 0, maxIter)
 		)
 
-		dispatcher.New(numWorker).Do(context.Background(), maxIter, func() { //nolint:errcheck
+		workerpool.New(numWorker).Do(context.Background(), maxIter, func() { //nolint:errcheck
 			mu.Lock()
 			gotNumGoroutines = append(gotNumGoroutines, runtime.NumGoroutine()-baseNumGoroutine)
 			mu.Unlock()
@@ -213,7 +213,7 @@ func TestDo(t *testing.T) {
 		)
 
 		start := time.Now()
-		dispatcher.New(numWorker).Do(context.Background(), maxIter, func() { //nolint:errcheck
+		workerpool.New(numWorker).Do(context.Background(), maxIter, func() { //nolint:errcheck
 			mu.Lock()
 			elapsedTimes = append(elapsedTimes, time.Since(start))
 			mu.Unlock()
@@ -267,28 +267,28 @@ func TestValidate(t *testing.T) {
 	}{
 		{
 			label:     "return error if maxIter == 0",
-			exp:       dispatcher.ErrInvalidValue,
+			exp:       workerpool.ErrInvalidValue,
 			numWorker: 10,
 			maxIter:   0,
 			callback:  func() {},
 		},
 		{
 			label:     "return error if maxIter == -2",
-			exp:       dispatcher.ErrInvalidValue,
+			exp:       workerpool.ErrInvalidValue,
 			numWorker: 10,
 			maxIter:   -2,
 			callback:  func() {},
 		},
 		{
 			label:     "return error if maxIter < numWorker",
-			exp:       dispatcher.ErrInvalidValue,
+			exp:       workerpool.ErrInvalidValue,
 			numWorker: 10,
 			maxIter:   5,
 			callback:  func() {},
 		},
 		{
 			label:     "return error if callback == nil",
-			exp:       dispatcher.ErrInvalidValue,
+			exp:       workerpool.ErrInvalidValue,
 			numWorker: 10,
 			maxIter:   20,
 			callback:  nil,
@@ -314,7 +314,7 @@ func TestValidate(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
 			defer cancel()
 
-			gotErr := dispatcher.New(tc.numWorker).Do(ctx, tc.maxIter, tc.callback)
+			gotErr := workerpool.New(tc.numWorker).Do(ctx, tc.maxIter, tc.callback)
 			if !errors.Is(gotErr, tc.exp) {
 				t.Errorf("unexpected error:\nexp %v\ngot %v", tc.exp, gotErr)
 			}

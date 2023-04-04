@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/benchttp/engine/internal/dispatcher"
+	"github.com/benchttp/engine/internal/workerpool"
 )
 
 var errTest = errors.New("test-generated error")
@@ -32,7 +32,7 @@ func TestRecorder_Run(t *testing.T) {
 			exp: ErrConnection,
 		},
 		{
-			label: "return dispatcher.ErrInvalidValue early on bad dispatcher value",
+			label: "return workerpool.ErrInvalidValue early on bad workerpool value",
 			req: withNoopTransport(New(Config{
 				Requests:       1,
 				Concurrency:    2, // bad: Concurrency > Requests
@@ -40,7 +40,7 @@ func TestRecorder_Run(t *testing.T) {
 				GlobalTimeout:  3 * time.Second,
 			},
 			)),
-			exp: dispatcher.ErrInvalidValue,
+			exp: workerpool.ErrInvalidValue,
 		},
 	}
 

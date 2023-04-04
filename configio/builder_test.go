@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/benchttp/engine/benchttp"
+	"github.com/benchttp/engine/benchttp/testsuite"
 	"github.com/benchttp/engine/benchttptest"
 	"github.com/benchttp/engine/configio"
 )
@@ -103,7 +104,7 @@ func TestBuilder_Set(t *testing.T) {
 
 	t.Run("test cases", func(t *testing.T) {
 		want := benchttp.Runner{
-			Tests: []benchttp.TestCase{
+			Tests: []testsuite.Case{
 				{
 					Name:      "maximum response time",
 					Field:     "ResponseTimes.Max",
@@ -126,7 +127,7 @@ func TestBuilder_Set(t *testing.T) {
 		}
 
 		b := configio.Builder{}
-		b.SetTests([]benchttp.TestCase{want.Tests[0]})
+		b.SetTests([]testsuite.Case{want.Tests[0]})
 		b.AddTests(want.Tests[1:]...)
 
 		benchttptest.AssertEqualRunners(t, want, b.Runner())

@@ -9,6 +9,7 @@ import (
 	"os"
 
 	"github.com/benchttp/engine/benchttp"
+	"github.com/benchttp/engine/benchttp/recorder"
 	"github.com/benchttp/engine/configio"
 
 	"github.com/benchttp/engine/cli/configflag"
@@ -93,16 +94,16 @@ func runBenchmark(runner benchttp.Runner, silent bool) (*benchttp.Report, error)
 	return report, nil
 }
 
-func onRecordingProgress(silent bool) func(benchttp.RecordingProgress) {
+func onRecordingProgress(silent bool) func(recorder.Progress) {
 	if silent {
-		return func(benchttp.RecordingProgress) {}
+		return func(recorder.Progress) {}
 	}
 
 	// hack: write a blank line as render.Progress always
 	// erases the previous line
 	fmt.Println()
 
-	return func(progress benchttp.RecordingProgress) {
+	return func(progress recorder.Progress) {
 		render.Progress(os.Stdout, progress) //nolint: errcheck
 	}
 }

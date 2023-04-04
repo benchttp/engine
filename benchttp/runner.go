@@ -8,34 +8,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/benchttp/engine/benchttp/internal/metrics"
-	"github.com/benchttp/engine/benchttp/internal/recorder"
-	"github.com/benchttp/engine/benchttp/internal/tests"
+	"github.com/benchttp/engine/benchttp/metrics"
+	"github.com/benchttp/engine/benchttp/recorder"
+	"github.com/benchttp/engine/benchttp/testsuite"
 )
-
-type (
-	RecordingProgress = recorder.Progress
-	RecordingStatus   = recorder.Status
-
-	MetricsAggregate = metrics.Aggregate
-	MetricsField     = metrics.Field
-	MetricsValue     = metrics.Value
-	MetricsTimeStats = metrics.TimeStats
-
-	TestCase         = tests.Case
-	TestPredicate    = tests.Predicate
-	TestSuiteResults = tests.SuiteResult
-	TestCaseResult   = tests.CaseResult
-)
-
-const (
-	StatusRunning  = recorder.StatusRunning
-	StatusCanceled = recorder.StatusCanceled
-	StatusTimeout  = recorder.StatusTimeout
-	StatusDone     = recorder.StatusDone
-)
-
-var ErrCanceled = recorder.ErrCanceled
 
 type Runner struct {
 	Request *http.Request
@@ -46,9 +22,9 @@ type Runner struct {
 	RequestTimeout time.Duration
 	GlobalTimeout  time.Duration
 
-	Tests []tests.Case
+	Tests []testsuite.Case
 
-	OnProgress func(RecordingProgress)
+	OnProgress func(recorder.Progress)
 
 	recorder *recorder.Recorder
 }
@@ -103,7 +79,7 @@ func (r Runner) Run(ctx context.Context) (*Report, error) {
 
 	agg := metrics.NewAggregate(records)
 
-	testResults := tests.Run(agg, r.Tests)
+	testResults := testsuite.Run(agg, r.Tests)
 
 	return newReport(r, duration, agg, testResults), nil
 }

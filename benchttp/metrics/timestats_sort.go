@@ -1,4 +1,4 @@
-package timestats
+package metrics
 
 import (
 	"time"

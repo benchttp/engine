@@ -1,4 +1,4 @@
-package timestats
+package metrics
 
 import (
 	"math"
@@ -17,7 +17,7 @@ type TimeStats struct {
 	Deciles                        []time.Duration
 }
 
-func New(times []time.Duration) TimeStats {
+func NewTimeStats(times []time.Duration) TimeStats {
 	n := len(times)
 	if n == 0 {
 		return TimeStats{}
