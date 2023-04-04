@@ -1,42 +1,42 @@
-package tests_test
+package testsuite_test
 
 import (
 	"fmt"
 	"testing"
 	"time"
 
-	"github.com/benchttp/engine/benchttp/internal/metrics"
-	"github.com/benchttp/engine/benchttp/internal/metrics/timestats"
-	"github.com/benchttp/engine/benchttp/internal/tests"
+	"github.com/benchttp/engine/benchttp/metrics"
+	"github.com/benchttp/engine/benchttp/metrics/timestats"
+	"github.com/benchttp/engine/benchttp/testsuite"
 )
 
 func TestRun(t *testing.T) {
 	testcases := []struct {
 		label          string
 		inputAgg       metrics.Aggregate
-		inputCases     []tests.Case
+		inputCases     []testsuite.Case
 		expGlobalPass  bool
-		expCaseResults []tests.CaseResult
+		expCaseResults []testsuite.CaseResult
 	}{
 		{
 			label:    "pass if all cases pass",
 			inputAgg: metricsWithMeanResponseTime(ms(100)),
-			inputCases: []tests.Case{
+			inputCases: []testsuite.Case{
 				{
 					Name:      "average response time below 120ms (pass)",
-					Predicate: tests.LT,
+					Predicate: testsuite.LT,
 					Field:     "ResponseTimes.Mean",
 					Target:    ms(120),
 				},
 				{
 					Name:      "average response time is above 80ms (pass)",
-					Predicate: tests.GT,
+					Predicate: testsuite.GT,
 					Field:     "ResponseTimes.Mean",
 					Target:    ms(80),
 				},
 			},
 			expGlobalPass: true,
-			expCaseResults: []tests.CaseResult{
+			expCaseResults: []testsuite.CaseResult{
 				{Pass: true, Got: ms(100), Summary: "want ResponseTimes.Mean < 120ms, got 100ms"},
 				{Pass: true, Got: ms(100), Summary: "want ResponseTimes.Mean > 80ms, got 100ms"},
 			},
@@ -44,22 +44,22 @@ func TestRun(t *testing.T) {
 		{
 			label:    "fail if at least one case fails",
 			inputAgg: metricsWithMeanResponseTime(ms(200)),
-			inputCases: []tests.Case{
+			inputCases: []testsuite.Case{
 				{
 					Name:      "average response time below 120ms (fail)",
-					Predicate: tests.LT,
+					Predicate: testsuite.LT,
 					Field:     "ResponseTimes.Mean",
 					Target:    ms(120),
 				},
 				{
 					Name:      "average response time is above 80ms (pass)",
-					Predicate: tests.GT,
+					Predicate: testsuite.GT,
 					Field:     "ResponseTimes.Mean",
 					Target:    ms(80),
 				},
 			},
 			expGlobalPass: false,
-			expCaseResults: []tests.CaseResult{
+			expCaseResults: []testsuite.CaseResult{
 				{Pass: false, Got: ms(200), Summary: "want ResponseTimes.Mean < 120ms, got 200ms"},
 				{Pass: true, Got: ms(200), Summary: "want ResponseTimes.Mean > 80ms, got 200ms"},
 			},
@@ -68,7 +68,7 @@ func TestRun(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.label, func(t *testing.T) {
-			suiteResult := tests.Run(tc.inputAgg, tc.inputCases)
+			suiteResult := testsuite.Run(tc.inputAgg, tc.inputCases)
 
 			assertGlobalPass(t, suiteResult.Pass, tc.expGlobalPass)
 			assertEqualCaseResults(t, tc.expCaseResults, suiteResult.Results)
@@ -89,7 +89,7 @@ func assertGlobalPass(t *testing.T, got, exp bool) {
 	})
 }
 
-func assertEqualCaseResults(t *testing.T, exp, got []tests.CaseResult) {
+func assertEqualCaseResults(t *testing.T, exp, got []testsuite.CaseResult) {
 	t.Helper()
 
 	if gotLen, expLen := len(got), len(exp); gotLen != expLen {

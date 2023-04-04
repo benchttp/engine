@@ -1,9 +1,9 @@
-package tests
+package testsuite
 
 import (
 	"fmt"
 
-	"github.com/benchttp/engine/benchttp/internal/metrics"
+	"github.com/benchttp/engine/benchttp/metrics"
 )
 
 type Case struct {

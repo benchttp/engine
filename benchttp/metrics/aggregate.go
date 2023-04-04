@@ -3,8 +3,8 @@ package metrics
 import (
 	"time"
 
-	"github.com/benchttp/engine/benchttp/internal/metrics/timestats"
-	"github.com/benchttp/engine/benchttp/internal/recorder"
+	"github.com/benchttp/engine/benchttp/metrics/timestats"
+	"github.com/benchttp/engine/benchttp/recorder"
 )
 
 type TimeStats = timestats.TimeStats

@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/benchttp/engine/internal/dispatcher"
+	"github.com/benchttp/engine/internal/workerpool"
 )
 
 const (
@@ -91,7 +91,7 @@ func (r *Recorder) Record(ctx context.Context, req *http.Request) ([]Record, err
 	r.start = time.Now()
 	go r.tickProgress()
 
-	err := dispatcher.
+	err := workerpool.
 		New(numWorker).
 		Do(ctx, maxIter, r.recordSingle(req, interval))
 

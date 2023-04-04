@@ -3,7 +3,7 @@ package metrics_test
 import (
 	"testing"
 
-	"github.com/benchttp/engine/benchttp/internal/metrics"
+	"github.com/benchttp/engine/benchttp/metrics"
 )
 
 func TestField_Type(t *testing.T) {

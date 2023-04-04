@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/benchttp/engine/benchttp/internal/metrics"
-	"github.com/benchttp/engine/benchttp/internal/metrics/timestats"
-	"github.com/benchttp/engine/benchttp/internal/recorder"
+	"github.com/benchttp/engine/benchttp/metrics"
+	"github.com/benchttp/engine/benchttp/metrics/timestats"
+	"github.com/benchttp/engine/benchttp/recorder"
 )
 
 func TestNewAggregate(t *testing.T) {
