@@ -24,7 +24,7 @@ type (
 
 	TestCase         = testsuite.Case
 	TestPredicate    = testsuite.Predicate
-	TestSuiteResults = testsuite.SuiteResult
+	TestSuiteResults = testsuite.Result
 	TestCaseResult   = testsuite.CaseResult
 )
 

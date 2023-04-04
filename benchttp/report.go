@@ -11,7 +11,7 @@ import (
 type Report struct {
 	Metadata Metadata
 	Metrics  metrics.Aggregate
-	Tests    testsuite.SuiteResult
+	Tests    testsuite.Result
 }
 
 // Metadata contains contextual information about a run.
@@ -26,7 +26,7 @@ func newReport(
 	r Runner,
 	d time.Duration,
 	m metrics.Aggregate,
-	t testsuite.SuiteResult,
+	t testsuite.Result,
 ) *Report {
 	return &Report{
 		Metrics: m,

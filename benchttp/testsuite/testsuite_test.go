@@ -15,8 +15,8 @@ func TestRun(t *testing.T) {
 		label          string
 		inputAgg       metrics.Aggregate
 		inputCases     []testsuite.Case
-		expGlobalPass  bool
-		expCaseResults []testsuite.CaseResult
+		expPass  bool
+		expCasesResults []testsuite.CaseResult
 	}{
 		{
 			label:    "pass if all cases pass",
@@ -35,8 +35,8 @@ func TestRun(t *testing.T) {
 					Target:    ms(80),
 				},
 			},
-			expGlobalPass: true,
-			expCaseResults: []testsuite.CaseResult{
+			expPass: true,
+			expCasesResults: []testsuite.CaseResult{
 				{Pass: true, Got: ms(100), Summary: "want ResponseTimes.Mean < 120ms, got 100ms"},
 				{Pass: true, Got: ms(100), Summary: "want ResponseTimes.Mean > 80ms, got 100ms"},
 			},
@@ -58,8 +58,8 @@ func TestRun(t *testing.T) {
 					Target:    ms(80),
 				},
 			},
-			expGlobalPass: false,
-			expCaseResults: []testsuite.CaseResult{
+			expPass: false,
+			expCasesResults: []testsuite.CaseResult{
 				{Pass: false, Got: ms(200), Summary: "want ResponseTimes.Mean < 120ms, got 200ms"},
 				{Pass: true, Got: ms(200), Summary: "want ResponseTimes.Mean > 80ms, got 200ms"},
 			},
@@ -70,8 +70,8 @@ func TestRun(t *testing.T) {
 		t.Run(tc.label, func(t *testing.T) {
 			suiteResult := testsuite.Run(tc.inputAgg, tc.inputCases)
 
-			assertGlobalPass(t, suiteResult.Pass, tc.expGlobalPass)
-			assertEqualCaseResults(t, tc.expCaseResults, suiteResult.Results)
+			assertGlobalPass(t, suiteResult.Pass, tc.expPass)
+			assertEqualCasesResults(t, tc.expCasesResults, suiteResult.OfCases)
 		})
 	}
 }
@@ -89,7 +89,7 @@ func assertGlobalPass(t *testing.T, got, exp bool) {
 	})
 }
 
-func assertEqualCaseResults(t *testing.T, exp, got []testsuite.CaseResult) {
+func assertEqualCasesResults(t *testing.T, exp, got []testsuite.CaseResult) {
 	t.Helper()
 
 	if gotLen, expLen := len(got), len(exp); gotLen != expLen {

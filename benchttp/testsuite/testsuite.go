@@ -13,10 +13,6 @@ type Case struct {
 	Target    metrics.Value
 }
 
-type SuiteResult struct {
-	Pass    bool
-	Results []CaseResult
-}
 
 type CaseResult struct {
 	Input   Case
@@ -25,7 +21,12 @@ type CaseResult struct {
 	Summary string
 }
 
-func Run(agg metrics.Aggregate, cases []Case) SuiteResult {
+type Result struct {
+	Pass    bool
+	OfCases []CaseResult
+}
+
+func Run(agg metrics.Aggregate, cases []Case) Result {
 	allpass := true
 	results := make([]CaseResult, len(cases))
 	for i, input := range cases {
@@ -35,9 +36,9 @@ func Run(agg metrics.Aggregate, cases []Case) SuiteResult {
 			allpass = false
 		}
 	}
-	return SuiteResult{
+	return Result{
 		Pass:    allpass,
-		Results: results,
+		OfCases: results,
 	}
 }
 
