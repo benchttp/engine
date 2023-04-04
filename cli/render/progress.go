@@ -6,14 +6,14 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/benchttp/engine/benchttp"
+	"github.com/benchttp/engine/benchttp/recorder"
 
 	"github.com/benchttp/engine/cli/render/ansi"
 )
 
 // Progress renders a fancy representation of a runner.RecordingProgress
 // and writes the result to w.
-func Progress(w io.Writer, p benchttp.RecordingProgress) (int, error) {
+func Progress(w io.Writer, p recorder.Progress) (int, error) {
 	return fmt.Fprint(w, progressString(p))
 }
 
@@ -21,7 +21,7 @@ func Progress(w io.Writer, p benchttp.RecordingProgress) (int, error) {
 // for a fancy display in a CLI:
 //
 //	RUNNING ◼︎◼︎◼︎◼︎◼︎◼︎◼︎◼︎◼︎◼︎ 50% | 50/100 requests | 27s timeout
-func progressString(p benchttp.RecordingProgress) string {
+func progressString(p recorder.Progress) string {
 	var (
 		countdown = p.Timeout - p.Elapsed
 		reqmax    = strconv.Itoa(p.MaxCount)
@@ -68,20 +68,20 @@ func renderTimeline(pctdone int) string {
 // renderStatus returns a string representing the status,
 // depending on whether the run is done or not and the value
 // of its context error.
-func renderStatus(status benchttp.RecordingStatus) string {
+func renderStatus(status recorder.Status) string {
 	styled := statusStyle(status)
 	return styled(string(status))
 }
 
-func statusStyle(status benchttp.RecordingStatus) ansi.StyleFunc {
+func statusStyle(status recorder.Status) ansi.StyleFunc {
 	switch status {
-	case benchttp.StatusRunning:
+	case recorder.StatusRunning:
 		return ansi.Yellow
-	case benchttp.StatusDone:
+	case recorder.StatusDone:
 		return ansi.Green
-	case benchttp.StatusCanceled:
+	case recorder.StatusCanceled:
 		return ansi.Red
-	case benchttp.StatusTimeout:
+	case recorder.StatusTimeout:
 		return ansi.Cyan
 	}
 	return ansi.Grey // should not occur

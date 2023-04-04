@@ -11,6 +11,8 @@ import (
 	"time"
 
 	"github.com/benchttp/engine/benchttp"
+	"github.com/benchttp/engine/benchttp/metrics"
+	"github.com/benchttp/engine/benchttp/testsuite"
 	"github.com/benchttp/engine/internal/errorutil"
 )
 
@@ -145,7 +147,7 @@ func (repr representation) parseTestsInto(dst *benchttp.Runner) error {
 		return nil
 	}
 
-	cases := make([]benchttp.TestCase, len(testSuite))
+	cases := make([]testsuite.Case, len(testSuite))
 	for i, t := range testSuite {
 		fieldPath := func(caseField string) string {
 			return fmt.Sprintf("tests[%d].%s", i, caseField)
@@ -160,12 +162,12 @@ func (repr representation) parseTestsInto(dst *benchttp.Runner) error {
 			return err
 		}
 
-		field := benchttp.MetricsField(*t.Field)
+		field := metrics.Field(*t.Field)
 		if err := field.Validate(); err != nil {
 			return fmt.Errorf("%s: %s", fieldPath("field"), err)
 		}
 
-		predicate := benchttp.TestPredicate(*t.Predicate)
+		predicate := testsuite.Predicate(*t.Predicate)
 		if err := predicate.Validate(); err != nil {
 			return fmt.Errorf("%s: %s", fieldPath("predicate"), err)
 		}
@@ -175,7 +177,7 @@ func (repr representation) parseTestsInto(dst *benchttp.Runner) error {
 			return fmt.Errorf("%s: %s", fieldPath("target"), err)
 		}
 
-		cases[i] = benchttp.TestCase{
+		cases[i] = testsuite.Case{
 			Name:      *t.Name,
 			Field:     field,
 			Predicate: predicate,
@@ -222,11 +224,11 @@ func parseOptionalDuration(raw string) (time.Duration, error) {
 }
 
 func parseMetricValue(
-	field benchttp.MetricsField,
+	field metrics.Field,
 	inputValue string,
-) (benchttp.MetricsValue, error) {
+) (metrics.Value, error) {
 	fieldType := field.Type()
-	handleError := func(v interface{}, err error) (benchttp.MetricsValue, error) {
+	handleError := func(v interface{}, err error) (metrics.Value, error) {
 		if err != nil {
 			return nil, fmt.Errorf(
 				"value %q is incompatible with field %s (want %s)",

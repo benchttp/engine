@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/benchttp/engine/benchttp"
+	"github.com/benchttp/engine/benchttp/testsuite"
 )
 
 // ConfigFile represents a testdata configuration file.
@@ -128,7 +129,7 @@ func fullRunner() benchttp.Runner {
 		RequestTimeout: 2 * time.Second,
 		GlobalTimeout:  60 * time.Second,
 
-		Tests: []benchttp.TestCase{
+		Tests: []testsuite.Case{
 			{
 				Name:      "maximum response time",
 				Field:     "ResponseTimes.Max",

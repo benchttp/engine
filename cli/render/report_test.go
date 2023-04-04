@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/benchttp/engine/benchttp"
+	"github.com/benchttp/engine/benchttp/metrics"
 
 	"github.com/benchttp/engine/cli/render"
 	"github.com/benchttp/engine/cli/render/ansi"
@@ -29,13 +30,13 @@ func TestReport_String(t *testing.T) {
 
 // helpers
 
-func metricsStub() (agg benchttp.MetricsAggregate, total time.Duration) {
-	return benchttp.MetricsAggregate{
+func metricsStub() (agg metrics.Aggregate, total time.Duration) {
+	return metrics.Aggregate{
 		RequestFailures: make([]struct {
 			Reason string
 		}, 1),
 		Records: make([]struct{ ResponseTime time.Duration }, 3),
-		ResponseTimes: benchttp.MetricsTimeStats{
+		ResponseTimes: metrics.TimeStats{
 			Min:  4 * time.Second,
 			Max:  6 * time.Second,
 			Mean: 5 * time.Second,

@@ -13,30 +13,6 @@ import (
 	"github.com/benchttp/engine/benchttp/testsuite"
 )
 
-type (
-	RecordingProgress = recorder.Progress
-	RecordingStatus   = recorder.Status
-
-	MetricsAggregate = metrics.Aggregate
-	MetricsField     = metrics.Field
-	MetricsValue     = metrics.Value
-	MetricsTimeStats = metrics.TimeStats
-
-	TestCase         = testsuite.Case
-	TestPredicate    = testsuite.Predicate
-	TestSuiteResults = testsuite.Result
-	TestCaseResult   = testsuite.CaseResult
-)
-
-const (
-	StatusRunning  = recorder.StatusRunning
-	StatusCanceled = recorder.StatusCanceled
-	StatusTimeout  = recorder.StatusTimeout
-	StatusDone     = recorder.StatusDone
-)
-
-var ErrCanceled = recorder.ErrCanceled
-
 type Runner struct {
 	Request *http.Request
 
@@ -48,7 +24,7 @@ type Runner struct {
 
 	Tests []testsuite.Case
 
-	OnProgress func(RecordingProgress)
+	OnProgress func(recorder.Progress)
 
 	recorder *recorder.Recorder
 }

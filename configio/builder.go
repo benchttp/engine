@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/benchttp/engine/benchttp"
+	"github.com/benchttp/engine/benchttp/testsuite"
 )
 
 // A Builder is used to incrementally build a benchttp.Runner
@@ -165,7 +166,7 @@ func (b *Builder) SetGlobalTimeout(v time.Duration) {
 
 // SetTests adds a mutation that sets a runner's
 // Tests field to v.
-func (b *Builder) SetTests(v []benchttp.TestCase) {
+func (b *Builder) SetTests(v []testsuite.Case) {
 	b.append(func(runner *benchttp.Runner) {
 		runner.Tests = v
 	})
@@ -173,7 +174,7 @@ func (b *Builder) SetTests(v []benchttp.TestCase) {
 
 // SetTests adds a mutation that appends the given benchttp.TestCases
 // to a runner's Tests field.
-func (b *Builder) AddTests(v ...benchttp.TestCase) {
+func (b *Builder) AddTests(v ...testsuite.Case) {
 	b.append(func(runner *benchttp.Runner) {
 		runner.Tests = append(runner.Tests, v...)
 	})
