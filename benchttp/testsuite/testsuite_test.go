@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/benchttp/engine/benchttp/metrics"
-	"github.com/benchttp/engine/benchttp/metrics/timestats"
 	"github.com/benchttp/engine/benchttp/testsuite"
 )
 
@@ -131,7 +130,7 @@ func assertEqualCasesResults(t *testing.T, exp, got []testsuite.CaseResult) {
 
 func metricsWithMeanResponseTime(d time.Duration) metrics.Aggregate {
 	return metrics.Aggregate{
-		ResponseTimes: timestats.TimeStats{
+		ResponseTimes: metrics.TimeStats{
 			Mean: d,
 		},
 	}

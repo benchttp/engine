@@ -1,15 +1,15 @@
-package timestats_test
+package metrics_test
 
 import (
 	"testing"
 	"time"
 
-	"github.com/benchttp/engine/benchttp/metrics/timestats"
+	"github.com/benchttp/engine/benchttp/metrics"
 )
 
 func TestCompute(t *testing.T) {
 	t.Run("happy path", func(t *testing.T) {
-		want := timestats.TimeStats{
+		want := metrics.TimeStats{
 			Min:       100,
 			Max:       400,
 			Mean:      230,
@@ -21,7 +21,7 @@ func TestCompute(t *testing.T) {
 
 		data := []time.Duration{100, 100, 200, 300, 400, 200, 100, 200, 300, 400, 100, 100, 200, 300, 400, 200, 100, 200, 300, 400}
 
-		got := timestats.New(data)
+		got := metrics.NewTimeStats(data)
 
 		for _, stat := range []struct {
 			name string
@@ -62,7 +62,7 @@ func TestCompute(t *testing.T) {
 
 	t.Run("few values", func(t *testing.T) {
 		data := []time.Duration{100, 300}
-		got := timestats.New(data)
+		got := metrics.NewTimeStats(data)
 
 		if got.Deciles != nil {
 			t.Errorf("deciles: want nil, got %v", got.Deciles)
@@ -76,9 +76,4 @@ func TestCompute(t *testing.T) {
 			t.Errorf("median: want 200ns, got %v", got.Median)
 		}
 	})
-}
-
-// approxEqual returns true if val is equal to target with a margin of error.
-func approxEqualTime(val, target, margin time.Duration) bool {
-	return val >= target-margin && val <= target+margin
 }

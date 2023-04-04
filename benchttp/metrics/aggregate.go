@@ -3,11 +3,8 @@ package metrics
 import (
 	"time"
 
-	"github.com/benchttp/engine/benchttp/metrics/timestats"
 	"github.com/benchttp/engine/benchttp/recorder"
 )
-
-type TimeStats = timestats.TimeStats
 
 // Aggregate is an aggregate of metrics computed from
 // a slice of recorder.Record.
@@ -15,7 +12,7 @@ type Aggregate struct {
 	// ResponseTimes is the common statistics computed from a
 	// slice recorder.Record. It offers statistics about the
 	// recorder.Record.Time of the records.
-	ResponseTimes timestats.TimeStats
+	ResponseTimes TimeStats
 	// StatusCodesDistribution maps each status code received to
 	// its number of occurrence.
 	StatusCodesDistribution map[int]int
@@ -23,7 +20,7 @@ type Aggregate struct {
 	// the combination of all recorder.Record.Events of a slice
 	// of recorder.Record. It offers statistics about the
 	// recorder.Events.Time of the records.
-	RequestEventTimes map[string]timestats.TimeStats
+	RequestEventTimes map[string]TimeStats
 	// Records lists each response time received during the run.
 	// It offers raw informarion.
 	Records []struct {
@@ -51,7 +48,7 @@ func NewAggregate(records []recorder.Record) (agg Aggregate) {
 		}
 	}
 
-	agg.ResponseTimes = timestats.New(times)
+	agg.ResponseTimes = NewTimeStats(times)
 
 	agg.StatusCodesDistribution = computeStatusCodesDistribution(records)
 
@@ -77,7 +74,7 @@ func (agg Aggregate) RequestSuccessCount() int {
 
 // Special compute helpers.
 
-func computeRequestEventTimes(records []recorder.Record) map[string]timestats.TimeStats {
+func computeRequestEventTimes(records []recorder.Record) map[string]TimeStats {
 	events := flattenRelativeTimeEvents(records)
 
 	timesByEvent := map[string][]time.Duration{}
@@ -86,10 +83,10 @@ func computeRequestEventTimes(records []recorder.Record) map[string]timestats.Ti
 		timesByEvent[e.Name] = append(timesByEvent[e.Name], e.Time)
 	}
 
-	statsByEvent := map[string]timestats.TimeStats{}
+	statsByEvent := map[string]TimeStats{}
 
 	for e, times := range timesByEvent {
-		statsByEvent[e] = timestats.New(times)
+		statsByEvent[e] = NewTimeStats(times)
 	}
 
 	return statsByEvent

@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/benchttp/engine/benchttp/metrics"
-	"github.com/benchttp/engine/benchttp/metrics/timestats"
 )
 
 func TestMetric_Compare(t *testing.T) {
@@ -87,7 +86,7 @@ func TestAggregate_MetricOf(t *testing.T) {
 			name:    "get metrics from nested struct",
 			fieldID: "ResponseTimes.Mean",
 			agg: metrics.Aggregate{
-				ResponseTimes: timestats.TimeStats{
+				ResponseTimes: metrics.TimeStats{
 					Mean: 100 * time.Millisecond,
 				},
 			},
@@ -114,7 +113,7 @@ func TestAggregate_MetricOf(t *testing.T) {
 			name:    "get metrics from string map",
 			fieldID: "RequestEventTimes.FirstResponseByte.Mean",
 			agg: metrics.Aggregate{
-				RequestEventTimes: map[string]timestats.TimeStats{
+				RequestEventTimes: map[string]metrics.TimeStats{
 					"FirstResponseByte": {Mean: 100 * time.Millisecond},
 				},
 			},
@@ -132,7 +131,7 @@ func TestAggregate_MetricOf(t *testing.T) {
 			name:    "case insensitive",
 			fieldID: "responsetimes.MEAN",
 			agg: metrics.Aggregate{
-				ResponseTimes: timestats.TimeStats{
+				ResponseTimes: metrics.TimeStats{
 					Mean: 100 * time.Millisecond,
 				},
 			},
